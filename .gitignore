@@ -1,0 +1,7 @@
+.venv/
+.venv_brasil/
+__pycache__/
+*.py[cod]
+.pygbag/
+build/
+dist/
