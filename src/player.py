@@ -1,6 +1,15 @@
+from collections import deque
+
 import pygame
 
-from src.settings import GRAVITY, PLAYER_JUMP_SPEED, PLAYER_SPEED
+from src.settings import (
+    GRAVITY,
+    PLAYER_ANIMATION_FRAMES,
+    PLAYER_DRAW_SIZE,
+    PLAYER_JUMP_SPEED,
+    PLAYER_SPEED,
+    PLAYER_SPRITE_PATH,
+)
 
 
 class Player:
@@ -8,14 +17,21 @@ class Player:
         self.rect = pygame.Rect(position[0], position[1], 36, 56)
         self.velocity = pygame.Vector2(0, 0)
         self.on_ground = False
+        self.facing_right = True
+        self.animations = self._load_animations()
+        self.animation_name = "idle"
+        self.animation_time = 0
+        self.current_frame_index = 0
 
     def handle_input(self, keys: pygame.key.ScancodeWrapper):
         self.velocity.x = 0
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.velocity.x = -PLAYER_SPEED
+            self.facing_right = False
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.velocity.x = PLAYER_SPEED
+            self.facing_right = True
 
         wants_to_jump = keys[pygame.K_SPACE] or keys[pygame.K_UP] or keys[pygame.K_w]
         if wants_to_jump and self.on_ground:
@@ -31,6 +47,7 @@ class Player:
 
         self.rect.y += round(self.velocity.y * dt)
         self._resolve_vertical_collisions(platforms)
+        self._update_animation(dt)
 
     def _keep_inside_level_bounds(self, level_width: int):
         if self.rect.left < 0:
@@ -62,3 +79,118 @@ class Player:
             elif self.velocity.y < 0:
                 self.rect.top = platform.bottom
                 self.velocity.y = 0
+
+        if not self.on_ground and self.velocity.y >= 0:
+            self._check_ground_below(platforms)
+
+    def _check_ground_below(self, platforms: list[pygame.Rect]):
+        foot_probe = self.rect.move(0, 1)
+
+        for platform in platforms:
+            if foot_probe.colliderect(platform):
+                self.on_ground = True
+                self.velocity.y = 0
+                return
+
+    def draw(self, screen: pygame.Surface, camera_x: int):
+        draw_rect = self._get_draw_rect(camera_x)
+        sprite = self._get_current_sprite()
+
+        if sprite:
+            if not self.facing_right:
+                sprite = pygame.transform.flip(sprite, True, False)
+            screen.blit(sprite, draw_rect)
+            return
+
+        pygame.draw.rect(screen, (235, 196, 82), draw_rect)
+        pygame.draw.rect(screen, (74, 52, 38), draw_rect, 3)
+
+    def _get_draw_rect(self, camera_x: int) -> pygame.Rect:
+        draw_rect = pygame.Rect((0, 0), PLAYER_DRAW_SIZE)
+        draw_rect.midbottom = (self.rect.centerx - camera_x, self.rect.bottom)
+        return draw_rect
+
+    def _load_animations(self) -> dict[str, list[pygame.Surface]]:
+        try:
+            sheet = pygame.image.load(PLAYER_SPRITE_PATH).convert_alpha()
+        except (FileNotFoundError, pygame.error):
+            return {}
+
+        animations = {}
+
+        for name, frame_rects in PLAYER_ANIMATION_FRAMES.items():
+            frames = []
+            for frame_rect in frame_rects:
+                frame = sheet.subsurface(pygame.Rect(frame_rect)).copy()
+                self._remove_light_background(frame)
+                frames.append(pygame.transform.smoothscale(frame, PLAYER_DRAW_SIZE))
+            animations[name] = frames
+
+        return animations
+
+    def _remove_light_background(self, surface: pygame.Surface):
+        width, height = surface.get_size()
+        visited = set()
+        queue = deque()
+
+        for x in range(width):
+            queue.append((x, 0))
+            queue.append((x, height - 1))
+        for y in range(height):
+            queue.append((0, y))
+            queue.append((width - 1, y))
+
+        while queue:
+            x, y = queue.popleft()
+            if (x, y) in visited:
+                continue
+            if x < 0 or x >= width or y < 0 or y >= height:
+                continue
+
+            visited.add((x, y))
+            color = surface.get_at((x, y))
+            if not self._is_light_background(color):
+                continue
+
+            surface.set_at((x, y), (255, 255, 255, 0))
+            queue.append((x + 1, y))
+            queue.append((x - 1, y))
+            queue.append((x, y + 1))
+            queue.append((x, y - 1))
+
+    def _is_light_background(self, color: pygame.Color) -> bool:
+        return color.r >= 238 and color.g >= 238 and color.b >= 238
+
+    def _update_animation(self, dt: float):
+        next_animation = self._choose_animation()
+        if next_animation != self.animation_name:
+            self.animation_name = next_animation
+            self.animation_time = 0
+            self.current_frame_index = 0
+
+        frames = self.animations.get(self.animation_name, [])
+        if len(frames) <= 1:
+            return
+
+        self.animation_time += dt
+        if self.animation_time >= 0.14:
+            self.animation_time = 0
+            self.current_frame_index = (self.current_frame_index + 1) % len(frames)
+
+    def _choose_animation(self) -> str:
+        if not self.on_ground:
+            if self.velocity.y < 0:
+                return "jump"
+            return "fall"
+
+        if self.velocity.x != 0:
+            return "walk"
+
+        return "idle"
+
+    def _get_current_sprite(self) -> pygame.Surface | None:
+        frames = self.animations.get(self.animation_name, [])
+        if not frames:
+            return None
+
+        return frames[self.current_frame_index % len(frames)]

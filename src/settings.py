@@ -9,7 +9,32 @@ GROUND_COLOR = (88, 130, 74)
 PLATFORM_COLOR = (135, 96, 58)
 PLAYER_COLOR = (235, 196, 82)
 PLAYER_OUTLINE = (74, 52, 38)
+PLAYER_SPRITE_PATH = "assets/images/personagem.png"
+PLAYER_DRAW_SIZE = (54, 72)
+PLAYER_ANIMATION_FRAMES = {
+    "idle": [
+        (42, 52, 140, 235),
+    ],
+    "walk": [
+        (535, 68, 120, 220),
+        (675, 68, 120, 220),
+        (815, 68, 120, 220),
+        (955, 68, 120, 220),
+    ],
+    "jump": [
+        (205, 355, 135, 245),
+    ],
+    "fall": [
+        (535, 380, 145, 235),
+    ],
+}
 GOAL_COLOR = (72, 180, 96)
+FRAGMENT_COLOR = (248, 214, 72)
+FRAGMENT_OUTLINE = (130, 90, 36)
+HAZARD_COLOR = (218, 126, 61)
+HAZARD_OUTLINE = (116, 70, 42)
+CHECKPOINT_COLOR = (82, 150, 214)
+CHECKPOINT_OUTLINE = (32, 70, 116)
 TEXT_COLOR = (32, 36, 40)
 
 GRAVITY = 1600
