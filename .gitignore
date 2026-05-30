@@ -5,3 +5,6 @@ __pycache__/
 .pygbag/
 build/
 dist/
+tmp_pygbag_app/
+tmp_visual_check/
+caminhos_brasil_save.json

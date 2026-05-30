@@ -6,30 +6,34 @@ O jogador controla Mig, um menino ficticio nascido em 2018, que viaja por difere
 
 ## Estado Atual
 
-O projeto ja possui uma versao jogavel com jornada cronologica completa, do ano de 1500 ao Brasil contemporaneo.
+O projeto possui uma versao jogavel e mais polida para primeiro teste publico, com jornada cronologica completa, do ano de 1500 ao Brasil contemporaneo.
 
 Principais recursos:
 
 - Tela inicial com imagem `abertura.png`.
-- Menu com continuar jornada, nova sessao, linha do tempo e colecao.
-- Linha do tempo com fases bloqueadas, liberadas e concluidas.
+- Menu com continuar jornada, nova sessao temporaria, linha do tempo, colecao e ajuda rapida.
+- Linha do tempo com fases bloqueadas, liberadas, proximas e concluidas.
 - Dezesseis fases historicas jogaveis.
 - Progresso salvo localmente quando possivel.
 - Opcao de nova jornada temporaria com `N`, sem apagar o save.
-- Movimento lateral, pulo, gravidade e colisao.
+- Movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo.
 - Camera horizontal.
-- Fragmentos historicos coletaveis.
-- Colecao historica agrupada por fase.
+- HUD com ajuste discreto para manter titulos longos dentro do painel.
+- Fragmentos historicos coletaveis com brilho, flutuacao e mensagem "Voce sabia?".
+- Mensagens historicas fixas no topo; se Mig passar por tras, o painel fica temporariamente translucido.
+- Colecao historica com aparencia de album e progresso por fase.
 - Introducao narrativa por fase.
-- Nota historica ao concluir fase.
-- Objetivo final liberado apenas apos coletar todos os fragmentos da fase.
-- Checkpoints seguros como pontos de retorno.
-- Areas de cuidado que retornam Mig ao ultimo checkpoint.
+- Nota historica e pergunta curta ao concluir fase.
+- Portal final liberado apenas apos coletar todos os fragmentos da fase.
+- Checkpoints seguros com bandeira animada.
+- Areas de cuidado mais visiveis, com aviso antes do contato.
 - Tela de pausa.
-- Tela final com creditos simples.
+- Tela final com resumo de fases e fragmentos.
 - Cenarios por tema desenhados com Pygame.
 - Sprite animado do Mig usando `assets/images/personagem.png`.
 - Sons leves gerados por codigo.
+- Smoke tests permanentes em `scripts/smoke_tests.py`.
+- Script de build web limpo em `scripts/build_pygbag_clean.py`.
 
 ## Fases Implementadas
 
@@ -55,10 +59,11 @@ Cada fase tem:
 - introducao curta;
 - missao;
 - nota historica de conclusao;
+- pergunta curta para pensar;
 - pelo menos 3 fragmentos;
 - pelo menos 1 checkpoint;
 - pelo menos 1 area de cuidado;
-- objetivo final.
+- objetivo final em forma de portal.
 
 ## Como Executar
 
@@ -76,6 +81,7 @@ python main.py
 - Enter: confirmar, iniciar fase ou avancar.
 - N: iniciar nova jornada temporaria sem apagar o progresso salvo.
 - S: abrir linha do tempo no menu.
+- H: abrir ajuda rapida no menu ou durante o jogo.
 - Setas ou W/S: navegar na linha do tempo e na colecao.
 - P: pausar ou continuar durante a fase.
 - C: abrir ou fechar a colecao historica.
@@ -108,29 +114,52 @@ Validacao tecnica:
 
 ```powershell
 python -m compileall main.py src
+.\.venv_brasil\Scripts\python.exe -m compileall main.py src
 ```
+
+Smoke test permanente:
+
+```powershell
+python scripts\smoke_tests.py
+.\.venv_brasil\Scripts\python.exe scripts\smoke_tests.py
+```
+
+Use o segundo comando quando o Python global nao tiver `pygame-ce` instalado.
+
+O smoke test confere:
+
+- existem 16 fases;
+- cada fase tem fragmentos, checkpoint e area de cuidado;
+- inicio, checkpoints e respawns nao caem em areas de cuidado;
+- fragmentos ficam apoiados em plataformas proximas e alcancaveis por criterio conservador;
+- `Game` inicializa em modo dummy;
+- `abertura.png` e `assets/images/personagem.png` carregam;
+- fluxo basico de menu, nova sessao temporaria, colecao, checkpoint, area de cuidado, conclusao e final passa sem alterar o save.
+- mensagens historicas permanecem em posicao estavel e ficam translucidas quando Mig passa por tras.
 
 Teste manual recomendado:
 
 1. Abrir com `python main.py`.
 2. Verificar se `abertura.png` aparece na tela inicial.
 3. Pressionar `Enter` e iniciar a fase liberada.
-4. Testar `N` no menu e confirmar que a jornada temporaria comeca na fase 1.
-5. Mover, pular e cair em plataformas.
-6. Coletar fragmentos.
-7. Abrir a colecao com `C`.
-8. Ativar checkpoint.
-9. Tocar em area de cuidado e confirmar retorno seguro.
-10. Reiniciar fase com `R`.
-11. Pausar e continuar com `P`.
-12. Concluir fase.
-13. Confirmar desbloqueio da fase seguinte.
-14. Entrar pela linha do tempo com `S`.
-15. Testar a fase 2, especialmente fragmentos e checkpoints.
-16. Testar uma fase intermediaria.
-17. Testar a ultima fase.
-18. Ver tela final.
-19. Fechar e abrir novamente para confirmar save.
+4. Voltar ao menu.
+5. Testar `H` para abrir ajuda rapida.
+6. Testar `N` no menu e confirmar que a jornada temporaria comeca na fase 1.
+7. Mover, pular e cair em plataformas.
+8. Coletar fragmentos.
+9. Abrir a colecao com `C`.
+10. Ativar checkpoint.
+11. Tocar em area de cuidado e confirmar retorno seguro.
+12. Reiniciar fase com `R`.
+13. Pausar e continuar com `P`.
+14. Concluir fase.
+15. Confirmar desbloqueio da fase seguinte.
+16. Entrar pela linha do tempo com `S`.
+17. Testar a fase 2, especialmente fragmentos e checkpoints.
+18. Testar uma fase intermediaria.
+19. Testar a ultima fase.
+20. Ver tela final.
+21. Fechar e abrir novamente para confirmar save.
 
 ## Estrutura De Arquivos
 
@@ -140,11 +169,15 @@ requirements.txt
 README.md
 AGENTS.md
 SPEC.MD
+PROMPT_YOLO.MD
 abertura.png
 caminhos_brasil_save.json       # gerado em execucao local
 assets/
   images/
     personagem.png
+scripts/
+  build_pygbag_clean.py
+  smoke_tests.py
 src/
   __init__.py
   backgrounds.py
@@ -160,14 +193,16 @@ src/
 ## Arquitetura Resumida
 
 - `main.py`: ponto de entrada com loop `async`, importante para Pygbag.
-- `src/game.py`: controla estados, telas, HUD, progresso, colecao, abertura e loop principal.
-- `src/player.py`: controla Mig, movimento, colisao e animacao.
+- `src/game.py`: controla estados, telas, HUD, progresso, colecao, ajuda, efeitos visuais, abertura e loop principal.
+- `src/player.py`: controla Mig, movimento, colisao, coyote time, buffer de pulo e animacao.
 - `src/level_data.py`: contem dados das 16 fases e geradores simples de layout.
 - `src/levels.py`: converte dados das fases em objetos `pygame.Rect`.
 - `src/backgrounds.py`: desenha cenarios por tema.
 - `src/progress.py`: salva e carrega progresso local em JSON.
 - `src/sounds.py`: gera sons simples por codigo.
 - `src/settings.py`: constantes gerais.
+- `scripts/smoke_tests.py`: validacao automatica leve.
+- `scripts/build_pygbag_clean.py`: cria uma copia minima e roda build Pygbag sem empacotar venv ou save local.
 
 ## Diretriz De Conteudo
 
@@ -184,29 +219,43 @@ Como o jogo e voltado para criancas:
 
 A entrada principal ja usa loop `async`, e o projeto evita dependencias alem de Pygame-CE e Pygbag.
 
-Teste esperado:
+O comando direto abaixo foi testado:
 
 ```powershell
 pygbag .
 ```
 
-Pontos a validar antes de publicar:
+Resultado: o comando iniciou e gerou build, mas na raiz do projeto ele tambem tentou empacotar `.venv_brasil` e `caminhos_brasil_save.json`. Por isso, para publicacao, use o build limpo:
 
-- `abertura.png` entra corretamente no build.
-- `assets/images/personagem.png` entra corretamente no build.
-- O jogo roda no navegador com audio habilitado ou falhando de forma segura.
-- `src/progress.py` deve ser avaliado para armazenamento web, pois hoje usa arquivo JSON local.
-- Nao usar caminhos absolutos em assets.
+```powershell
+.\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
+```
+
+Resultado validado: o build limpo empacotou somente 13 arquivos do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). A saida fica em:
+
+```text
+build/pygbag_app/build/web
+```
+
+Pontos ainda a validar antes de publicar:
+
+- abrir o `index.html` gerado em navegador real;
+- testar audio no navegador;
+- avaliar armazenamento web para substituir ou complementar o save local em arquivo JSON.
+
+## Limites Conhecidos
+
+- As fases compartilham gerador simples de layout.
+- O salvamento atual e local por arquivo JSON; no navegador, pode precisar de adaptacao.
+- A interface esta otimizada para 960x540.
+- As mensagens historicas usam painel fixo e translucidez para nao disputar espaco com o pulo do Mig.
+- `src/game.py` concentra muitas responsabilidades e pode ser dividido futuramente.
+- A build Pygbag limpa passa, mas ainda falta rodada manual em navegador real.
 
 ## Proximas Melhorias Recomendadas
 
-Prioridade sugerida:
-
-1. Ajustar sensacao de movimento e pulo para ficar mais confortavel.
-2. Adicionar feedback visual leve para fragmentos, checkpoint e portal final.
-3. Melhorar visual das plataformas e itens por tema.
-4. Criar uma tela simples de ajuda com controles.
-5. Polir a colecao historica como album.
-6. Rodar teste com Pygbag.
-7. Adaptar salvamento para web, se necessario.
-8. Fazer rodada manual completa em todas as fases.
+1. Fazer teste publico curto com criancas ou familiares observando dificuldade e leitura.
+2. Testar o build Pygbag em navegador real.
+3. Adaptar `src/progress.py` para armazenamento web quando a publicacao for prioridade.
+4. Polir mais layouts especificos de algumas fases sem aumentar complexidade.
+5. Separar telas de `src/game.py` se o arquivo crescer mais.

@@ -4,9 +4,15 @@ import pygame
 
 from src.settings import (
     GRAVITY,
+    PLAYER_AIR_ACCELERATION,
     PLAYER_ANIMATION_FRAMES,
+    PLAYER_COYOTE_TIME,
     PLAYER_DRAW_SIZE,
+    PLAYER_FRICTION,
+    PLAYER_GROUND_ACCELERATION,
     PLAYER_JUMP_SPEED,
+    PLAYER_JUMP_BUFFER_TIME,
+    PLAYER_MAX_FALL_SPEED,
     PLAYER_SPEED,
     PLAYER_SPRITE_PATH,
 )
@@ -22,24 +28,52 @@ class Player:
         self.animation_name = "idle"
         self.animation_time = 0
         self.current_frame_index = 0
+        self.coyote_timer = 0
+        self.jump_buffer_timer = 0
+        self.jump_was_pressed = False
+        self.jump_started = False
 
-    def handle_input(self, keys: pygame.key.ScancodeWrapper):
-        self.velocity.x = 0
+    def handle_input(self, keys: pygame.key.ScancodeWrapper, dt: float):
+        self.jump_started = False
+        horizontal_direction = 0
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.velocity.x = -PLAYER_SPEED
+            horizontal_direction -= 1
             self.facing_right = False
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.velocity.x = PLAYER_SPEED
+            horizontal_direction += 1
             self.facing_right = True
 
+        target_speed = horizontal_direction * PLAYER_SPEED
+        if horizontal_direction:
+            acceleration = PLAYER_GROUND_ACCELERATION if self.on_ground else PLAYER_AIR_ACCELERATION
+            self.velocity.x = self._approach(
+                self.velocity.x,
+                target_speed,
+                PLAYER_SPEED * acceleration * dt,
+            )
+        else:
+            friction = PLAYER_FRICTION if self.on_ground else PLAYER_FRICTION * 0.22
+            self.velocity.x = self._approach(self.velocity.x, 0, PLAYER_SPEED * friction * dt)
+
+        if self.on_ground:
+            self.coyote_timer = PLAYER_COYOTE_TIME
+        else:
+            self.coyote_timer = max(0, self.coyote_timer - dt)
+
         wants_to_jump = keys[pygame.K_SPACE] or keys[pygame.K_UP] or keys[pygame.K_w]
-        if wants_to_jump and self.on_ground:
-            self.velocity.y = -PLAYER_JUMP_SPEED
-            self.on_ground = False
+        if wants_to_jump and not self.jump_was_pressed:
+            self.jump_buffer_timer = PLAYER_JUMP_BUFFER_TIME
+        self.jump_was_pressed = wants_to_jump
+
+        if self.jump_buffer_timer > 0 and self.coyote_timer > 0:
+            self._start_jump()
+
+        self.jump_buffer_timer = max(0, self.jump_buffer_timer - dt)
 
     def update(self, dt: float, platforms: list[pygame.Rect], level_width: int):
         self.velocity.y += GRAVITY * dt
+        self.velocity.y = min(self.velocity.y, PLAYER_MAX_FALL_SPEED)
 
         self.rect.x += round(self.velocity.x * dt)
         self._resolve_horizontal_collisions(platforms)
@@ -48,6 +82,20 @@ class Player:
         self.rect.y += round(self.velocity.y * dt)
         self._resolve_vertical_collisions(platforms)
         self._update_animation(dt)
+
+    def _start_jump(self):
+        self.velocity.y = -PLAYER_JUMP_SPEED
+        self.on_ground = False
+        self.coyote_timer = 0
+        self.jump_buffer_timer = 0
+        self.jump_started = True
+
+    def _approach(self, current: float, target: float, amount: float) -> float:
+        if current < target:
+            return min(current + amount, target)
+        if current > target:
+            return max(current - amount, target)
+        return target
 
     def _keep_inside_level_bounds(self, level_width: int):
         if self.rect.left < 0:
