@@ -19,6 +19,7 @@ Principais recursos:
 - Movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo.
 - Camera horizontal.
 - HUD com ajuste discreto para manter titulos longos dentro do painel.
+- Controles por toque para jogar no celular em modo paisagem no navegador.
 - Fragmentos historicos coletaveis com brilho, flutuacao e mensagem "Voce sabia?".
 - Mensagens historicas fixas no topo; se Mig passar por tras, o painel fica temporariamente translucido.
 - Colecao historica com aparencia de album e progresso por fase.
@@ -76,6 +77,8 @@ python main.py
 
 ## Controles
 
+Teclado:
+
 - Setas esquerda/direita ou A/D: mover.
 - Espaco, seta para cima ou W: pular.
 - Enter: confirmar, iniciar fase ou avancar.
@@ -88,6 +91,14 @@ python main.py
 - R: reiniciar a fase.
 - M: voltar ao menu em telas internas.
 - Esc: sair.
+
+Celular ou tela de toque:
+
+- Use o aparelho deitado, em modo paisagem.
+- Toque nas opcoes do menu para continuar, iniciar nova sessao, abrir linha do tempo, colecao ou ajuda.
+- Durante a fase, use os botoes virtuais `<`, `>` e `Pular`.
+- Toque em `P` para pausar e em `C` para abrir a colecao.
+- Na linha do tempo e na colecao, toque nas opcoes ou arraste para rolar.
 
 ## Progresso E Salvamento
 
@@ -135,6 +146,7 @@ O smoke test confere:
 - `Game` inicializa em modo dummy;
 - `abertura.png` e `assets/images/personagem.png` carregam;
 - fluxo basico de menu, nova sessao temporaria, colecao, checkpoint, area de cuidado, conclusao e final passa sem alterar o save.
+- fluxo basico por toque cobre menu, fase, movimento, pulo, colecao e linha do tempo;
 - mensagens historicas permanecem em posicao estavel e ficam translucidas quando Mig passa por tras.
 
 Teste manual recomendado:
@@ -160,6 +172,17 @@ Teste manual recomendado:
 19. Testar a ultima fase.
 20. Ver tela final.
 21. Fechar e abrir novamente para confirmar save.
+
+Teste mobile recomendado apos publicar:
+
+1. Abrir `https://msimoes38.github.io/caminhos_brasil/` no celular.
+2. Virar o aparelho para modo paisagem.
+3. Tocar em continuar e iniciar uma fase.
+4. Usar `<`, `>` e `Pular` para mover Mig.
+5. Coletar um fragmento.
+6. Abrir colecao com `C`.
+7. Pausar com `P` e voltar.
+8. Abrir a linha do tempo pelo menu.
 
 ## Estrutura De Arquivos
 
@@ -248,6 +271,7 @@ Pontos ainda a validar antes de publicar:
 - As fases compartilham gerador simples de layout.
 - O salvamento atual e local por arquivo JSON; no navegador, pode precisar de adaptacao.
 - A interface esta otimizada para 960x540.
+- A experiencia mobile foi pensada para celular deitado; modo retrato nao possui layout dedicado.
 - As mensagens historicas usam painel fixo e translucidez para nao disputar espaco com o pulo do Mig.
 - `src/game.py` concentra muitas responsabilidades e pode ser dividido futuramente.
 - A build Pygbag limpa passa, mas ainda falta rodada manual em navegador real.

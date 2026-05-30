@@ -62,6 +62,11 @@ class Game:
         self.saved_progress = self.progress_store.load()
         self.temporary_session = False
         self.random = Random(2018)
+        self.touch_ui_enabled = False
+        self.touch_control_by_pointer = {}
+        self.active_touch_controls = set()
+        self.touch_jump_pressed = False
+        self.pointer_starts = {}
 
         self.selected_level_index = 0
         self.level_select_scroll = 0
@@ -91,6 +96,237 @@ class Game:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
                 self._handle_keydown(event.key)
+            elif event.type == pygame.FINGERDOWN:
+                self._handle_pointer_down(
+                    self._finger_event_position(event),
+                    ("finger", event.finger_id),
+                    is_touch=True,
+                )
+            elif event.type == pygame.FINGERMOTION:
+                self._handle_pointer_motion(
+                    self._finger_event_position(event),
+                    ("finger", event.finger_id),
+                    is_touch=True,
+                )
+            elif event.type == pygame.FINGERUP:
+                self._handle_pointer_up(
+                    self._finger_event_position(event),
+                    ("finger", event.finger_id),
+                    is_touch=True,
+                )
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if not getattr(event, "touch", False):
+                    self._handle_pointer_down(event.pos, ("mouse", 0), is_touch=False)
+            elif event.type == pygame.MOUSEMOTION:
+                if not getattr(event, "touch", False) and ("mouse", 0) in self.pointer_starts:
+                    self._handle_pointer_motion(event.pos, ("mouse", 0), is_touch=False)
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if not getattr(event, "touch", False):
+                    self._handle_pointer_up(event.pos, ("mouse", 0), is_touch=False)
+
+    def _finger_event_position(self, event: pygame.event.Event) -> tuple[int, int]:
+        return (
+            int(max(0, min(1, event.x)) * SCREEN_WIDTH),
+            int(max(0, min(1, event.y)) * SCREEN_HEIGHT),
+        )
+
+    def _handle_pointer_down(
+        self,
+        position: tuple[int, int],
+        pointer_id,
+        is_touch: bool = True,
+    ):
+        self.touch_ui_enabled = True
+        self.pointer_starts[pointer_id] = {
+            "position": position,
+            "last_position": position,
+            "state": self.state,
+            "drag": 0,
+            "scroll_remainder": 0,
+        }
+
+        if self.state == STATE_PLAYING:
+            action = self._gameplay_touch_action_at(position)
+            if action in ("left", "right", "jump"):
+                self._set_touch_control(pointer_id, action)
+            elif action == "pause":
+                self._clear_touch_controls()
+                self.state = STATE_PAUSED
+            elif action == "collection":
+                self._clear_touch_controls()
+                self._toggle_collection()
+
+    def _handle_pointer_motion(
+        self,
+        position: tuple[int, int],
+        pointer_id,
+        is_touch: bool = True,
+    ):
+        if pointer_id in self.touch_control_by_pointer:
+            action = self._gameplay_touch_action_at(position)
+            if action in ("left", "right", "jump"):
+                self._set_touch_control(pointer_id, action)
+            else:
+                self._remove_touch_control(pointer_id)
+
+        start = self.pointer_starts.get(pointer_id)
+        if not start:
+            return
+
+        last_x, last_y = start["last_position"]
+        start["last_position"] = position
+        start["drag"] += abs(position[0] - last_x) + abs(position[1] - last_y)
+
+        if start["state"] == STATE_COLLECTION and self.state == STATE_COLLECTION:
+            self._scroll_collection_from_drag(start, position[1] - last_y)
+        elif start["state"] == STATE_LEVEL_SELECT and self.state == STATE_LEVEL_SELECT:
+            self._scroll_level_select_from_drag(start, position[1] - last_y)
+
+    def _handle_pointer_up(
+        self,
+        position: tuple[int, int],
+        pointer_id,
+        is_touch: bool = True,
+    ):
+        was_control = pointer_id in self.touch_control_by_pointer
+        self._remove_touch_control(pointer_id)
+
+        start = self.pointer_starts.pop(pointer_id, None)
+        if was_control or not start:
+            return
+        if start["drag"] > 24:
+            return
+        if start["state"] != self.state:
+            return
+
+        self._handle_tap(position, start["state"])
+
+    def _set_touch_control(self, pointer_id, action: str):
+        previous_action = self.touch_control_by_pointer.get(pointer_id)
+        self.touch_control_by_pointer[pointer_id] = action
+        if action == "jump" and previous_action != "jump":
+            self.touch_jump_pressed = True
+        self._refresh_active_touch_controls()
+
+    def _remove_touch_control(self, pointer_id):
+        if pointer_id in self.touch_control_by_pointer:
+            del self.touch_control_by_pointer[pointer_id]
+            self._refresh_active_touch_controls()
+
+    def _clear_touch_controls(self):
+        self.touch_control_by_pointer.clear()
+        self.active_touch_controls.clear()
+        self.touch_jump_pressed = False
+
+    def _refresh_active_touch_controls(self):
+        self.active_touch_controls = set(self.touch_control_by_pointer.values())
+
+    def _touch_direction(self) -> int:
+        moving_left = "left" in self.active_touch_controls
+        moving_right = "right" in self.active_touch_controls
+        if moving_left and not moving_right:
+            return -1
+        if moving_right and not moving_left:
+            return 1
+        return 0
+
+    def _handle_tap(self, position: tuple[int, int], state: str):
+        if state == STATE_MENU:
+            self._handle_menu_tap(position)
+        elif state == STATE_LEVEL_SELECT:
+            self._handle_level_select_tap(position)
+        elif state == STATE_INTRO:
+            if self._intro_box_rect().collidepoint(position):
+                self.state = STATE_PLAYING
+        elif state == STATE_PAUSED:
+            self._handle_pause_tap(position)
+        elif state == STATE_COMPLETED:
+            if self._completion_box_rect().collidepoint(position):
+                self._go_to_next_level()
+        elif state == STATE_FINAL:
+            if self._final_box_rect().collidepoint(position):
+                self.state = STATE_MENU
+        elif state == STATE_COLLECTION:
+            if self._collection_back_button_rect().collidepoint(position):
+                self.state = self.previous_state
+        elif state == STATE_HELP:
+            if self._help_box_rect().collidepoint(position):
+                self.state = self.previous_state
+
+    def _handle_menu_tap(self, position: tuple[int, int]):
+        action = self._menu_touch_action_at(position)
+        if action == "continue":
+            self._handle_menu_keydown(pygame.K_RETURN)
+        elif action == "new":
+            self._handle_menu_keydown(pygame.K_n)
+        elif action == "timeline":
+            self._handle_menu_keydown(pygame.K_s)
+        elif action == "collection":
+            self._toggle_collection()
+        elif action == "help":
+            self._toggle_help()
+        elif action == "exit":
+            self.running = False
+
+    def _handle_level_select_tap(self, position: tuple[int, int]):
+        scroll_action = self._level_select_scroll_action_at(position)
+        if scroll_action == "up":
+            self._handle_level_select_keydown(pygame.K_UP)
+            return
+        if scroll_action == "down":
+            self._handle_level_select_keydown(pygame.K_DOWN)
+            return
+
+        selected_index = self._level_select_index_at(position)
+        if selected_index is None:
+            return
+
+        self.selected_level_index = selected_index
+        if selected_index <= self.highest_unlocked_level:
+            self.sounds.play("menu")
+            self._load_level(selected_index, STATE_INTRO)
+        else:
+            self.feedback_message = "Essa fase ainda esta bloqueada. Conclua as anteriores primeiro."
+            self.feedback_message_timer = 2.5
+            self.sounds.play("blocked")
+
+    def _handle_pause_tap(self, position: tuple[int, int]):
+        action = self._pause_touch_action_at(position)
+        if action == "resume":
+            self.state = STATE_PLAYING
+        elif action == "restart":
+            self._restart_level()
+        elif action == "menu":
+            self.state = STATE_MENU
+        elif self._pause_box_rect().collidepoint(position):
+            self.state = STATE_PLAYING
+
+    def _scroll_collection_from_drag(self, start: dict, delta_y: int):
+        max_scroll = max(0, len(self._collection_rows()) - 8)
+        self._scroll_from_drag(start, delta_y, max_scroll, "collection_scroll")
+
+    def _scroll_level_select_from_drag(self, start: dict, delta_y: int):
+        max_scroll = max(0, get_level_count() - 7)
+        self._scroll_from_drag(start, delta_y, max_scroll, "level_select_scroll")
+        self.selected_level_index = max(
+            self.level_select_scroll,
+            min(self.selected_level_index, self.level_select_scroll + 6),
+        )
+
+    def _scroll_from_drag(
+        self,
+        start: dict,
+        delta_y: int,
+        max_scroll: int,
+        attribute_name: str,
+    ):
+        start["scroll_remainder"] += delta_y
+        while start["scroll_remainder"] <= -34:
+            setattr(self, attribute_name, min(max_scroll, getattr(self, attribute_name) + 1))
+            start["scroll_remainder"] += 34
+        while start["scroll_remainder"] >= 34:
+            setattr(self, attribute_name, max(0, getattr(self, attribute_name) - 1))
+            start["scroll_remainder"] -= 34
 
     def _handle_keydown(self, key: int):
         if key == pygame.K_ESCAPE:
@@ -209,7 +445,15 @@ class Game:
             return
 
         keys = pygame.key.get_pressed()
-        self.player.handle_input(keys, dt)
+        touch_jump_pressed = self.touch_jump_pressed
+        self.touch_jump_pressed = False
+        self.player.handle_input(
+            keys,
+            dt,
+            touch_direction=self._touch_direction(),
+            touch_jump_held="jump" in self.active_touch_controls,
+            touch_jump_pressed=touch_jump_pressed,
+        )
         if self.player.jump_started:
             self.sounds.play("jump")
         self.player.update(dt, self.level.platforms, self.level.width)
@@ -379,6 +623,7 @@ class Game:
         self.feedback_message_timer = 0
         self.effects = []
         self.camera_x = 0
+        self._clear_touch_controls()
         self.state = state
 
     def _load_menu_image(self) -> pygame.Surface | None:
@@ -482,6 +727,111 @@ class Game:
         elif self.selected_level_index >= self.level_select_scroll + visible_rows:
             self.level_select_scroll = self.selected_level_index - visible_rows + 1
 
+    def _centered_rect(self, width: int, height: int) -> pygame.Rect:
+        rect = pygame.Rect(0, 0, width, height)
+        rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        return rect
+
+    def _menu_panel_rect(self) -> pygame.Rect:
+        return pygame.Rect(548, 302, 382, 190)
+
+    def _menu_touch_actions(self) -> list[tuple[str, pygame.Rect]]:
+        panel = self._menu_panel_rect()
+        return [
+            ("continue", pygame.Rect(panel.x + 12, panel.y + 8, panel.width - 24, 28)),
+            ("new", pygame.Rect(panel.x + 12, panel.y + 36, panel.width - 24, 28)),
+            ("timeline", pygame.Rect(panel.x + 12, panel.y + 64, panel.width - 24, 28)),
+            ("collection", pygame.Rect(panel.x + 12, panel.y + 92, 176, 28)),
+            ("help", pygame.Rect(panel.x + 194, panel.y + 92, 176, 28)),
+            ("exit", pygame.Rect(panel.x + 12, panel.y + 120, panel.width - 24, 28)),
+        ]
+
+    def _menu_touch_action_at(self, position: tuple[int, int]) -> str | None:
+        for action, rect in self._menu_touch_actions():
+            if rect.collidepoint(position):
+                return action
+        return None
+
+    def _touch_control_rects(self) -> dict[str, pygame.Rect]:
+        return {
+            "left": pygame.Rect(24, SCREEN_HEIGHT - 112, 86, 82),
+            "right": pygame.Rect(122, SCREEN_HEIGHT - 112, 86, 82),
+            "jump": pygame.Rect(SCREEN_WIDTH - 136, SCREEN_HEIGHT - 124, 108, 96),
+            "pause": pygame.Rect(SCREEN_WIDTH - 134, 62, 50, 42),
+            "collection": pygame.Rect(SCREEN_WIDTH - 74, 62, 50, 42),
+        }
+
+    def _gameplay_touch_action_at(self, position: tuple[int, int]) -> str | None:
+        for action, rect in self._touch_control_rects().items():
+            if rect.collidepoint(position):
+                return action
+        return None
+
+    def _level_select_box_rect(self) -> pygame.Rect:
+        return self._centered_rect(860, 440)
+
+    def _level_select_row_rects(self) -> list[tuple[int, pygame.Rect]]:
+        box = self._level_select_box_rect()
+        first_index = self.level_select_scroll
+        last_index = min(get_level_count(), first_index + 7)
+        rows = []
+        for row_index, index in enumerate(range(first_index, last_index)):
+            y = box.y + 82 + row_index * 43
+            rows.append((index, pygame.Rect(box.x + 84, y - 7, box.width - 124, 35)))
+        return rows
+
+    def _level_select_index_at(self, position: tuple[int, int]) -> int | None:
+        for index, rect in self._level_select_row_rects():
+            if rect.collidepoint(position):
+                return index
+        return None
+
+    def _level_select_scroll_action_at(self, position: tuple[int, int]) -> str | None:
+        box = self._level_select_box_rect()
+        if pygame.Rect(box.right - 62, box.y + 58, 56, 56).collidepoint(position):
+            return "up"
+        if pygame.Rect(box.right - 62, box.bottom - 106, 56, 56).collidepoint(position):
+            return "down"
+        return None
+
+    def _collection_box_rect(self) -> pygame.Rect:
+        return self._centered_rect(860, 440)
+
+    def _collection_back_button_rect(self) -> pygame.Rect:
+        box = self._collection_box_rect()
+        return pygame.Rect(box.right - 116, box.y + 18, 88, 34)
+
+    def _intro_box_rect(self) -> pygame.Rect:
+        return pygame.Rect(70, SCREEN_HEIGHT - 195, SCREEN_WIDTH - 140, 150)
+
+    def _pause_box_rect(self) -> pygame.Rect:
+        return self._centered_rect(520, 244)
+
+    def _pause_touch_actions(self) -> list[tuple[str, pygame.Rect]]:
+        box = self._pause_box_rect()
+        return [
+            ("resume", pygame.Rect(box.x + 64, box.y + 82, box.width - 128, 34)),
+            ("restart", pygame.Rect(box.x + 64, box.y + 124, box.width - 128, 34)),
+            ("menu", pygame.Rect(box.x + 64, box.y + 166, box.width - 128, 34)),
+        ]
+
+    def _pause_touch_action_at(self, position: tuple[int, int]) -> str | None:
+        for action, rect in self._pause_touch_actions():
+            if rect.collidepoint(position):
+                return action
+        return None
+
+    def _help_box_rect(self) -> pygame.Rect:
+        return self._centered_rect(780, 420)
+
+    def _completion_box_rect(self) -> pygame.Rect:
+        box = pygame.Rect(0, 0, 820, 208)
+        box.center = (SCREEN_WIDTH // 2, 168)
+        return box
+
+    def _final_box_rect(self) -> pygame.Rect:
+        return self._centered_rect(840, 380)
+
     def _collection_rows(self) -> list[tuple[str, str]]:
         rows = []
         entries_by_level: dict[str, list[str]] = {}
@@ -522,6 +872,8 @@ class Game:
             self._draw_effects()
             self._draw_player()
             self._draw_hud()
+            if self.state == STATE_PLAYING and self.touch_ui_enabled:
+                self._draw_touch_controls()
 
         if self.state == STATE_INTRO:
             self._draw_intro()
@@ -768,13 +1120,13 @@ class Game:
         elif self._all_fragments_collected():
             self._draw_feedback_message("Portal liberado! Agora encontre o marco final.")
 
-        if self.level_index == 0 and self.state == STATE_PLAYING:
+        if self.level_index == 0 and self.state == STATE_PLAYING and not self.touch_ui_enabled:
             self._draw_tutorial_hints()
 
     def _draw_menu(self):
         self._draw_menu_scene()
 
-        panel = pygame.Rect(548, 302, 382, 190)
+        panel = self._menu_panel_rect()
         panel_surface = pygame.Surface(panel.size, pygame.SRCALPHA)
         pygame.draw.rect(
             panel_surface,
@@ -784,6 +1136,9 @@ class Game:
         )
         self.screen.blit(panel_surface, panel)
         pygame.draw.rect(self.screen, TEXT_COLOR, panel, 2, border_radius=8)
+        for _, row in self._menu_touch_actions():
+            pygame.draw.rect(self.screen, (248, 238, 190), row, border_radius=5)
+            pygame.draw.rect(self.screen, (128, 116, 86), row, 1, border_radius=5)
 
         start_surface = self.font.render("Enter: continuar", True, TEXT_COLOR)
         progress_text = f"Fases liberadas: {self.highest_unlocked_level + 1}/{get_level_count()}"
@@ -796,12 +1151,12 @@ class Game:
         help_surface = self.font.render("H: ajuda", True, TEXT_COLOR)
         exit_surface = self.font.render("Esc: sair", True, TEXT_COLOR)
 
-        self.screen.blit(start_surface, (panel.x + 18, panel.y + 14))
-        self.screen.blit(new_journey_surface, (panel.x + 18, panel.y + 42))
-        self.screen.blit(select_surface, (panel.x + 18, panel.y + 70))
-        self.screen.blit(collection_surface, (panel.x + 18, panel.y + 98))
-        self.screen.blit(help_surface, (panel.x + 206, panel.y + 98))
-        self.screen.blit(exit_surface, (panel.x + 18, panel.y + 126))
+        self.screen.blit(start_surface, (panel.x + 18, panel.y + 12))
+        self.screen.blit(new_journey_surface, (panel.x + 18, panel.y + 40))
+        self.screen.blit(select_surface, (panel.x + 18, panel.y + 68))
+        self.screen.blit(collection_surface, (panel.x + 18, panel.y + 96))
+        self.screen.blit(help_surface, (panel.x + 206, panel.y + 96))
+        self.screen.blit(exit_surface, (panel.x + 18, panel.y + 124))
         self.screen.blit(progress_surface, (panel.x + 18, panel.y + 154))
 
     def _draw_menu_scene(self):
@@ -875,8 +1230,7 @@ class Game:
         self.screen.blit(label_surface, (x + 88, y + 6))
 
     def _draw_level_select(self):
-        box = pygame.Rect(0, 0, 860, 440)
-        box.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        box = self._level_select_box_rect()
         pygame.draw.rect(self.screen, (248, 238, 190), box)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2)
 
@@ -895,13 +1249,12 @@ class Game:
             4,
         )
 
-        for row_index, index in enumerate(range(first_index, last_index)):
+        for row_index, (index, row) in enumerate(self._level_select_row_rects()):
             y = box.y + 82 + row_index * 43
             is_selected = index == self.selected_level_index
             is_unlocked = index <= self.highest_unlocked_level
             is_completed = index in self.completed_levels
             is_next = is_unlocked and not is_completed and index == self.highest_unlocked_level
-            row = pygame.Rect(box.x + 84, y - 7, box.width - 124, 35)
 
             if is_selected:
                 pygame.draw.rect(self.screen, (226, 202, 128), row)
@@ -950,11 +1303,17 @@ class Game:
                 pygame.draw.circle(self.screen, TEXT_COLOR, (medal_x, row.centery - 5), 10, 2)
 
         if first_index > 0:
+            up_rect = pygame.Rect(box.right - 62, box.y + 58, 56, 56)
+            pygame.draw.rect(self.screen, (238, 222, 166), up_rect, border_radius=6)
+            pygame.draw.rect(self.screen, TEXT_COLOR, up_rect, 2, border_radius=6)
             up_surface = self.font.render("^", True, TEXT_COLOR)
-            self.screen.blit(up_surface, up_surface.get_rect(center=(box.right - 34, box.y + 82)))
+            self.screen.blit(up_surface, up_surface.get_rect(center=up_rect.center))
         if last_index < get_level_count():
+            down_rect = pygame.Rect(box.right - 62, box.bottom - 106, 56, 56)
+            pygame.draw.rect(self.screen, (238, 222, 166), down_rect, border_radius=6)
+            pygame.draw.rect(self.screen, TEXT_COLOR, down_rect, 2, border_radius=6)
             down_surface = self.font.render("v", True, TEXT_COLOR)
-            self.screen.blit(down_surface, down_surface.get_rect(center=(box.right - 34, box.bottom - 78)))
+            self.screen.blit(down_surface, down_surface.get_rect(center=down_rect.center))
 
         if self.feedback_message and self.feedback_message_timer > 0:
             feedback_surface = self.font.render(self.feedback_message, True, (116, 70, 42))
@@ -964,7 +1323,7 @@ class Game:
             )
 
         help_surface = self.font.render(
-            "Setas escolhem | Enter inicia | M volta ao menu",
+            "Setas ou toque escolhem | Enter inicia | M volta ao menu",
             True,
             TEXT_COLOR,
         )
@@ -1030,26 +1389,57 @@ class Game:
             self.screen.blit(label_surface, (label_x, box.y + 8))
             x += width + 10
 
+    def _draw_touch_controls(self):
+        rects = self._touch_control_rects()
+        self._draw_virtual_button(rects["left"], "<", "left" in self.active_touch_controls)
+        self._draw_virtual_button(rects["right"], ">", "right" in self.active_touch_controls)
+        self._draw_virtual_button(rects["jump"], "Pular", "jump" in self.active_touch_controls)
+        self._draw_virtual_button(rects["pause"], "P", False, alpha=196)
+        self._draw_virtual_button(rects["collection"], "C", False, alpha=196)
+
+    def _draw_virtual_button(
+        self,
+        rect: pygame.Rect,
+        label: str,
+        active: bool,
+        alpha: int = 176,
+    ):
+        surface = pygame.Surface(rect.size, pygame.SRCALPHA)
+        fill = (226, 202, 128, 224 if active else alpha)
+        border = (*TEXT_COLOR, 238)
+        pygame.draw.rect(surface, fill, surface.get_rect(), border_radius=10)
+        pygame.draw.rect(surface, border, surface.get_rect(), 3, border_radius=10)
+        self.screen.blit(surface, rect)
+
+        label_surface = self.font.render(label, True, TEXT_COLOR)
+        self.screen.blit(label_surface, label_surface.get_rect(center=rect.center))
+
     def _draw_pause(self):
-        box = pygame.Rect(0, 0, 520, 220)
-        box.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        box = self._pause_box_rect()
         pygame.draw.rect(self.screen, (248, 238, 190), box)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2)
 
         title_surface = self.big_font.render("Pausado", True, TEXT_COLOR)
-        resume_surface = self.font.render("P ou Enter continua", True, TEXT_COLOR)
-        restart_surface = self.font.render("R reinicia | M volta ao menu", True, TEXT_COLOR)
+        resume_surface = self.font.render("Continuar", True, TEXT_COLOR)
+        restart_surface = self.font.render("Reiniciar fase", True, TEXT_COLOR)
+        menu_surface = self.font.render("Voltar ao menu", True, TEXT_COLOR)
         collection_surface = self.font.render("C abre a colecao historica", True, TEXT_COLOR)
 
         self.screen.blit(title_surface, title_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 50)))
-        self.screen.blit(resume_surface, resume_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 100)))
-        self.screen.blit(restart_surface, restart_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 138)))
-        self.screen.blit(collection_surface, collection_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 176)))
+        for action, rect in self._pause_touch_actions():
+            pygame.draw.rect(self.screen, (226, 202, 128), rect, border_radius=6)
+            pygame.draw.rect(self.screen, TEXT_COLOR, rect, 2, border_radius=6)
+            label = {
+                "resume": resume_surface,
+                "restart": restart_surface,
+                "menu": menu_surface,
+            }[action]
+            self.screen.blit(label, label.get_rect(center=rect.center))
+        self.screen.blit(collection_surface, collection_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 218)))
 
     def _draw_help(self):
         self._draw_menu_scene()
-        box = pygame.Rect(0, 0, 760, 380)
-        box.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        box = self._help_box_rect()
         pygame.draw.rect(self.screen, (248, 238, 190), box, border_radius=8)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=8)
 
@@ -1059,11 +1449,13 @@ class Game:
         rows = [
             ("A/D ou setas", "Mover Mig pelos caminhos."),
             ("Espaco / W", "Pular com um pouco de perdao no tempo."),
+            ("Toque < >", "Mover Mig no celular."),
+            ("Toque Pular", "Pular usando o botao grande da tela."),
             ("Fragmentos", "Pegue todos para abrir o portal da fase."),
-            ("C", "Abrir a colecao historica."),
+            ("C ou toque C", "Abrir a colecao historica."),
             ("P / R / M", "Pausar, reiniciar ou voltar ao menu."),
         ]
-        y = box.y + 86
+        y = box.y + 80
         for key_text, description in rows:
             key_box = pygame.Rect(box.x + 42, y, 210, 34)
             pygame.draw.rect(self.screen, (226, 202, 128), key_box, border_radius=6)
@@ -1072,20 +1464,19 @@ class Game:
             description_surface = self.font.render(description, True, TEXT_COLOR)
             self.screen.blit(key_surface, key_surface.get_rect(center=key_box.center))
             self.screen.blit(description_surface, (box.x + 278, y + 7))
-            y += 46
+            y += 38
 
         note_surface = self.font.render(
-            "Leia frases curtas, observe o cenario e avance no seu ritmo.",
+            "No celular, use o aparelho deitado. Leia e avance no seu ritmo.",
             True,
             (72, 76, 70),
         )
-        close_surface = self.font.render("H, Enter ou M volta", True, TEXT_COLOR)
+        close_surface = self.font.render("H, Enter, M ou toque aqui volta", True, TEXT_COLOR)
         self.screen.blit(note_surface, note_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 58)))
         self.screen.blit(close_surface, close_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 28)))
 
     def _draw_collection(self):
-        box = pygame.Rect(0, 0, 860, 440)
-        box.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        box = self._collection_box_rect()
         pygame.draw.rect(self.screen, (246, 234, 196), box, border_radius=8)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=8)
         pygame.draw.rect(self.screen, (226, 202, 128), (box.x, box.y, 84, box.height), border_radius=8)
@@ -1106,6 +1497,12 @@ class Game:
         pygame.draw.circle(self.screen, TEXT_COLOR, (box.x + 42, box.y + 54), 18, 2)
         medal_surface = self.font.render(str(collected_count), True, TEXT_COLOR)
         self.screen.blit(medal_surface, medal_surface.get_rect(center=(box.x + 42, box.y + 54)))
+
+        back_rect = self._collection_back_button_rect()
+        pygame.draw.rect(self.screen, (226, 202, 128), back_rect, border_radius=6)
+        pygame.draw.rect(self.screen, TEXT_COLOR, back_rect, 2, border_radius=6)
+        back_surface = self.font.render("Voltar", True, TEXT_COLOR)
+        self.screen.blit(back_surface, back_surface.get_rect(center=back_rect.center))
 
         rows = self._collection_rows()
         visible_rows = rows[self.collection_scroll : self.collection_scroll + 8]
@@ -1130,14 +1527,14 @@ class Game:
                 y += 4
 
         help_surface = self.font.render(
-            "Setas rolam | C, Enter ou M volta",
+            "Setas ou arraste rolam | C, Enter, M ou Voltar fecha",
             True,
             TEXT_COLOR,
         )
         self.screen.blit(help_surface, help_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 28)))
 
     def _draw_intro(self):
-        box = pygame.Rect(70, SCREEN_HEIGHT - 195, SCREEN_WIDTH - 140, 150)
+        box = self._intro_box_rect()
         pygame.draw.rect(self.screen, (248, 238, 190), box)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2)
 
@@ -1148,7 +1545,7 @@ class Game:
             line_surface = self.font.render(line, True, TEXT_COLOR)
             self.screen.blit(line_surface, (box.x + 22, box.y + 54 + index * 26))
 
-        continue_surface = self.font.render("Pressione Enter para iniciar.", True, TEXT_COLOR)
+        continue_surface = self.font.render("Pressione Enter ou toque aqui para iniciar.", True, TEXT_COLOR)
         self.screen.blit(
             continue_surface,
             continue_surface.get_rect(bottomright=(box.right - 22, box.bottom - 16)),
@@ -1158,16 +1555,15 @@ class Game:
         title = "Fase concluida!"
         subtitle = "Medalha recebida: todos os fragmentos da fase foram encontrados."
         if self.level_index + 1 >= get_level_count():
-            restart = "Enter abre o final | R reinicia | C abre colecao."
+            restart = "Enter abre o final | toque continua | R reinicia | C colecao."
         else:
-            restart = "Enter avanca | R reinicia | C abre colecao."
+            restart = "Enter avanca | toque continua | R reinicia | C colecao."
 
         title_surface = self.big_font.render(title, True, TEXT_COLOR)
         subtitle_surface = self.font.render(subtitle, True, TEXT_COLOR)
         restart_surface = self.font.render(restart, True, TEXT_COLOR)
 
-        box = pygame.Rect(0, 0, 820, 208)
-        box.center = (SCREEN_WIDTH // 2, 168)
+        box = self._completion_box_rect()
         pygame.draw.rect(self.screen, (248, 238, 190), box, border_radius=8)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=8)
         pygame.draw.circle(self.screen, (248, 218, 92), (box.x + 42, box.y + 42), 20)
@@ -1206,8 +1602,7 @@ class Game:
         return questions[self.level_index % len(questions)]
 
     def _draw_final(self):
-        box = pygame.Rect(0, 0, 840, 380)
-        box.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        box = self._final_box_rect()
         pygame.draw.rect(self.screen, (248, 238, 190), box, border_radius=8)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=8)
 
@@ -1251,7 +1646,7 @@ class Game:
             TEXT_COLOR,
         )
         help_surface = self.font.render(
-            "Enter ou M volta ao menu | C abre colecao | R revisita a ultima fase",
+            "Enter, M ou toque volta ao menu | C abre colecao | R revisita a ultima fase",
             True,
             TEXT_COLOR,
         )

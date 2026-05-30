@@ -81,6 +81,7 @@ O jogo ja possui:
 - Movimento lateral, pulo, gravidade e colisao.
 - Camera horizontal.
 - HUD ajusta discretamente titulos longos para caberem no painel.
+- Controles por toque para celular em modo paisagem no navegador.
 - Fragmentos historicos coletaveis.
 - Colecao historica agrupada por fase.
 - Colecao historica com aparencia de album e progresso por fase.
@@ -157,6 +158,7 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 - A tela inicial usa `abertura.png`; se esse arquivo faltar, `src/game.py` tem fallback desenhado por Pygame.
 - A nova sessao com `N` nao deve sobrescrever o save salvo.
 - O controle `H` abre a ajuda rapida e deve continuar simples e legivel.
+- Os controles por toque devem continuar grandes, visiveis e sem cobrir HUD ou mensagens historicas.
 - Nao reposicionar dinamicamente a mensagem historica durante o pulo; isso distrai o jogador. Preserve painel fixo com translucidez.
 - `pygbag .` na raiz pode empacotar `.venv_brasil` e `caminhos_brasil_save.json`; para build web, prefira `scripts/build_pygbag_clean.py`.
 
@@ -177,6 +179,7 @@ Teste manual minimo:
 - Pressionar `N` no menu e confirmar nova jornada temporaria.
 - Pressionar `H` no menu ou na fase e confirmar ajuda rapida.
 - Mover e pular.
+- Em celular ou tela touch, usar modo paisagem e testar `<`, `>`, `Pular`, `P` e `C`.
 - Coletar fragmentos.
 - Conferir se a mensagem historica nao atrapalha o pulo; ela deve ficar fixa e translucida se Mig passar por tras.
 - Abrir colecao com `C`.

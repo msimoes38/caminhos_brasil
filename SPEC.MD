@@ -29,6 +29,7 @@ A versao atual esta pronta para um primeiro teste publico local. Ela possui:
 - movimento lateral, colisao, gravidade, coyote time e buffer curto de pulo;
 - camera horizontal;
 - HUD com ajuste discreto de fonte para titulos longos;
+- controles por toque para celular em modo paisagem no navegador;
 - fragmentos historicos coletaveis;
 - mensagens historicas fixas no topo, com translucidez quando Mig passa por tras;
 - checkpoints seguros;
@@ -113,7 +114,7 @@ Controla:
 
 - inicializacao do Pygame;
 - loop principal;
-- eventos de teclado;
+- eventos de teclado, mouse e toque;
 - estados do jogo;
 - menu;
 - ajuda rapida;
@@ -126,6 +127,7 @@ Controla:
 - tela final;
 - colecao historica;
 - HUD;
+- botoes virtuais de toque;
 - camera;
 - efeitos visuais leves;
 - mensagens historicas e feedbacks curtos no topo da tela;
@@ -141,6 +143,7 @@ O arquivo esta funcional, mas grande. Separar telas em `screens.py` ou `ui.py` p
 Controla Mig:
 
 - movimento horizontal;
+- direcao e pulo vindos do teclado ou dos botoes virtuais;
 - aceleracao e desaceleracao simples;
 - controle no ar;
 - pulo;
@@ -319,6 +322,8 @@ menu -> nova sessao temporaria -> intro da fase 1
 
 ## 7. Controles
 
+Teclado:
+
 - A/D ou setas esquerda/direita: mover.
 - W, seta para cima ou espaco: pular.
 - Enter: confirmar, iniciar fase ou avancar.
@@ -330,6 +335,14 @@ menu -> nova sessao temporaria -> intro da fase 1
 - R: reiniciar fase.
 - M: voltar ao menu.
 - Esc: sair.
+
+Toque em celular ou tela touch:
+
+- Usar o aparelho deitado, em modo paisagem.
+- Tocar nas opcoes do menu para continuar, nova sessao, linha do tempo, colecao e ajuda.
+- Durante a fase, usar os botoes virtuais `<`, `>` e `Pular`.
+- Tocar em `P` para pausar e em `C` para abrir a colecao.
+- Na linha do tempo e na colecao, tocar nas opcoes ou arrastar para rolar.
 
 ## 8. Fases Implementadas
 
@@ -516,6 +529,7 @@ python scripts\smoke_tests.py
 Use o comando da venv quando o Python global nao tiver `pygame-ce` instalado.
 
 Tambem e util renderizar telas em SDL dummy quando houver mudancas de UI.
+O smoke test tambem cobre fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa e linha do tempo.
 
 ## 16. Teste Manual Recomendado
 
@@ -542,6 +556,17 @@ Tambem e util renderizar telas em SDL dummy quando houver mudancas de UI.
 21. Ver tela final.
 22. Fechar e abrir novamente para conferir save.
 
+Teste mobile recomendado:
+
+1. Abrir a versao publicada no celular.
+2. Usar o aparelho em modo paisagem.
+3. Tocar em continuar e iniciar uma fase.
+4. Mover com `<` e `>`.
+5. Pular com `Pular`.
+6. Abrir colecao com `C`.
+7. Pausar com `P`.
+8. Abrir linha do tempo pelo menu.
+
 ## 17. Como Adicionar Uma Nova Fase
 
 1. Abrir `src/level_data.py`.
@@ -566,8 +591,9 @@ Tambem e util renderizar telas em SDL dummy quando houver mudancas de UI.
 - As fases compartilham gerador simples de layout.
 - O salvamento atual e local por arquivo JSON.
 - A interface esta otimizada para 960x540.
+- A experiencia mobile e pensada para modo paisagem; modo retrato nao tem layout dedicado.
 - `src/game.py` concentra muitas responsabilidades.
-- O build Pygbag limpo passa, mas ainda falta teste em navegador real.
+- O build Pygbag limpo passa e e publicado via GitHub Pages.
 - Audio e save em navegador precisam de validacao especifica.
 
 ## 19. Regras Para Proximos Agentes
@@ -579,6 +605,7 @@ Tambem e util renderizar telas em SDL dummy quando houver mudancas de UI.
 - Nao quebre a sessao temporaria com `N`.
 - Nao deixe checkpoints ou respawns em areas de cuidado.
 - Nao deixe fragmentos inalcancaveis.
+- Preserve controles por toque em modo paisagem ao alterar HUD, pausa, colecao ou linha do tempo.
 - Rode `python scripts\smoke_tests.py` quando alterar fases, fisica, player, save ou fluxo.
 - Ao alterar HUD ou mensagens historicas, preservar a posicao estavel do painel e a translucidez quando Mig passar por tras.
 - Use `scripts/build_pygbag_clean.py` para build web enquanto `.venv_brasil` e save local existirem na raiz.

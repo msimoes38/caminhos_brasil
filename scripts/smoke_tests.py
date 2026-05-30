@@ -20,6 +20,7 @@ from src.game import (
     STATE_INTRO,
     STATE_LEVEL_SELECT,
     STATE_MENU,
+    STATE_PAUSED,
     STATE_PLAYING,
 )
 from src.levels import create_level, get_level_count
@@ -84,6 +85,7 @@ def main() -> int:
     save_path = ROOT / "caminhos_brasil_save.json"
     save_before = save_path.read_bytes() if save_path.exists() else None
     _check_basic_flow(game, errors)
+    _check_touch_flow(Game(), errors)
     save_after = save_path.read_bytes() if save_path.exists() else None
     if save_before != save_after:
         errors.append("Fluxo de teste alterou o save local.")
@@ -103,6 +105,7 @@ def main() -> int:
     print("- Fragmentos ficam apoiados em plataformas proximas e alcancaveis.")
     print("- Game inicializa em modo dummy com abertura e sprite do Mig.")
     print("- Fluxo basico de menu, nova sessao, checkpoint, cuidado e final passa sem alterar save.")
+    print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao e linha do tempo.")
     print("- Mensagem historica mantem posicao fixa e usa translucidez quando Mig passa por tras.")
     return 0
 
@@ -227,6 +230,76 @@ def _check_basic_flow(game: Game, errors: list[str]):
     game._handle_keydown(pygame.K_RETURN)
     if game.state != STATE_FINAL:
         errors.append("Ultima fase nao levou para a tela final.")
+
+
+def _check_touch_flow(game: Game, errors: list[str]):
+    _tap(game, game._menu_touch_actions()[0][1].center)
+    if game.state != STATE_INTRO:
+        errors.append("Toque em continuar no menu nao abriu a introducao.")
+
+    _tap(game, game._intro_box_rect().center)
+    if game.state != STATE_PLAYING:
+        errors.append("Toque na introducao nao iniciou a fase.")
+
+    left_rect = game._touch_control_rects()["left"]
+    pointer_id = ("test", 1)
+    game._handle_pointer_down(left_rect.center, pointer_id)
+    game._update(1 / 60)
+    if game._touch_direction() != -1 or game.player.velocity.x >= 0:
+        errors.append("Botao virtual esquerdo nao moveu Mig para a esquerda.")
+    game._handle_pointer_up(left_rect.center, pointer_id)
+    game.player.velocity.x = 0
+
+    right_rect = game._touch_control_rects()["right"]
+    pointer_id = ("test", 2)
+    game._handle_pointer_down(right_rect.center, pointer_id)
+    game._update(1 / 60)
+    if game._touch_direction() != 1 or game.player.velocity.x <= 0:
+        errors.append("Botao virtual direito nao moveu Mig para a direita.")
+    game._handle_pointer_up(right_rect.center, pointer_id)
+
+    jump_rect = game._touch_control_rects()["jump"]
+    pointer_id = ("test", 3)
+    game.player.on_ground = True
+    game._handle_pointer_down(jump_rect.center, pointer_id)
+    game._update(1 / 60)
+    if not game.player.jump_started:
+        errors.append("Toque rapido em pular nao acionou o buffer de pulo.")
+    game._handle_pointer_up(jump_rect.center, pointer_id)
+
+    collection_rect = game._touch_control_rects()["collection"]
+    pointer_id = ("test", 4)
+    game._handle_pointer_down(collection_rect.center, pointer_id)
+    game._handle_pointer_up(collection_rect.center, pointer_id)
+    if game.state != STATE_COLLECTION:
+        errors.append("Botao virtual C nao abriu a colecao.")
+    _tap(game, game._collection_back_button_rect().center)
+    if game.state != STATE_PLAYING:
+        errors.append("Botao Voltar da colecao nao retornou para a fase.")
+
+    pause_rect = game._touch_control_rects()["pause"]
+    pointer_id = ("test", 5)
+    game._handle_pointer_down(pause_rect.center, pointer_id)
+    game._handle_pointer_up(pause_rect.center, pointer_id)
+    if game.state != STATE_PAUSED:
+        errors.append("Botao virtual P nao pausou a fase.")
+    _tap(game, game._pause_touch_actions()[0][1].center)
+    if game.state != STATE_PLAYING:
+        errors.append("Toque em Continuar nao voltou da pausa para a fase.")
+
+    game.state = STATE_MENU
+    _tap(game, game._menu_touch_actions()[2][1].center)
+    if game.state != STATE_LEVEL_SELECT:
+        errors.append("Toque em linha do tempo no menu nao abriu a selecao de fases.")
+    _tap(game, game._level_select_row_rects()[0][1].center)
+    if game.state != STATE_INTRO:
+        errors.append("Toque em fase liberada na linha do tempo nao abriu a introducao.")
+
+
+def _tap(game: Game, position: tuple[int, int]):
+    pointer_id = ("tap", position)
+    game._handle_pointer_down(position, pointer_id)
+    game._handle_pointer_up(position, pointer_id)
 
 
 if __name__ == "__main__":

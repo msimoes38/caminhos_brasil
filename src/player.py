@@ -33,15 +33,27 @@ class Player:
         self.jump_was_pressed = False
         self.jump_started = False
 
-    def handle_input(self, keys: pygame.key.ScancodeWrapper, dt: float):
+    def handle_input(
+        self,
+        keys: pygame.key.ScancodeWrapper,
+        dt: float,
+        touch_direction: int = 0,
+        touch_jump_held: bool = False,
+        touch_jump_pressed: bool = False,
+    ):
         self.jump_started = False
-        horizontal_direction = 0
+        horizontal_direction = touch_direction
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             horizontal_direction -= 1
             self.facing_right = False
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             horizontal_direction += 1
+            self.facing_right = True
+        horizontal_direction = max(-1, min(1, horizontal_direction))
+        if touch_direction < 0:
+            self.facing_right = False
+        elif touch_direction > 0:
             self.facing_right = True
 
         target_speed = horizontal_direction * PLAYER_SPEED
@@ -61,8 +73,9 @@ class Player:
         else:
             self.coyote_timer = max(0, self.coyote_timer - dt)
 
-        wants_to_jump = keys[pygame.K_SPACE] or keys[pygame.K_UP] or keys[pygame.K_w]
-        if wants_to_jump and not self.jump_was_pressed:
+        keyboard_jump_held = keys[pygame.K_SPACE] or keys[pygame.K_UP] or keys[pygame.K_w]
+        wants_to_jump = keyboard_jump_held or touch_jump_held
+        if (wants_to_jump and not self.jump_was_pressed) or touch_jump_pressed:
             self.jump_buffer_timer = PLAYER_JUMP_BUFFER_TIME
         self.jump_was_pressed = wants_to_jump
 

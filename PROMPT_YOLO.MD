@@ -71,6 +71,7 @@ O projeto ja possui:
 - movimento lateral, pulo, gravidade, colisao, coyote time, buffer curto de pulo, controle no ar e limite de queda;
 - camera horizontal;
 - HUD com ajuste discreto para titulos longos;
+- controles por toque para celular em modo paisagem no navegador;
 - fragmentos historicos coletaveis com brilho e flutuacao;
 - mensagens historicas com "Voce sabia?";
 - mensagens historicas fixas no topo, com painel temporariamente translucido quando Mig passa por tras;
@@ -96,6 +97,7 @@ Observacoes importantes:
 - Checkpoints e respawns nunca devem cair em areas de cuidado.
 - Fragmentos devem estar apoiados em plataformas alcancaveis pelo pulo atual.
 - A mensagem historica nao deve mudar de lugar durante o pulo. Preserve painel fixo e translucido quando necessario.
+- Os botoes virtuais de toque devem continuar grandes, visiveis e sem cobrir HUD ou mensagens historicas.
 - A abertura deve continuar usando `abertura.png` quando disponivel.
 - O sprite usado pelo jogo e `assets/images/personagem.png`.
 - O jogo deve continuar funcionando se audio ou save falharem.
@@ -211,6 +213,7 @@ Esse periodo trouxe mudancas importantes e tambem desafios para muitas pessoas. 
 - R: reiniciar fase.
 - M: voltar ao menu.
 - Esc: sair.
+- No celular: usar modo paisagem, tocar nas opcoes de menu e jogar com `<`, `>` e `Pular`.
 
 Se adicionar novo controle, documente e mantenha simples.
 
