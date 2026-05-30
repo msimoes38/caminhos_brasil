@@ -1,12 +1,18 @@
 # Caminhos do Brasil
 
-Jogo de plataforma 2D educativo sobre a historia do Brasil, feito em Python com Pygame-CE e pensado para futura publicacao web com Pygbag.
+Jogo de plataforma 2D educativo sobre a historia do Brasil, feito em Python com Pygame-CE e publicado no navegador com Pygbag e GitHub Pages.
 
 O jogador controla Mig, um menino ficticio nascido em 2018, que viaja por diferentes periodos historicos do Brasil. A proposta e ensinar historia de forma leve, visual, respeitosa e adequada para criancas.
 
 ## Estado Atual
 
-O projeto possui uma versao jogavel e mais polida para primeiro teste publico, com jornada cronologica completa, do ano de 1500 ao Brasil contemporaneo.
+O projeto possui uma versao jogavel para teste publico, com jornada cronologica completa, do ano de 1500 ao Brasil contemporaneo.
+
+Versao publicada:
+
+```text
+https://msimoes38.github.io/caminhos_brasil/
+```
 
 Principais recursos:
 
@@ -68,6 +74,14 @@ Cada fase tem:
 
 ## Como Executar
 
+No navegador:
+
+```text
+https://msimoes38.github.io/caminhos_brasil/
+```
+
+Localmente:
+
 ```powershell
 python -m venv .venv_brasil
 .\.venv_brasil\Scripts\Activate.ps1
@@ -126,6 +140,7 @@ Validacao tecnica:
 ```powershell
 python -m compileall main.py src
 .\.venv_brasil\Scripts\python.exe -m compileall main.py src
+.\.venv_brasil\Scripts\python.exe -m compileall scripts
 ```
 
 Smoke test permanente:
@@ -185,6 +200,18 @@ Teste mobile recomendado apos publicar:
 8. Pausar com `P` e voltar.
 9. Abrir a linha do tempo pelo menu.
 
+Build web local:
+
+```powershell
+.\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
+```
+
+Saida esperada:
+
+```text
+build/pygbag_app/build/web
+```
+
 ## Estrutura De Arquivos
 
 ```text
@@ -226,7 +253,7 @@ src/
 - `src/sounds.py`: gera sons simples por codigo.
 - `src/settings.py`: constantes gerais.
 - `scripts/smoke_tests.py`: validacao automatica leve.
-- `scripts/build_pygbag_clean.py`: cria uma copia minima e roda build Pygbag sem empacotar venv ou save local.
+- `scripts/build_pygbag_clean.py`: cria uma copia minima, roda build Pygbag sem empacotar venv/save local e injeta ajustes mobile no `index.html`.
 
 ## Diretriz De Conteudo
 
@@ -239,9 +266,21 @@ Como o jogo e voltado para criancas:
 - valorizar memoria, cidadania, diversidade e curiosidade;
 - manter frases curtas nos fragmentos historicos.
 
-## Publicacao Web Futura
+## Publicacao Web
 
-A entrada principal ja usa loop `async`, e o projeto evita dependencias alem de Pygame-CE e Pygbag.
+A entrada principal usa loop `async`, e o projeto evita dependencias alem de Pygame-CE e Pygbag.
+
+A publicacao ocorre via GitHub Actions em `.github/workflows/pages.yml` quando ha push na branch:
+
+```text
+yolo_melhoria
+```
+
+O workflow instala as dependencias, roda `scripts/build_pygbag_clean.py` e publica a pasta:
+
+```text
+build/pygbag_app/build/web
+```
 
 O comando direto abaixo foi testado:
 
@@ -255,34 +294,35 @@ Resultado: o comando iniciou e gerou build, mas na raiz do projeto ele tambem te
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Resultado validado: o build limpo empacotou somente 13 arquivos do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma tela de carregamento propria, que pode ser liberada por toque ou automaticamente apos alguns segundos, e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A saida fica em:
+Resultado validado: o build limpo empacota somente os arquivos necessarios do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma tela de carregamento propria, que pode ser liberada por toque ou automaticamente apos alguns segundos, e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A saida fica em:
 
 ```text
 build/pygbag_app/build/web
 ```
 
-Pontos ainda a validar antes de publicar:
+Checklist apos deploy:
 
-- abrir o `index.html` gerado em navegador real;
-- conferir se a tela inicial de carregamento aparece com mensagem no celular;
-- confirmar no celular que a tela "Ready to start !" nao fica travada;
+- abrir a URL publicada em desktop e celular;
+- conferir se a tela de carregamento aparece com mensagem e nao fica travada;
+- usar celular em modo paisagem;
+- iniciar fase, andar, pular, coletar fragmento, pausar, abrir colecao e linha do tempo;
 - testar audio no navegador;
-- avaliar armazenamento web para substituir ou complementar o save local em arquivo JSON.
+- observar o comportamento do save web, que ainda e um limite conhecido.
 
 ## Limites Conhecidos
 
 - As fases compartilham gerador simples de layout.
-- O salvamento atual e local por arquivo JSON; no navegador, pode precisar de adaptacao.
+- O salvamento atual e local por arquivo JSON; no navegador, pode precisar de adaptacao para armazenamento web.
 - A interface esta otimizada para 960x540.
 - A experiencia mobile foi pensada para celular deitado; modo retrato nao possui layout dedicado.
 - As mensagens historicas usam painel fixo e translucidez para nao disputar espaco com o pulo do Mig.
 - `src/game.py` concentra muitas responsabilidades e pode ser dividido futuramente.
-- A build Pygbag limpa passa, mas ainda falta rodada manual em navegador real.
+- A experiencia web depende do comportamento do navegador, especialmente em celular; sempre testar apos deploy.
 
 ## Proximas Melhorias Recomendadas
 
 1. Fazer teste publico curto com criancas ou familiares observando dificuldade e leitura.
-2. Testar o build Pygbag em navegador real.
-3. Adaptar `src/progress.py` para armazenamento web quando a publicacao for prioridade.
+2. Adaptar `src/progress.py` para armazenamento web quando a persistencia no navegador for prioridade.
+3. Melhorar a tela de carregamento com progresso real se o Pygbag expuser um sinal confiavel.
 4. Polir mais layouts especificos de algumas fases sem aumentar complexidade.
 5. Separar telas de `src/game.py` se o arquivo crescer mais.

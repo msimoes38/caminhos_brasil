@@ -1,18 +1,18 @@
 # PROMPT_YOLO.MD
 
-Use este prompt para pedir a outro agente de IA que continue o projeto Caminhos do Brasil em modo "yolo", com autonomia para implementar, testar, documentar e entregar os ultimos ajustes finais antes da preparacao para publicacao.
+Use este prompt para pedir a outro agente de IA que continue o projeto Caminhos do Brasil em modo "yolo", com autonomia para implementar, testar, documentar e entregar o plano de melhorias abaixo.
 
-Modo "yolo" aqui nao significa descuido. Significa agir com criterio: preservar o que funciona, fazer melhorias pequenas e coerentes, validar tecnicamente, testar o maximo possivel e deixar o projeto mais pronto para criancas e para build web.
+Modo "yolo" aqui nao significa descuido. Significa agir com criterio: preservar o que funciona, fazer melhorias pequenas e coerentes, validar tecnicamente, testar o maximo possivel e manter a versao web boa para criancas.
 
 ---
 
 ## Prompt Para O Proximo Agente
 
-Voce e um agente de IA trabalhando no projeto `Caminhos do Brasil`, um jogo de plataforma 2D educativo sobre a historia do Brasil, feito em Python com Pygame-CE e pensado para futura publicacao web com Pygbag.
+Voce e um agente de IA trabalhando no projeto `Caminhos do Brasil`, um jogo de plataforma 2D educativo sobre a historia do Brasil, feito em Python com Pygame-CE e publicado no navegador com Pygbag e GitHub Pages.
 
-Seu objetivo e fazer os ultimos ajustes finais antes da preparacao para publicacao: polir experiencia, corrigir problemas remanescentes, validar jogo local, validar build web limpo e atualizar documentacao. Nao entregue apenas proposta. Implemente, valide e documente.
+Seu objetivo e implementar melhorias incrementais para deixar o jogo mais amigavel, atraente e consistente para criancas de aproximadamente 8 anos, com foco especial na experiencia mobile publicada. Nao entregue apenas proposta: implemente, valide, atualize documentacao e deixe pronto para commit/push.
 
-Trabalhe com autonomia, mas preserve o jogo atual. Nao transforme o projeto em outro jogo.
+Trabalhe com autonomia, mas preserve o jogo atual. Nao transforme o projeto em outro jogo. O jogo esta no caminho certo; a meta e polir, nao complicar.
 
 ---
 
@@ -29,6 +29,7 @@ Antes de editar qualquer arquivo, leia:
 - todos os arquivos em `src/`
 - `scripts/smoke_tests.py`
 - `scripts/build_pygbag_clean.py`
+- `.github/workflows/pages.yml`
 
 Depois disso, inspecione tambem:
 
@@ -40,9 +41,9 @@ Preserve funcionalidades existentes que ja funcionam. Refatore apenas quando iss
 
 ---
 
-## Contexto Do Jogo
+## Contexto Do Projeto
 
-O jogo acompanha Mig, um menino ficticio nascido em 2018, que viaja por periodos historicos do Brasil.
+O jogo acompanha Mig, um menino ficticio nascido em 2018, que viaja por diferentes periodos historicos do Brasil, de 1500 ao Brasil contemporaneo.
 
 O jogo deve:
 
@@ -53,8 +54,26 @@ O jogo deve:
 - evitar descricoes fortes, violentas ou graficas;
 - nao glorificar processos historicos controversos;
 - funcionar localmente com Pygame-CE;
-- ser pensado para futura execucao no navegador com Pygbag;
+- funcionar no navegador com Pygbag e GitHub Pages;
 - priorizar clareza, estabilidade e simplicidade.
+
+URL publicada:
+
+```text
+https://msimoes38.github.io/caminhos_brasil/
+```
+
+Branch de publicacao:
+
+```text
+yolo_melhoria
+```
+
+O deploy acontece pelo workflow:
+
+```text
+.github/workflows/pages.yml
+```
 
 ---
 
@@ -63,7 +82,7 @@ O jogo deve:
 O projeto ja possui:
 
 - tela inicial usando `abertura.png`;
-- menu com `Enter` para continuar, `N` para nova sessao temporaria, `S` para linha do tempo, `C` para colecao e `H` para ajuda;
+- menu com continuar, nova sessao temporaria, linha do tempo, colecao e ajuda;
 - linha do tempo com fases bloqueadas, liberadas, proximas e concluidas;
 - progresso salvo localmente em `caminhos_brasil_save.json`;
 - nova jornada temporaria com `N`, sem apagar ou sobrescrever o save salvo;
@@ -72,6 +91,7 @@ O projeto ja possui:
 - camera horizontal;
 - HUD com ajuste discreto para titulos longos;
 - controles por toque para celular em modo paisagem no navegador;
+- botoes virtuais semitransparentes para mobile;
 - fragmentos historicos coletaveis com brilho e flutuacao;
 - mensagens historicas com "Voce sabia?";
 - mensagens historicas fixas no topo, com painel temporariamente translucido quando Mig passa por tras;
@@ -89,7 +109,8 @@ O projeto ja possui:
 - cenarios por tema desenhados em Pygame;
 - smoke tests permanentes em `scripts/smoke_tests.py`;
 - build Pygbag limpo em `scripts/build_pygbag_clean.py`;
-- documentacao atualizada em `README.md`, `AGENTS.md` e `SPEC.MD`.
+- tela HTML de carregamento no build web, com fallback por sinal do jogo, toque/click e tempo automatico;
+- deploy automatico pelo GitHub Pages.
 
 Observacoes importantes:
 
@@ -102,9 +123,111 @@ Observacoes importantes:
 - O sprite usado pelo jogo e `assets/images/personagem.png`.
 - O jogo deve continuar funcionando se audio ou save falharem.
 - `pygbag .` na raiz pode empacotar `.venv_brasil` e `caminhos_brasil_save.json`; para publicacao, prefira `scripts/build_pygbag_clean.py`.
-- Preserve `--ume_block=0` em `scripts/build_pygbag_clean.py`; ele evita que celulares fiquem presos na tela "Ready to start !" do Pygbag.
-- Preserve a tela de carregamento HTML injetada pelo build limpo para evitar tela azul vazia no celular.
+- Preserve `--ume_block=0` em `scripts/build_pygbag_clean.py`.
+- Preserve o patch contra travamento na tela "Ready to start !" do Pygbag.
+- Preserve a tela HTML de carregamento. Ela deve poder sumir por sinal do jogo, toque/click e tempo automatico.
 - A pasta `build/` e artefato gerado. Ela pode ser apagada e recriada.
+
+---
+
+## Plano De Melhorias A Implementar
+
+Implemente em ordem de prioridade. Os itens 1 e 2 sao obrigatorios e devem vir primeiro.
+
+1. **Tela inicial mobile mais amigavel**
+   - Hoje, no celular, o usuario precisa tocar onde aparece uma instrucao baseada em teclado, como "Enter".
+   - Ajuste a tela inicial/menu para detectar uso de toque e mostrar texto amigavel: "Toque para comecar" ou botoes claros.
+   - No celular, mostrar areas/botoes grandes para `Continuar`, `Nova jornada`, `Linha do tempo`, `Colecao` e `Ajuda`.
+   - No desktop, manter atalhos de teclado visiveis e funcionais.
+   - Nao remover a arte `abertura.png`.
+
+2. **Modo tela cheia no celular**
+   - Adicionar um botao discreto e claro para tentar abrir em tela cheia no celular, por exemplo `Tela cheia`.
+   - Acionar fullscreen via navegador quando possivel.
+   - Se o navegador nao permitir fullscreen, mostrar orientacao simples: "Se a barra continuar aparecendo, use Adicionar a tela inicial".
+   - Considerar tambem metadados/manifest no build web para melhorar a experiencia quando instalado/adicionado a tela inicial.
+   - A implementacao deve ser tolerante a falhas e nao pode quebrar desktop.
+
+3. **Primeiros segundos mais guiados**
+   - Na fase 1, mostrar dicas curtas e contextuais:
+     - "Use os botoes para andar."
+     - "Toque em Pular."
+     - "Pegue os fragmentos brilhantes."
+   - As dicas devem sumir depois de alguns segundos ou apos a acao correspondente.
+   - No desktop, as dicas podem mencionar teclado; no mobile, devem mencionar toque.
+
+4. **Feedback infantil mais claro**
+   - Ao coletar fragmento, mostrar feedback curto e positivo, como "Boa descoberta!".
+   - Melhorar um pouco brilho/particulas/som sem exagerar.
+   - Quando todos os fragmentos forem coletados, destacar o portal com pulso visual ou mensagem mais clara.
+
+5. **Melhorar sensacao de movimento**
+   - Avaliar pequenos ajustes de aceleracao, desaceleracao e pulo.
+   - Prioridade: Mig deve parecer responsivo para uma crianca de 8 anos.
+   - Evite mudar drasticamente a fisica ou quebrar plataformas/fragmentos.
+   - Se mudar fisica, rode smoke tests e revise alcance de fragmentos.
+
+6. **Botoes mobile mais confortaveis**
+   - Revisar tamanho, posicao e transparencia dos botoes virtuais.
+   - Eles devem continuar faceis de tocar, mas nao devem cobrir Mig, perigos ou informacoes importantes.
+   - Validar com screenshot em 960x540 e, se possivel, em navegador/celular.
+
+7. **Tela de pausa mais tocavel**
+   - Melhorar a pausa mobile com botoes grandes:
+     - `Continuar`
+     - `Reiniciar`
+     - `Menu`
+     - `Colecao`
+   - Manter atalhos de teclado existentes.
+
+8. **Colecao mais recompensadora**
+   - Destacar fragmentos recem-coletados.
+   - Melhorar texto/contador por fase, por exemplo "3/4 descobertas".
+   - Nao transformar em sistema complexo.
+
+9. **Linha do tempo mais atraente**
+   - Destacar melhor a proxima fase liberada com texto simples, como "Proxima aventura".
+   - Em fases bloqueadas, manter mensagem clara: "Complete a fase anterior para liberar".
+
+10. **Revisar dificuldade das primeiras fases**
+    - Testar fase 1 e fase 2 pensando em crianca.
+    - A fase 1 deve ensinar.
+    - A fase 2 pode desafiar um pouco mais, mas sem frustrar.
+    - Nao alongar fases.
+
+11. **Melhorar tela de carregamento web**
+    - Manter a tela atual, mas deixa-la mais alinhada ao jogo:
+      - titulo;
+      - dica curta;
+      - orientacao paisagem;
+      - mensagem como "Preparando a viagem no tempo...".
+    - Ela nunca pode bloquear o jogo indefinidamente.
+
+12. **Melhorar publicacao online**
+    - Ajustar titulo da aba, icone, descricao e manifest basico quando fizer sentido.
+    - O alvo e parecer mais "app" quando aberto/adicionado no celular.
+    - Nao adicionar dependencias.
+
+13. **Save web**
+    - Avaliar adaptar `src/progress.py` para armazenamento web.
+    - Se implementar, preservar save local em desktop e tolerancia a falhas.
+    - Se nao implementar agora, documentar claramente como limite conhecido.
+
+14. **Checklist final de publicacao**
+    - Atualizar README/SPEC com checklist curto:
+      - desktop;
+      - celular paisagem;
+      - tela cheia;
+      - iniciar fase;
+      - andar;
+      - pular;
+      - coletar;
+      - pausar;
+      - colecao;
+      - linha do tempo;
+      - recarregar pagina.
+
+Se o tempo/escopo ficar grande, implemente pelo menos os itens 1, 2, 3, 6, 11, 12 e 14. Nao sacrifique estabilidade para tentar fazer todos.
 
 ---
 
@@ -129,56 +252,7 @@ O jogo possui as 16 fases:
 15. `1985 a 1988 - Redemocratizacao`
 16. `1988 ate hoje - Brasil contemporaneo`
 
-Nao e prioridade adicionar fases. A prioridade e polir, validar e preparar a versao existente.
-
----
-
-## Prioridades Para Os Ajustes Finais
-
-Siga esta ordem:
-
-1. Estabilidade.
-2. Jogabilidade justa.
-3. Legibilidade e conforto visual.
-4. Experiencia infantil acolhedora.
-5. Validacao das fases e do save.
-6. Validacao Pygbag.
-7. Documentacao final.
-
-Se houver conflito entre polimento e estabilidade, escolha estabilidade.
-
----
-
-## Ajustes Finais Que Voce Deve Avaliar
-
-Nao implemente tudo automaticamente se nao houver necessidade. Avalie o jogo atual, corrija o que estiver ruim e mantenha o escopo pequeno.
-
-Prioridades provaveis:
-
-- Rodar o jogo local e observar se menus, HUD, colecao, linha do tempo, ajuda e final estao legiveis em 960x540.
-- Conferir se as mensagens historicas fixas e translucidas nao atrapalham o pulo.
-- Testar fase 1, fase 2, uma fase intermediaria e fase 16.
-- Conferir se fragmentos continuam alcancaveis.
-- Conferir se checkpoints e respawns continuam seguros.
-- Melhorar pequenos detalhes visuais somente se estiverem claramente atrapalhando leitura ou prazer de jogar.
-- Conferir se a colecao com muitos fragmentos continua legivel e rolavel.
-- Conferir se linha do tempo destaca bem a proxima fase.
-- Conferir se a tela final resume bem a jornada e a colecao.
-- Conferir se a nova sessao temporaria com `N` continua sem gravar no save.
-- Conferir se falha de audio ou save nao quebra o jogo.
-- Rodar build Pygbag limpo e, se possivel, abrir em navegador real.
-- Atualizar README, SPEC e AGENTS se qualquer comportamento mudar.
-
-Evite:
-
-- adicionar inimigos;
-- adicionar combate;
-- adicionar fisica complexa;
-- adicionar dependencias novas;
-- alongar fases;
-- refatorar por vaidade;
-- mexer em conteudo historico sensivel sem necessidade;
-- reposicionar dinamicamente a mensagem historica durante o pulo.
+Nao adicione novas fases nesta rodada, a menos que o usuario peca explicitamente.
 
 ---
 
@@ -224,7 +298,7 @@ Se adicionar novo controle, documente e mantenha simples.
 ## Arquivos Importantes
 
 - `main.py`: ponto de entrada com loop `async`, importante para Pygbag.
-- `src/game.py`: estados, telas, HUD, efeitos, colecao, linha do tempo, fluxo e progresso.
+- `src/game.py`: estados, telas, HUD, efeitos, colecao, linha do tempo, fluxo, toque e progresso.
 - `src/player.py`: movimento, colisao, coyote time, buffer de pulo e animacao.
 - `src/level_data.py`: dados das 16 fases e geracao simples de layout.
 - `src/levels.py`: conversao dos dados das fases em objetos usados pelo Pygame.
@@ -233,28 +307,12 @@ Se adicionar novo controle, documente e mantenha simples.
 - `src/sounds.py`: sons simples gerados por codigo, com fallback silencioso.
 - `src/settings.py`: constantes gerais.
 - `scripts/smoke_tests.py`: validacao automatica leve.
-- `scripts/build_pygbag_clean.py`: build web limpo sem empacotar venv ou save local.
+- `scripts/build_pygbag_clean.py`: build web limpo, patch mobile, tela de carregamento e ajustes do `index.html`.
+- `.github/workflows/pages.yml`: deploy GitHub Pages.
 - `README.md`: como executar, jogar, testar e publicar.
 - `SPEC.MD`: especificacao tecnica para continuidade.
 - `AGENTS.md`: regras para agentes de IA.
-- `PROMPT_YOLO.MD`: prompt para futuras rodadas autonomas.
-
----
-
-## Regras De Salvamento
-
-Preserve:
-
-- save local em `caminhos_brasil_save.json`;
-- fallback quando leitura/escrita falhar;
-- `N` inicia nova jornada temporaria sem apagar nem sobrescrever o progresso salvo;
-- progresso salvo com fases liberadas, fases concluidas e colecao.
-
-Para web:
-
-- avaliar se `src/progress.py` precisa adaptacao;
-- se nao for possivel implementar armazenamento web agora, documentar claramente;
-- nao deixe falha de save impedir gameplay.
+- `PROMPT_YOLO.MD`: este prompt.
 
 ---
 
@@ -266,7 +324,8 @@ O projeto deve continuar pronto para Pygbag:
 - assets devem usar caminhos relativos;
 - dependencias devem permanecer minimas;
 - audio deve falhar de forma segura;
-- save nao pode impedir gameplay.
+- save nao pode impedir gameplay;
+- build web deve continuar usando `scripts/build_pygbag_clean.py`.
 
 Nao use `pygbag .` como unica validacao se `.venv_brasil` ou `caminhos_brasil_save.json` estiverem na raiz. Use:
 
@@ -280,20 +339,11 @@ Saida esperada:
 build/pygbag_app/build/web
 ```
 
-O build limpo deve iniciar no celular com mensagem de carregamento, sem ficar travado em "Ready to start !".
+Depois de publicar, teste com query string para evitar cache, por exemplo:
 
-Se possivel, abra o `index.html` gerado em navegador real e teste:
-
-- abertura;
-- sprite do Mig;
-- audio;
-- primeira fase;
-- colecao;
-- linha do tempo;
-- save/fallback;
-- tela final.
-
-Se nao for possivel testar navegador real, documente a pendencia.
+```text
+https://msimoes38.github.io/caminhos_brasil/?v=6
+```
 
 ---
 
@@ -324,28 +374,19 @@ Se o Python global nao tiver `pygame-ce`, use:
 .\.venv_brasil\Scripts\python.exe scripts\smoke_tests.py
 ```
 
-O smoke test deve conferir:
+Ao alterar build web, rode:
 
-- existem 16 fases;
-- cada fase tem fragmentos;
-- cada fase tem checkpoint;
-- cada fase tem area de cuidado;
-- checkpoints nao colidem com areas de cuidado;
-- respawns nao caem em areas de cuidado;
-- fragmentos ficam em plataformas alcancaveis por criterio conservador;
-- `Game` inicializa em modo dummy;
-- menu carrega `abertura.png`;
-- sprite do Mig carrega;
-- fluxo basico de menu, nova sessao, colecao, checkpoint, area de cuidado, conclusao e final passa sem alterar save;
-- mensagem historica fica em posicao estavel e usa translucidez quando Mig passa por tras.
+```powershell
+.\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
+```
 
-Se alterar UI, renderize/abra o jogo e confira visualmente.
+Se alterar UI, renderize ou abra o jogo e confira visualmente. Se possivel, gere screenshots em SDL dummy para registrar a aparencia.
 
 ---
 
 ## Testes Manuais Recomendados
 
-Teste manual minimo:
+Teste local minimo:
 
 1. Abrir o jogo.
 2. Confirmar `abertura.png` na tela inicial.
@@ -365,11 +406,23 @@ Teste manual minimo:
 16. Concluir fase.
 17. Confirmar desbloqueio da fase seguinte.
 18. Abrir linha do tempo com `S`.
-19. Testar fase 2 com todos os fragmentos.
-20. Testar uma fase intermediaria.
-21. Testar fase 16.
-22. Ver tela final.
-23. Fechar e abrir novamente para conferir save.
+19. Testar fase 2.
+
+Teste mobile web minimo:
+
+1. Abrir a URL publicada no celular em modo paisagem.
+2. Confirmar tela de carregamento.
+3. Testar botao/fluxo de tela cheia.
+4. Confirmar que o menu mobile diz para tocar, nao apenas apertar Enter.
+5. Tocar em continuar.
+6. Tocar na introducao para iniciar.
+7. Andar com `<` e `>`.
+8. Pular com `Pular`.
+9. Coletar fragmento.
+10. Abrir colecao.
+11. Pausar e continuar.
+12. Voltar ao menu.
+13. Abrir linha do tempo.
 
 Se nao for possivel testar tudo, documente exatamente o que foi testado e o que ficou pendente.
 
@@ -391,7 +444,7 @@ README deve conter:
 - estado atual;
 - fases implementadas;
 - como testar;
-- observacoes sobre Pygbag;
+- observacoes sobre Pygbag/GitHub Pages;
 - limites conhecidos.
 
 SPEC deve conter:
@@ -401,6 +454,7 @@ SPEC deve conter:
 - modelo de dados;
 - assets;
 - salvamento;
+- build e deploy;
 - como adicionar fase;
 - limites conhecidos;
 - testes recomendados.
@@ -420,7 +474,11 @@ Ao final, o jogo deve:
 
 - abrir sem erro com `python main.py` ou com a venv local;
 - manter a tela inicial com `abertura.png`;
-- permitir continuar jornada salva com `Enter`;
+- ter tela inicial mobile amigavel, com convite claro para tocar;
+- oferecer tentativa de tela cheia no celular sem quebrar desktop;
+- manter controles de teclado existentes;
+- manter controles de toque existentes;
+- permitir continuar jornada salva;
 - permitir nova jornada temporaria com `N`;
 - permitir jogar do menu ate a tela final;
 - manter 16 fases historicas;
@@ -429,7 +487,6 @@ Ao final, o jogo deve:
 - manter colecao historica funcional;
 - manter pausa funcional;
 - manter ajuda rapida com `H`;
-- manter controles documentados;
 - manter linguagem adequada para criancas;
 - nao quebrar animacao do Mig;
 - nao quebrar coleta;
@@ -437,12 +494,11 @@ Ao final, o jogo deve:
 - nao quebrar camera;
 - nao deixar respawn em area de cuidado;
 - nao deixar fragmentos inalcancaveis;
-- manter mensagens historicas fixas e translucidas quando Mig passar por tras;
+- manter mensagens historicas fixas e translucidas quando Mig passa por tras;
 - passar em `python -m compileall main.py src`;
 - passar no smoke test na venv local;
-- ter README, SPEC e AGENTS atualizados se houver mudancas;
-- ter build Pygbag limpo testado ou pendencia documentada;
-- estar pronto para primeiro teste com usuario final.
+- gerar build Pygbag limpo;
+- ter documentacao atualizada.
 
 ---
 
@@ -450,15 +506,14 @@ Ao final, o jogo deve:
 
 Ao concluir, responda ao usuario com:
 
-- resumo do jogo entregue;
-- principais melhorias implementadas;
+- resumo das melhorias implementadas;
 - arquivos alterados;
 - como executar;
 - como testar;
 - validacoes executadas;
-- resultado do teste Pygbag ou pendencia;
-- limites conhecidos;
-- proximas melhorias opcionais.
+- resultado do build Pygbag;
+- pendencias ou limites conhecidos;
+- comandos sugeridos de commit/push.
 
 Se algo nao foi testado, diga claramente.
 

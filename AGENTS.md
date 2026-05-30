@@ -13,7 +13,7 @@ O jogo acompanha Mig, um menino ficticio nascido em 2018, que viaja por diferent
 - Genero: plataforma 2D.
 - Linguagem: Python.
 - Biblioteca principal: Pygame-CE.
-- Publicacao futura desejada: navegador, usando Pygbag.
+- Publicacao: navegador via Pygbag, com deploy no GitHub Pages.
 - Publico: criancas, com referencia principal em torno de 8 anos.
 - Tom: educativo, acolhedor, simples e respeitoso.
 
@@ -101,12 +101,15 @@ O jogo ja possui:
 - Cenarios desenhados por codigo.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
 - Build Pygbag limpo em `scripts/build_pygbag_clean.py`.
+- Deploy automatico no GitHub Pages pela branch `yolo_melhoria`.
+- Tela HTML de carregamento para a versao web, com fallback por toque e tempo.
 
 ## Arquivos Importantes
 
 - `README.md`: explicacao para executar, jogar e testar.
-- `SPEC.MD`: especificacao tecnica e funcional para continuidade do projeto.
+- `SPEC.MD`: especificacao tecnica e funcional atualizada para continuidade do projeto.
 - `AGENTS.md`: instrucoes de trabalho para agentes de IA.
+- `PROMPT_YOLO.MD`: prompt longo para rodadas autonomas futuras, quando o usuario pedir esse modo.
 - `main.py`: ponto de entrada compativel com Pygbag.
 - `requirements.txt`: dependencias do projeto.
 - `abertura.png`: imagem principal da tela inicial.
@@ -120,7 +123,8 @@ O jogo ja possui:
 - `src/sounds.py`: sons simples gerados por codigo.
 - `src/settings.py`: constantes gerais.
 - `scripts/smoke_tests.py`: validacao automatica leve de fases, assets e fluxo basico.
-- `scripts/build_pygbag_clean.py`: gera build web a partir de copia minima, sem empacotar venv ou save local.
+- `scripts/build_pygbag_clean.py`: gera build web a partir de copia minima, sem empacotar venv ou save local, e injeta ajustes mobile no `index.html`.
+- `.github/workflows/pages.yml`: build e deploy para GitHub Pages quando houver push em `yolo_melhoria`.
 
 ## Fluxo Recomendado De Trabalho
 
@@ -149,7 +153,8 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 
 7. Se a mudanca tocar jogabilidade, testar manualmente a fase afetada.
 8. Se a mudanca tocar menu, imagens ou telas, renderizar/abrir o jogo e conferir visualmente.
-9. Atualizar `README.md`, `SPEC.MD` ou `AGENTS.md` quando a mudanca afetar comportamento, arquitetura ou processo.
+9. Atualizar `README.md`, `SPEC.MD` ou `AGENTS.md` quando a mudanca afetar comportamento, arquitetura, publicacao ou processo.
+10. Atualizar `PROMPT_YOLO.MD` quando o estado geral do projeto ou as prioridades de agentes mudarem.
 
 ## Pontos De Atencao Recentes
 
@@ -165,6 +170,8 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 - `pygbag .` na raiz pode empacotar `.venv_brasil` e `caminhos_brasil_save.json`; para build web, prefira `scripts/build_pygbag_clean.py`.
 - A tela "Ready to start !" do Pygbag pode travar em celular; o build limpo usa `--ume_block=0` e nao deve perder esse ajuste.
 - A tela azul vazia do template Pygbag deve continuar substituida pela tela de carregamento do projeto.
+- A tela de carregamento web deve sempre ter saida por sinal do jogo, toque/click e tempo automatico, para nunca bloquear o menu.
+- A URL publicada e `https://msimoes38.github.io/caminhos_brasil/`; use query string como `?v=5` para evitar cache em testes.
 
 ## Testes Recomendados
 
@@ -172,6 +179,8 @@ Validacao tecnica:
 
 ```powershell
 python -m compileall main.py src
+.\.venv_brasil\Scripts\python.exe -m compileall main.py src
+.\.venv_brasil\Scripts\python.exe -m compileall scripts
 python scripts\smoke_tests.py
 ```
 

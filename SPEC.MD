@@ -2,69 +2,88 @@
 
 Especificacao tecnica e funcional do projeto Caminhos do Brasil.
 
-Este documento existe para que outro agente de IA, ou outro desenvolvedor, consiga continuar o projeto sem reconstruir o contexto da conversa.
+Este documento e a fonte de continuidade para outro agente de IA ou desenvolvedor trabalhar no projeto sem depender do historico da conversa.
 
 ## 1. Visao Geral
 
 Caminhos do Brasil e um jogo de plataforma 2D educativo sobre a historia do Brasil.
 
-O personagem principal e Mig, um menino ficticio nascido em 2018. Ele viaja por diferentes periodos historicos, de 1500 ao Brasil contemporaneo, coletando fragmentos historicos e avancando por uma linha do tempo.
+O jogador controla Mig, um menino ficticio nascido em 2018, que viaja por diferentes periodos historicos, de 1500 ao Brasil contemporaneo. O jogo combina plataforma simples, fragmentos historicos coletaveis, linha do tempo e colecao.
 
-O jogo deve ser:
+Objetivos do produto:
 
-- leve;
-- infantil;
-- educativo;
-- respeitoso;
-- simples de executar;
-- preparado para futura publicacao web com Pygbag.
+- ensinar historia de forma leve e respeitosa;
+- ser adequado para criancas, com referencia principal por volta de 8 anos;
+- funcionar localmente com Python e Pygame-CE;
+- funcionar no navegador via Pygbag e GitHub Pages;
+- manter codigo simples, modular o suficiente e facil de continuar.
+
+URL publicada:
+
+```text
+https://msimoes38.github.io/caminhos_brasil/
+```
+
+Branch de publicacao:
+
+```text
+yolo_melhoria
+```
 
 ## 2. Estado Atual Do Produto
 
-A versao atual esta pronta para um primeiro teste publico local. Ela possui:
+A versao atual esta jogavel e publicada para teste publico. Ela possui:
 
 - tela inicial com `abertura.png`;
 - menu com continuar, nova sessao temporaria, linha do tempo, colecao e ajuda;
 - 16 fases historicas em ordem cronologica;
-- movimento lateral, colisao, gravidade, coyote time e buffer curto de pulo;
+- introducao narrativa por fase;
+- movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo;
 - camera horizontal;
-- HUD com ajuste discreto de fonte para titulos longos;
-- controles por toque para celular em modo paisagem no navegador;
+- HUD com ajuste discreto para titulos longos;
+- controles por teclado, mouse e toque;
+- interface mobile em modo paisagem com botoes virtuais semitransparentes;
 - fragmentos historicos coletaveis;
 - mensagens historicas fixas no topo, com translucidez quando Mig passa por tras;
-- checkpoints seguros;
+- checkpoints seguros e respawn;
 - areas de cuidado;
 - portal final bloqueado ate todos os fragmentos da fase serem coletados;
 - feedback visual para fragmento, checkpoint, cuidado, portal e conclusao;
-- colecao em formato de album;
-- linha do tempo com destaque de fase concluida/proxima;
+- colecao historica em formato de album;
+- linha do tempo com fases liberadas, bloqueadas, proximas e concluidas;
+- tela de pausa;
+- tela final com resumo da jornada;
 - sons simples gerados por codigo;
 - save local tolerante a falhas;
 - smoke tests permanentes;
-- build Pygbag limpo validado por script.
+- build Pygbag limpo e deploy via GitHub Pages.
 
 ## 3. Tecnologias
 
-Dependencias:
+Dependencias fixadas em `requirements.txt`:
 
 ```text
 pygame-ce==2.5.7
 pygbag==0.9.2
 ```
 
-Arquitetura base:
+Base tecnica:
 
-- Python como linguagem principal.
+- Python.
 - Pygame-CE para execucao local.
-- Pygbag como alvo futuro de publicacao web.
-- Dados das fases mantidos em Python em `src/level_data.py`.
+- Pygbag para execucao web.
+- GitHub Actions e GitHub Pages para publicacao.
+- Dados das fases em Python, principalmente `src/level_data.py`.
 - Cenarios desenhados por codigo em `src/backgrounds.py`.
-- Sons simples gerados por codigo em `src/sounds.py`.
+- Sons gerados por codigo em `src/sounds.py`.
 - Sem dependencias novas alem de Pygame-CE e Pygbag.
 
 ## 4. Estrutura De Arquivos
 
 ```text
+.github/
+  workflows/
+    pages.yml
 main.py
 requirements.txt
 README.md
@@ -89,9 +108,21 @@ src/
   progress.py
   settings.py
   sounds.py
+build/                           # artefato gerado, nao e fonte
 ```
 
-## 5. Arquivos Principais
+## 5. Documentos Para Agentes De IA
+
+Arquivos de continuidade:
+
+- `README.md`: visao para usuario/desenvolvedor, execucao, controles, testes e publicacao.
+- `AGENTS.md`: regras obrigatorias para agentes de IA que forem trabalhar no projeto.
+- `SPEC.MD`: especificacao tecnica e funcional atualizada.
+- `PROMPT_YOLO.MD`: prompt longo para rodadas autonomas futuras, quando o usuario quiser pedir uma revisao/polimento maior.
+
+Regra: sempre atualize `README.md`, `AGENTS.md` e `SPEC.MD` quando mudar comportamento, arquitetura, publicacao, controles ou processo de teste. Atualize `PROMPT_YOLO.MD` quando o estado geral do projeto ou as prioridades de agentes mudarem.
+
+## 6. Arquivos Principais
 
 ### `main.py`
 
@@ -99,9 +130,9 @@ Ponto de entrada.
 
 Requisito importante:
 
-- Deve manter loop `async` para facilitar compatibilidade com Pygbag.
+- manter loop `async` para compatibilidade com Pygbag.
 
-Fluxo atual:
+Fluxo:
 
 ```python
 game = Game()
@@ -110,54 +141,45 @@ await game.run()
 
 ### `src/game.py`
 
-Controla:
+Arquivo central do jogo.
 
-- inicializacao do Pygame;
-- loop principal;
-- eventos de teclado, mouse e toque;
-- estados do jogo;
-- menu;
-- ajuda rapida;
-- abertura com `abertura.png`;
-- linha do tempo;
-- introducao de fase;
-- gameplay;
-- pausa;
-- conclusao de fase;
-- tela final;
-- colecao historica;
-- HUD;
-- botoes virtuais de toque;
-- camera;
-- efeitos visuais leves;
-- mensagens historicas e feedbacks curtos no topo da tela;
-- coleta de fragmentos;
-- checkpoints;
-- areas de cuidado;
-- salvamento de progresso.
+Responsabilidades:
 
-O arquivo esta funcional, mas grande. Separar telas em `screens.py` ou `ui.py` pode ser uma melhoria futura, nao uma urgencia.
+- inicializar Pygame;
+- manter o loop principal;
+- tratar eventos de teclado, mouse e toque;
+- converter eventos `FINGER*` para coordenadas 960x540;
+- ignorar eventos de mouse gerados por toque quando apropriado;
+- controlar estados do jogo;
+- desenhar menu, ajuda, linha do tempo, colecao, fase, pausa, conclusao e final;
+- gerenciar progresso, colecao e salvamento;
+- desenhar HUD, mensagens historicas e botoes virtuais;
+- acionar efeitos visuais e sons;
+- coletar fragmentos;
+- ativar checkpoints;
+- reiniciar tentativa ao tocar em areas de cuidado;
+- esconder a tela HTML de carregamento web pelo metodo `_hide_web_loading_overlay()`.
+
+O arquivo esta funcional, mas grande. Separar telas em modulos como `screens.py` ou `ui.py` pode ser melhoria futura, sem urgencia.
 
 ### `src/player.py`
 
 Controla Mig:
 
-- movimento horizontal;
-- direcao e pulo vindos do teclado ou dos botoes virtuais;
-- aceleracao e desaceleracao simples;
+- movimento horizontal por teclado e toque;
+- pulo por teclado e toque;
+- pulo recem-tocado para preservar toques rapidos;
+- aceleracao/desaceleracao;
 - controle no ar;
-- pulo;
 - coyote time;
-- buffer curto de pulo;
-- limite de velocidade de queda;
+- jump buffer;
 - gravidade;
+- limite de queda;
 - colisao horizontal e vertical;
-- limites do mundo;
-- estado `on_ground`;
-- animacao com folha de sprites;
-- fallback visual caso o sprite nao carregue.
+- animacao por folha de sprites;
+- fallback desenhado por Pygame se o sprite falhar.
 
-O sprite usado durante o jogo fica em:
+Sprite usado:
 
 ```text
 assets/images/personagem.png
@@ -169,21 +191,21 @@ Contem:
 
 - dataclasses `FragmentData` e `LevelData`;
 - constantes de chao;
-- geradores simples de plataformas, perigos, checkpoints e fragmentos;
+- geradores simples de plataformas, fragmentos, areas de cuidado e checkpoints;
 - lista `LEVELS` com 16 fases.
 
-Observacoes importantes:
+Regras criticas:
 
-- O layout das fases usa um gerador comum.
-- Fragmentos devem permanecer alcancaveis pelo pulo atual.
-- Checkpoints e respawns nao devem ficar sobre areas de cuidado.
-- A fase 2 ja exigiu cuidado especial com checkpoints e fragmentos.
+- fragmentos devem permanecer em plataformas alcancaveis;
+- checkpoints nao podem colidir com areas de cuidado;
+- respawn de checkpoint nao pode cair em area de cuidado;
+- fase 2 ja exigiu cuidado especial com checkpoint e fragmentos.
 
 ### `src/levels.py`
 
-Converte dados crus em objetos usados pelo Pygame.
+Converte os dados crus de `src/level_data.py` para objetos usados pelo Pygame.
 
-Funcoes uteis:
+Funcoes publicas:
 
 - `get_level_count()`
 - `get_level_title(index)`
@@ -222,7 +244,7 @@ Salva e carrega progresso local em:
 caminhos_brasil_save.json
 ```
 
-Campos salvos:
+Campos:
 
 - `highest_unlocked_level`
 - `completed_levels`
@@ -230,14 +252,15 @@ Campos salvos:
 
 Requisitos:
 
-- Falha de leitura nao pode quebrar o jogo.
-- Falha de escrita nao pode quebrar o jogo.
-- A sessao temporaria iniciada com `N` nao deve sobrescrever o save.
-- Para web, este modulo e o ponto principal de adaptacao.
+- falha de leitura nao pode quebrar o jogo;
+- falha de escrita nao pode quebrar o jogo;
+- save corrompido deve voltar para progresso vazio;
+- sessao temporaria iniciada com `N` nao deve sobrescrever o save;
+- adaptacao de armazenamento web deve acontecer aqui quando for prioridade.
 
 ### `src/sounds.py`
 
-Gera sons por codigo, sem depender de arquivos de audio.
+Gera sons simples por codigo.
 
 Eventos com som:
 
@@ -251,51 +274,71 @@ Eventos com som:
 - acao bloqueada;
 - retorno por area de cuidado.
 
-Se o mixer falhar, o jogo deve continuar sem audio.
+Se mixer/audio falhar, o jogo segue em silencio.
 
 ### `src/settings.py`
 
-Define constantes:
+Define:
 
-- tamanho da tela;
+- resolucao 960x540;
 - FPS;
 - cores;
 - fisica;
-- coyote time;
-- buffer de pulo;
+- tempos de coyote/jump buffer;
 - caminho do sprite;
-- retangulos da folha de sprites.
+- recortes da folha de sprites.
 
 ### `scripts/smoke_tests.py`
 
-Valida regras basicas sem abrir janela real:
+Teste automatizado leve em SDL dummy.
 
-- quantidade de fases;
-- presenca de fragmentos, checkpoints e areas de cuidado;
-- inicio, checkpoints e respawns fora de areas de cuidado;
-- fragmentos apoiados em plataformas proximas e alcancaveis por criterio conservador;
-- `Game` inicializa em SDL dummy;
-- abertura e sprite carregam;
-- fluxo basico de menu, nova sessao, colecao, checkpoint, cuidado, conclusao e final;
-- comportamento do painel de mensagem historica: posicao estavel e translucidez quando Mig cruza sua area.
+Valida:
+
+- existem 16 fases;
+- cada fase tem fragmentos, checkpoint e area de cuidado;
+- inicio, checkpoints e respawns nao caem em areas de cuidado;
+- fragmentos ficam em plataformas proximas e alcancaveis por criterio conservador;
+- `Game` inicializa;
+- `abertura.png` carrega;
+- sprite do Mig carrega;
+- fluxo basico de menu, nova sessao, checkpoint, cuidado, conclusao e final;
+- fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa e linha do tempo;
+- mensagem historica fica fixa e fica translucida quando Mig passa por tras;
+- teste nao altera o save local.
 
 ### `scripts/build_pygbag_clean.py`
 
-Prepara uma copia minima em `build/pygbag_app` e executa:
+Cria uma copia minima em:
+
+```text
+build/pygbag_app
+```
+
+Depois executa:
 
 ```powershell
 python -m pygbag --ume_block=0 --build build/pygbag_app
 ```
 
-Motivo: `pygbag .` na raiz pode empacotar `.venv_brasil` e o save local quando esses arquivos existem dentro do projeto.
+Motivos para usar este script:
 
-O `--ume_block=0` evita que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. O script ainda mantem um fallback para ajustar o `index.html` caso uma versao futura do Pygbag volte a gerar esse bloqueio.
+- evita empacotar `.venv_brasil`;
+- evita empacotar `caminhos_brasil_save.json`;
+- empacota apenas os arquivos necessarios;
+- aplica patch no `index.html` gerado para celular;
+- preserva `--ume_block=0`, evitando travamento em "Ready to start !";
+- injeta tela HTML de carregamento do projeto;
+- a tela de carregamento some quando o jogo chama `window.caminhosHideLoading`, por toque/click ou automaticamente apos alguns segundos.
 
-O script tambem injeta uma tela HTML leve de carregamento. Ela substitui a tela azul vazia do template padrao do Pygbag e e escondida pelo jogo depois que o primeiro quadro real e desenhado. Como fallback, tambem some por toque/click ou automaticamente apos alguns segundos.
+Saida:
 
-## 6. Estados Do Jogo
+```text
+build/pygbag_app/build/web
+```
 
-Estados definidos em `src/game.py`:
+## 7. Estados Do Jogo
+
+Estados em `src/game.py`:
 
 - `menu`
 - `level_select`
@@ -318,13 +361,15 @@ Fluxos auxiliares:
 
 ```text
 menu -> level_select -> intro
+menu -> collection -> menu
+menu -> help -> menu
 playing -> paused -> playing
-telas relevantes -> collection -> estado anterior
-telas relevantes -> help -> estado anterior
+playing -> collection -> playing
+playing -> help -> playing
 menu -> nova sessao temporaria -> intro da fase 1
 ```
 
-## 7. Controles
+## 8. Controles
 
 Teclado:
 
@@ -340,15 +385,17 @@ Teclado:
 - M: voltar ao menu.
 - Esc: sair.
 
-Toque em celular ou tela touch:
+Toque:
 
-- Usar o aparelho deitado, em modo paisagem.
-- Tocar nas opcoes do menu para continuar, nova sessao, linha do tempo, colecao e ajuda.
-- Durante a fase, usar os botoes virtuais `<`, `>` e `Pular`.
-- Tocar em `P` para pausar e em `C` para abrir a colecao.
-- Na linha do tempo e na colecao, tocar nas opcoes ou arrastar para rolar.
+- aparelho em modo paisagem;
+- menu com areas tocaveis;
+- intro/conclusao/final avancam por toque no painel;
+- botoes virtuais `<`, `>` e `Pular` durante a fase;
+- botoes virtuais `P` e `C` durante a fase;
+- linha do tempo aceita toque em fases e arraste vertical;
+- colecao aceita arraste vertical e botao Voltar.
 
-## 8. Fases Implementadas
+## 9. Fases
 
 1. `1500 - Chegada dos portugueses` (`coast`)
 2. `Seculo XVI - Ciclo do acucar` (`sugar`)
@@ -367,9 +414,20 @@ Toque em celular ou tela touch:
 15. `1985 a 1988 - Redemocratizacao` (`redemocratization`)
 16. `1988 ate hoje - Brasil contemporaneo` (`contemporary`)
 
-## 9. Modelo De Dados Da Fase
+Cada fase deve ter:
 
-Cada fase usa `LevelData`:
+- introducao curta;
+- missao;
+- nota historica de conclusao;
+- pergunta de reflexao;
+- pelo menos 3 fragmentos;
+- pelo menos 1 checkpoint;
+- pelo menos 1 area de cuidado;
+- portal final.
+
+## 10. Modelo De Dados
+
+`LevelData`:
 
 ```text
 title
@@ -387,32 +445,27 @@ hazards
 checkpoints
 ```
 
-Cada fragmento usa `FragmentData`:
+`FragmentData`:
 
 ```text
 area
 info
 ```
 
-Regras esperadas:
+`Level` em `src/levels.py` converte tuplas para `pygame.Rect`.
 
-- Cada fase deve ter pelo menos 3 fragmentos.
-- Cada fase deve ter pelo menos 1 checkpoint.
-- Cada fase deve ter pelo menos 1 area de cuidado.
-- O objetivo final so deve concluir a fase apos todos os fragmentos serem coletados.
-- O smoke test deve continuar passando quando layouts mudarem.
-
-## 10. Conteudo Historico
+## 11. Conteudo Historico
 
 Diretrizes obrigatorias:
 
-- Linguagem simples.
-- Frases curtas.
-- Tom acolhedor.
-- Sem descricoes graficas.
-- Sem glorificar processos violentos ou controversos.
-- Tratar temas sensiveis com cuidado e respeito.
-- Valorizar povos indigenas, pessoas escravizadas, cidadania, diversidade e memoria.
+- linguagem simples;
+- frases curtas;
+- tom acolhedor;
+- sem descricoes graficas;
+- sem glorificar processos violentos ou controversos;
+- tratar temas sensiveis com respeito;
+- valorizar povos indigenas, pessoas escravizadas, cidadania, diversidade e memoria;
+- manter perspectiva educativa, nao panfletaria.
 
 Formula segura para temas sensiveis:
 
@@ -420,52 +473,18 @@ Formula segura para temas sensiveis:
 Esse periodo trouxe mudancas importantes e tambem desafios para muitas pessoas. E um tema que deve ser estudado com cuidado e respeito.
 ```
 
-Na interface, os fragmentos aparecem como mensagens curtas com "Voce sabia?". O texto salvo na colecao continua sendo o texto historico limpo, sem prefixo extra.
-
-## 11. Feedback Visual E Motivacao
-
-Elementos atuais:
-
-- fragmentos brilham e flutuam levemente;
-- titulos longos no HUD usam fonte um pouco menor para caber no painel;
-- coleta gera pequenas particulas;
-- mensagens historicas aparecem em painel fixo no topo; o painel fica translucido quando Mig passa por tras, evitando saltos de layout;
-- checkpoint tem bandeira com movimento e efeito ao ativar;
-- areas de cuidado mostram padrao listrado e avisos triangulares;
-- portal muda de bloqueado para liberado;
-- tocar no portal sem todos os fragmentos mostra mensagem curta;
-- conclusao de fase mostra medalha, nota historica e pergunta;
-- linha do tempo destaca fase concluida e proxima fase;
-- tela final mostra fases concluidas e total de fragmentos.
-
-## 12. Abertura E Assets
-
-Tela inicial:
-
-- Usa `abertura.png` em tela cheia.
-- Se a imagem nao carregar, o jogo usa fallback desenhado em Pygame.
-- O painel de menu e translucido, para nao cobrir totalmente a arte principal.
-
-Assets atuais:
-
-- `abertura.png`: imagem principal do menu.
-- `assets/images/personagem.png`: sprite animado do Mig durante o jogo.
-
-Observacao:
-
-- Existe tambem `personagem.png` na raiz do projeto em alguns ambientes. O sprite usado pelo jogo e `assets/images/personagem.png`.
-
-## 13. Salvamento
+## 12. Salvamento
 
 Comportamento atual:
 
-- Ao abrir o jogo, `ProgressStore.load()` tenta carregar `caminhos_brasil_save.json`.
-- `Enter` no menu continua a jornada salva.
-- `N` no menu inicia nova jornada temporaria.
-- Na nova jornada temporaria, `Game._save_progress()` nao grava em disco.
-- Coletar fragmentos e concluir fases salva progresso apenas fora da sessao temporaria.
+- `ProgressStore.load()` tenta carregar `caminhos_brasil_save.json`;
+- se falhar, retorna progresso vazio;
+- `Enter` no menu continua a jornada salva;
+- `N` no menu cria nova jornada temporaria;
+- em nova jornada temporaria, `_save_progress()` nao grava em disco;
+- coletar fragmentos e concluir fases grava progresso apenas fora da sessao temporaria.
 
-Formato do save:
+Formato:
 
 ```json
 {
@@ -475,147 +494,144 @@ Formato do save:
 }
 ```
 
-## 14. Compatibilidade Com Pygbag
+Limite conhecido:
 
-Decisoes ja tomadas:
+- no navegador, o save por arquivo JSON pode nao persistir como esperado. A adaptacao futura deve ser feita em `src/progress.py`, preferencialmente preservando tolerancia a falhas.
 
-- `main.py` usa loop `async`.
-- Cenarios sao desenhados com Pygame.
-- Sons sao gerados por codigo.
-- Dados usam estruturas simples.
-- Assets usam caminhos relativos.
-- Dependencias sao minimas.
+## 13. Publicacao Web
 
-Validacoes feitas:
+Workflow:
 
-- `pygbag .` foi tentado na raiz. Ele iniciou e gerou build, mas tentou empacotar `.venv_brasil` e o save local porque esses itens estavam dentro da pasta do projeto.
-- `scripts/build_pygbag_clean.py` foi criado e validado. Ele empacotou apenas 13 arquivos do jogo.
-- O build limpo usa `--ume_block=0` para nao depender do toque inicial do Pygbag na tela "Ready to start !", que pode falhar em navegadores de celular.
-- O `index.html` gerado recebe uma tela de carregamento com mensagem para celular antes do menu ficar pronto.
+```text
+.github/workflows/pages.yml
+```
 
-Comando recomendado para build web:
+Acionamento:
+
+- push na branch `yolo_melhoria`;
+- `workflow_dispatch` manual.
+
+Etapas:
+
+1. checkout;
+2. Python 3.12;
+3. `python -m pip install -r requirements.txt`;
+4. `python scripts/build_pygbag_clean.py`;
+5. upload de `build/pygbag_app/build/web`;
+6. deploy para ambiente `github-pages`.
+
+Comando local equivalente:
 
 ```powershell
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Saida:
+Cuidados:
 
-```text
-build/pygbag_app/build/web
-```
+- nao usar `pygbag .` como build final se `.venv_brasil` ou save local existirem na raiz;
+- preservar `--ume_block=0`;
+- preservar patch de `Ready to start !`;
+- preservar a tela HTML de carregamento;
+- testar em celular real apos deploy;
+- usar URL com query string para evitar cache, por exemplo `?v=5`.
 
-Pendencias antes de publicacao:
+## 14. Validacao Tecnica
 
-- Abrir o build em navegador real.
-- Testar audio no navegador.
-- Adaptar ou complementar `src/progress.py` para armazenamento web.
-
-## 15. Validacao Tecnica
-
-Comando padrao:
+Comandos recomendados:
 
 ```powershell
 python -m compileall main.py src
-```
-
-Se usar ambiente virtual local:
-
-```powershell
 .\.venv_brasil\Scripts\python.exe -m compileall main.py src
-```
-
-Smoke test:
-
-```powershell
-python scripts\smoke_tests.py
+.\.venv_brasil\Scripts\python.exe -m compileall scripts
 .\.venv_brasil\Scripts\python.exe scripts\smoke_tests.py
+.\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Use o comando da venv quando o Python global nao tiver `pygame-ce` instalado.
+Use `python scripts\smoke_tests.py` se o Python global tiver `pygame-ce`.
 
-Tambem e util renderizar telas em SDL dummy quando houver mudancas de UI.
-O smoke test tambem cobre fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa e linha do tempo.
+Quando alterar UI, tambem faca teste visual local ou em SDL dummy com screenshot.
 
-## 16. Teste Manual Recomendado
+Quando alterar publicacao, aguarde GitHub Actions ficar verde e teste a URL publicada.
 
-1. Abrir o jogo.
-2. Verificar imagem de abertura.
+## 15. Teste Manual Minimo
+
+Local:
+
+1. Abrir com `python main.py`.
+2. Confirmar `abertura.png`.
 3. Pressionar `Enter`.
-4. Iniciar fase 1.
-5. Testar `H`.
-6. Mover e pular.
-7. Coletar fragmentos.
-8. Abrir colecao com `C`.
-9. Ativar checkpoint.
-10. Tocar em area de cuidado.
-11. Confirmar retorno seguro.
-12. Reiniciar fase com `R`.
-13. Pausar com `P`.
-14. Concluir fase.
-15. Confirmar desbloqueio da fase seguinte.
-16. Abrir linha do tempo com `S`.
-17. Pressionar `N` no menu e confirmar nova jornada temporaria.
-18. Testar fase 2.
-19. Testar uma fase intermediaria.
-20. Testar fase 16.
-21. Ver tela final.
-22. Fechar e abrir novamente para conferir save.
-
-Teste mobile recomendado:
-
-1. Abrir a versao publicada no celular.
-2. Usar o aparelho em modo paisagem.
-3. Confirmar que a tela de carregamento mostra mensagem e que "Ready to start !" nao fica travada.
-4. Tocar em continuar e iniciar uma fase.
-5. Mover com `<` e `>`.
-6. Pular com `Pular`.
+4. Iniciar fase.
+5. Mover e pular.
+6. Coletar fragmento.
 7. Abrir colecao com `C`.
-8. Pausar com `P`.
-9. Abrir linha do tempo pelo menu.
+8. Abrir ajuda com `H`.
+9. Pausar com `P`.
+10. Reiniciar com `R`.
+11. Voltar ao menu com `M`.
+12. Abrir linha do tempo com `S`.
+13. Testar `N` para nova jornada temporaria.
+14. Concluir uma fase.
+15. Confirmar desbloqueio da fase seguinte.
 
-## 17. Como Adicionar Uma Nova Fase
+Mobile web:
+
+1. Abrir `https://msimoes38.github.io/caminhos_brasil/`.
+2. Usar celular deitado.
+3. Confirmar tela de carregamento com mensagem.
+4. Se demorar, tocar para continuar.
+5. Confirmar menu.
+6. Tocar em continuar.
+7. Tocar na introducao.
+8. Usar `<`, `>` e `Pular`.
+9. Abrir `C`, voltar.
+10. Pausar com `P`, continuar.
+11. Abrir linha do tempo pelo menu.
+
+## 16. Como Adicionar Uma Fase
 
 1. Abrir `src/level_data.py`.
-2. Adicionar uma chamada a `_make_level(...)`, ou criar `LevelData` manual se precisar de layout especial.
-3. Definir:
-   - `title`
-   - `year`
-   - `mission`
-   - `historical_note`
-   - `intro_text`
-   - `theme`
-   - `fragment_infos`
-4. Usar tema existente ou adicionar novo em `src/backgrounds.py`.
-5. Garantir fragmentos alcancaveis.
-6. Garantir checkpoints seguros.
-7. Rodar `python scripts\smoke_tests.py`.
-8. Rodar validacao tecnica.
-9. Testar manualmente.
+2. Adicionar `_make_level(...)` ou `LevelData` manual.
+3. Definir titulo, ano, missao, nota historica, intro, tema e fragmentos.
+4. Reusar tema existente ou criar novo em `src/backgrounds.py`.
+5. Garantir plataformas alcancaveis.
+6. Garantir fragmentos alcancaveis.
+7. Garantir checkpoints e respawns seguros.
+8. Rodar smoke tests.
+9. Atualizar README e SPEC se a quantidade/ordem de fases mudar.
 
-## 18. Limites Conhecidos
+## 17. Limites Conhecidos
 
 - As fases compartilham gerador simples de layout.
-- O salvamento atual e local por arquivo JSON.
-- A interface esta otimizada para 960x540.
-- A experiencia mobile e pensada para modo paisagem; modo retrato nao tem layout dedicado.
+- A interface base e 960x540.
+- Mobile e paisagem apenas; retrato nao tem layout dedicado.
+- Save web ainda precisa de validacao/adaptacao.
+- Audio em navegador pode variar por politica do browser.
 - `src/game.py` concentra muitas responsabilidades.
-- O build Pygbag limpo passa e e publicado via GitHub Pages.
-- Audio e save em navegador precisam de validacao especifica.
+- A tela de carregamento HTML usa fallback por tempo/toque porque o sinal de carregamento do Pygbag pode variar no celular.
+
+## 18. Prioridades Futuras
+
+1. Adaptar save para armazenamento web.
+2. Testar audio e save em navegadores reais.
+3. Polir fases especificas sem aumentar complexidade.
+4. Separar telas de `src/game.py` quando houver motivo claro.
+5. Melhorar tela de carregamento com progresso real se houver API confiavel.
+6. Fazer teste com criancas/familiares e observar leitura/dificuldade.
 
 ## 19. Regras Para Proximos Agentes
 
-- Preserve o que ja funciona.
-- Evite refatorar por vaidade.
-- Nao adicione dependencias sem necessidade.
+- Leia `README.md`, `AGENTS.md`, `SPEC.MD`, `PROMPT_YOLO.MD`, `requirements.txt`, `main.py`, `src/`, `scripts/smoke_tests.py` e `scripts/build_pygbag_clean.py` antes de alterar.
+- Preserve Python, Pygame-CE e Pygbag.
+- Preserve loop `async` em `main.py`.
+- Preserve controles de teclado e toque.
+- Preserve `--ume_block=0`.
+- Preserve a tela de carregamento web e seus fallbacks.
+- Nao empacote venv nem save local no build.
+- Nao adicione dependencias sem necessidade clara.
 - Nao altere conteudo historico para tom pesado.
-- Nao quebre a sessao temporaria com `N`.
-- Nao deixe checkpoints ou respawns em areas de cuidado.
+- Nao quebre nova jornada temporaria com `N`.
+- Nao deixe checkpoints, respawns ou inicio em areas de cuidado.
 - Nao deixe fragmentos inalcancaveis.
-- Preserve controles por toque em modo paisagem ao alterar HUD, pausa, colecao ou linha do tempo.
-- Preserve `--ume_block=0` em `scripts/build_pygbag_clean.py` para evitar travamento no carregamento mobile do Pygbag.
-- Preserve a tela de carregamento injetada por `scripts/build_pygbag_clean.py` e o aviso escondido por `Game._hide_web_loading_overlay()`.
-- Rode `python scripts\smoke_tests.py` quando alterar fases, fisica, player, save ou fluxo.
-- Ao alterar HUD ou mensagens historicas, preservar a posicao estavel do painel e a translucidez quando Mig passar por tras.
-- Use `scripts/build_pygbag_clean.py` para build web enquanto `.venv_brasil` e save local existirem na raiz.
-- Atualize este SPEC quando mudar comportamento, arquitetura, fases ou fluxo.
+- Preserve painel historico fixo com translucidez quando Mig passa por tras.
+- Atualize documentacao quando mudar comportamento, arquitetura, publicacao ou testes.
+- Rode validacoes proporcionais ao risco da mudanca.
