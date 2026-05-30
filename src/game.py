@@ -75,6 +75,7 @@ class Game:
         self.animation_time = 0
         self.effects = []
         self.running = True
+        self.web_loading_overlay_hidden = False
         self._apply_progress(self.saved_progress)
         self._load_level(0, STATE_MENU)
 
@@ -883,6 +884,31 @@ class Game:
             self._draw_completion_message()
 
         pygame.display.flip()
+        self._hide_web_loading_overlay()
+
+    def _hide_web_loading_overlay(self):
+        if self.web_loading_overlay_hidden:
+            return
+        self.web_loading_overlay_hidden = True
+
+        try:
+            import platform
+
+            window = getattr(platform, "window", None)
+            hide_loading = getattr(window, "caminhosHideLoading", None) if window else None
+            if hide_loading is not None:
+                try:
+                    hide_loading()
+                    return
+                except Exception:
+                    pass
+
+            document = getattr(platform, "document", None)
+            loading = document.getElementById("caminhos-loading") if document else None
+            if loading is not None:
+                loading.style.display = "none"
+        except Exception:
+            pass
 
     def _draw_level(self):
         for platform in self.level.platforms:
@@ -1394,19 +1420,19 @@ class Game:
         self._draw_virtual_button(rects["left"], "<", "left" in self.active_touch_controls)
         self._draw_virtual_button(rects["right"], ">", "right" in self.active_touch_controls)
         self._draw_virtual_button(rects["jump"], "Pular", "jump" in self.active_touch_controls)
-        self._draw_virtual_button(rects["pause"], "P", False, alpha=196)
-        self._draw_virtual_button(rects["collection"], "C", False, alpha=196)
+        self._draw_virtual_button(rects["pause"], "P", False, alpha=104)
+        self._draw_virtual_button(rects["collection"], "C", False, alpha=104)
 
     def _draw_virtual_button(
         self,
         rect: pygame.Rect,
         label: str,
         active: bool,
-        alpha: int = 176,
+        alpha: int = 88,
     ):
         surface = pygame.Surface(rect.size, pygame.SRCALPHA)
-        fill = (226, 202, 128, 224 if active else alpha)
-        border = (*TEXT_COLOR, 238)
+        fill = (226, 202, 128, 148 if active else alpha)
+        border = (*TEXT_COLOR, 216)
         pygame.draw.rect(surface, fill, surface.get_rect(), border_radius=10)
         pygame.draw.rect(surface, border, surface.get_rect(), 3, border_radius=10)
         self.screen.blit(surface, rect)

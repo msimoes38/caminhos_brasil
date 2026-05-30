@@ -103,6 +103,7 @@ Observacoes importantes:
 - O jogo deve continuar funcionando se audio ou save falharem.
 - `pygbag .` na raiz pode empacotar `.venv_brasil` e `caminhos_brasil_save.json`; para publicacao, prefira `scripts/build_pygbag_clean.py`.
 - Preserve `--ume_block=0` em `scripts/build_pygbag_clean.py`; ele evita que celulares fiquem presos na tela "Ready to start !" do Pygbag.
+- Preserve a tela de carregamento HTML injetada pelo build limpo para evitar tela azul vazia no celular.
 - A pasta `build/` e artefato gerado. Ela pode ser apagada e recriada.
 
 ---
@@ -279,7 +280,7 @@ Saida esperada:
 build/pygbag_app/build/web
 ```
 
-O build limpo deve iniciar no celular sem ficar travado em "Ready to start !".
+O build limpo deve iniciar no celular com mensagem de carregamento, sem ficar travado em "Ready to start !".
 
 Se possivel, abra o `index.html` gerado em navegador real e teste:
 

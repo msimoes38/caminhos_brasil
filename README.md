@@ -34,7 +34,7 @@ Principais recursos:
 - Sprite animado do Mig usando `assets/images/personagem.png`.
 - Sons leves gerados por codigo.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
-- Script de build web limpo em `scripts/build_pygbag_clean.py`, com ajuste para evitar travamento na tela "Ready to start !" em celulares.
+- Script de build web limpo em `scripts/build_pygbag_clean.py`, com tela de carregamento propria e ajuste para evitar travamento na tela "Ready to start !" em celulares.
 
 ## Fases Implementadas
 
@@ -177,7 +177,7 @@ Teste mobile recomendado apos publicar:
 
 1. Abrir `https://msimoes38.github.io/caminhos_brasil/` no celular.
 2. Virar o aparelho para modo paisagem.
-3. Confirmar que o jogo sai da tela de carregamento e mostra o menu.
+3. Confirmar que a tela de carregamento mostra mensagem e depois libera o menu.
 4. Tocar em continuar e iniciar uma fase.
 5. Usar `<`, `>` e `Pular` para mover Mig.
 6. Coletar um fragmento.
@@ -255,7 +255,7 @@ Resultado: o comando iniciou e gerou build, mas na raiz do projeto ele tambem te
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Resultado validado: o build limpo empacotou somente 13 arquivos do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A saida fica em:
+Resultado validado: o build limpo empacotou somente 13 arquivos do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma tela de carregamento propria e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A saida fica em:
 
 ```text
 build/pygbag_app/build/web
@@ -264,6 +264,7 @@ build/pygbag_app/build/web
 Pontos ainda a validar antes de publicar:
 
 - abrir o `index.html` gerado em navegador real;
+- conferir se a tela inicial de carregamento aparece com mensagem no celular;
 - confirmar no celular que a tela "Ready to start !" nao fica travada;
 - testar audio no navegador;
 - avaliar armazenamento web para substituir ou complementar o save local em arquivo JSON.

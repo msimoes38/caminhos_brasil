@@ -68,6 +68,7 @@ Pensar desde o inicio em Pygbag:
 - Usar arquivos pequenos e formatos comuns.
 - Testar Pygbag antes de considerar a versao pronta para publicacao; se houver venv ou save na raiz, usar `scripts/build_pygbag_clean.py`.
 - Preservar `--ume_block=0` no build web para evitar que celulares fiquem presos na tela "Ready to start !" do Pygbag.
+- Preservar a tela de carregamento HTML injetada pelo build limpo, pois ela evita uma tela azul vazia no celular.
 
 ## Estado Atual Do Projeto
 
@@ -163,6 +164,7 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 - Nao reposicionar dinamicamente a mensagem historica durante o pulo; isso distrai o jogador. Preserve painel fixo com translucidez.
 - `pygbag .` na raiz pode empacotar `.venv_brasil` e `caminhos_brasil_save.json`; para build web, prefira `scripts/build_pygbag_clean.py`.
 - A tela "Ready to start !" do Pygbag pode travar em celular; o build limpo usa `--ume_block=0` e nao deve perder esse ajuste.
+- A tela azul vazia do template Pygbag deve continuar substituida pela tela de carregamento do projeto.
 
 ## Testes Recomendados
 
