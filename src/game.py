@@ -54,6 +54,7 @@ class Game:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 28)
+        self.small_font = pygame.font.Font(None, 24)
         self.big_font = pygame.font.Font(None, 44)
         self.medium_font = pygame.font.Font(None, 38)
         self.sounds = SoundManager()
@@ -62,11 +63,14 @@ class Game:
         self.saved_progress = self.progress_store.load()
         self.temporary_session = False
         self.random = Random(2018)
-        self.touch_ui_enabled = False
+        self.touch_ui_enabled = self._detect_touch_context()
         self.touch_control_by_pointer = {}
         self.active_touch_controls = set()
         self.touch_jump_pressed = False
         self.pointer_starts = {}
+        self.level_play_time = 0
+        self.tutorial_actions = {"move": False, "jump": False, "collect": False}
+        self.recent_collection_entry = None
 
         self.selected_level_index = 0
         self.level_select_scroll = 0
@@ -91,11 +95,32 @@ class Game:
 
         pygame.quit()
 
+    def _detect_touch_context(self) -> bool:
+        try:
+            import platform
+
+            window = getattr(platform, "window", None)
+            navigator = getattr(window, "navigator", None) if window else None
+            max_touch_points = getattr(navigator, "maxTouchPoints", 0) if navigator else 0
+            return int(max_touch_points or 0) > 0
+        except Exception:
+            return False
+
     def _handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
+                if event.key in (
+                    pygame.K_LEFT,
+                    pygame.K_RIGHT,
+                    pygame.K_a,
+                    pygame.K_d,
+                    pygame.K_SPACE,
+                    pygame.K_UP,
+                    pygame.K_w,
+                ):
+                    self.touch_ui_enabled = False
                 self._handle_keydown(event.key)
             elif event.type == pygame.FINGERDOWN:
                 self._handle_pointer_down(
@@ -137,7 +162,8 @@ class Game:
         pointer_id,
         is_touch: bool = True,
     ):
-        self.touch_ui_enabled = True
+        if is_touch:
+            self.touch_ui_enabled = True
         self.pointer_starts[pointer_id] = {
             "position": position,
             "last_position": position,
@@ -266,8 +292,53 @@ class Game:
             self._toggle_collection()
         elif action == "help":
             self._toggle_help()
+        elif action == "fullscreen":
+            self._request_fullscreen()
         elif action == "exit":
             self.running = False
+
+    def _request_fullscreen(self):
+        self.touch_ui_enabled = True
+        attempted = False
+
+        try:
+            import platform
+
+            window = getattr(platform, "window", None)
+            helper = getattr(window, "caminhosRequestFullscreen", None) if window else None
+            if helper is not None:
+                helper()
+                attempted = True
+            else:
+                document = getattr(platform, "document", None)
+                element = getattr(document, "documentElement", None) if document else None
+                if element is None and document is not None:
+                    element = getattr(document, "body", None)
+                if element is not None:
+                    for method_name in (
+                        "requestFullscreen",
+                        "webkitRequestFullscreen",
+                        "msRequestFullscreen",
+                    ):
+                        method = getattr(element, method_name, None)
+                        if method is not None:
+                            method()
+                            attempted = True
+                            break
+
+                screen = getattr(window, "screen", None) if window else None
+                orientation = getattr(screen, "orientation", None) if screen else None
+                lock_orientation = getattr(orientation, "lock", None) if orientation else None
+                if lock_orientation is not None:
+                    lock_orientation("landscape")
+        except Exception:
+            attempted = False
+
+        if attempted:
+            self.feedback_message = "Tentando tela cheia. Use o celular deitado."
+        else:
+            self.feedback_message = "Se a barra continuar aparecendo, use Adicionar a tela inicial."
+        self.feedback_message_timer = 4.5
 
     def _handle_level_select_tap(self, position: tuple[int, int]):
         scroll_action = self._level_select_scroll_action_at(position)
@@ -299,6 +370,8 @@ class Game:
             self._restart_level()
         elif action == "menu":
             self.state = STATE_MENU
+        elif action == "collection":
+            self._toggle_collection()
         elif self._pause_box_rect().collidepoint(position):
             self.state = STATE_PLAYING
 
@@ -409,6 +482,8 @@ class Game:
             self._restart_level()
         elif key == pygame.K_m:
             self.state = STATE_MENU
+        elif key == pygame.K_c:
+            self._toggle_collection()
 
     def _handle_completed_keydown(self, key: int):
         if key == pygame.K_RETURN:
@@ -448,6 +523,16 @@ class Game:
         keys = pygame.key.get_pressed()
         touch_jump_pressed = self.touch_jump_pressed
         self.touch_jump_pressed = False
+        moved_this_frame = (
+            self._touch_direction() != 0
+            or keys[pygame.K_LEFT]
+            or keys[pygame.K_RIGHT]
+            or keys[pygame.K_a]
+            or keys[pygame.K_d]
+        )
+        if moved_this_frame:
+            self.tutorial_actions["move"] = True
+        self.level_play_time += dt
         self.player.handle_input(
             keys,
             dt,
@@ -456,6 +541,7 @@ class Game:
             touch_jump_pressed=touch_jump_pressed,
         )
         if self.player.jump_started:
+            self.tutorial_actions["jump"] = True
             self.sounds.play("jump")
         self.player.update(dt, self.level.platforms, self.level.width)
         self._update_camera()
@@ -481,12 +567,13 @@ class Game:
         for fragment in self.fragments:
             if self.player.rect.colliderect(fragment.rect):
                 collected_any = True
-                self.fragment_message = f"Voce sabia? {fragment.info}"
+                self.tutorial_actions["collect"] = True
+                self.fragment_message = f"Boa descoberta! Voce sabia? {fragment.info}"
                 self.fragment_message_timer = 4
                 self._spawn_effect_burst(
                     fragment.rect.center,
                     FRAGMENT_COLOR,
-                    count=14,
+                    count=18,
                     radius=4,
                 )
                 self._add_collection_entry(fragment.info)
@@ -495,6 +582,9 @@ class Game:
 
         self.fragments = remaining_fragments
         if collected_any:
+            if self._all_fragments_collected():
+                self.feedback_message = "Portal liberado! Procure o marco final."
+                self.feedback_message_timer = 3.2
             self.sounds.play("collect")
 
     def _add_collection_entry(self, info: str):
@@ -504,6 +594,7 @@ class Game:
 
         self.collection_entry_set.add(entry)
         self.collection_entries.append(entry)
+        self.recent_collection_entry = entry
         self._save_progress()
 
     def _update_fragment_message(self, dt: float):
@@ -622,6 +713,8 @@ class Game:
         self.fragment_message_timer = 0
         self.feedback_message = ""
         self.feedback_message_timer = 0
+        self.level_play_time = 0
+        self.tutorial_actions = {"move": False, "jump": False, "collect": False}
         self.effects = []
         self.camera_x = 0
         self._clear_touch_controls()
@@ -734,10 +827,26 @@ class Game:
         return rect
 
     def _menu_panel_rect(self) -> pygame.Rect:
+        if self.touch_ui_enabled:
+            return pygame.Rect(496, 224, 430, 300)
         return pygame.Rect(548, 302, 382, 190)
 
     def _menu_touch_actions(self) -> list[tuple[str, pygame.Rect]]:
         panel = self._menu_panel_rect()
+        if self.touch_ui_enabled:
+            row_x = panel.x + 18
+            row_y = panel.y + 76
+            row_width = panel.width - 36
+            row_height = 38
+            gap = 5
+            return [
+                ("continue", pygame.Rect(row_x, row_y + 0 * (row_height + gap), row_width, row_height)),
+                ("new", pygame.Rect(row_x, row_y + 1 * (row_height + gap), row_width, row_height)),
+                ("timeline", pygame.Rect(row_x, row_y + 2 * (row_height + gap), row_width, row_height)),
+                ("collection", pygame.Rect(row_x, row_y + 3 * (row_height + gap), row_width, row_height)),
+                ("help", pygame.Rect(row_x, row_y + 4 * (row_height + gap), row_width // 2 - 5, row_height)),
+                ("fullscreen", pygame.Rect(row_x + row_width // 2 + 5, row_y + 4 * (row_height + gap), row_width // 2 - 5, row_height)),
+            ]
         return [
             ("continue", pygame.Rect(panel.x + 12, panel.y + 8, panel.width - 24, 28)),
             ("new", pygame.Rect(panel.x + 12, panel.y + 36, panel.width - 24, 28)),
@@ -755,11 +864,11 @@ class Game:
 
     def _touch_control_rects(self) -> dict[str, pygame.Rect]:
         return {
-            "left": pygame.Rect(24, SCREEN_HEIGHT - 112, 86, 82),
-            "right": pygame.Rect(122, SCREEN_HEIGHT - 112, 86, 82),
-            "jump": pygame.Rect(SCREEN_WIDTH - 136, SCREEN_HEIGHT - 124, 108, 96),
-            "pause": pygame.Rect(SCREEN_WIDTH - 134, 62, 50, 42),
-            "collection": pygame.Rect(SCREEN_WIDTH - 74, 62, 50, 42),
+            "left": pygame.Rect(24, SCREEN_HEIGHT - 112, 92, 84),
+            "right": pygame.Rect(132, SCREEN_HEIGHT - 112, 92, 84),
+            "jump": pygame.Rect(SCREEN_WIDTH - 158, SCREEN_HEIGHT - 128, 130, 100),
+            "pause": pygame.Rect(SCREEN_WIDTH - 140, 68, 54, 44),
+            "collection": pygame.Rect(SCREEN_WIDTH - 76, 68, 54, 44),
         }
 
     def _gameplay_touch_action_at(self, position: tuple[int, int]) -> str | None:
@@ -806,14 +915,15 @@ class Game:
         return pygame.Rect(70, SCREEN_HEIGHT - 195, SCREEN_WIDTH - 140, 150)
 
     def _pause_box_rect(self) -> pygame.Rect:
-        return self._centered_rect(520, 244)
+        return self._centered_rect(540, 292)
 
     def _pause_touch_actions(self) -> list[tuple[str, pygame.Rect]]:
         box = self._pause_box_rect()
         return [
-            ("resume", pygame.Rect(box.x + 64, box.y + 82, box.width - 128, 34)),
-            ("restart", pygame.Rect(box.x + 64, box.y + 124, box.width - 128, 34)),
-            ("menu", pygame.Rect(box.x + 64, box.y + 166, box.width - 128, 34)),
+            ("resume", pygame.Rect(box.x + 64, box.y + 78, box.width - 128, 38)),
+            ("restart", pygame.Rect(box.x + 64, box.y + 122, box.width - 128, 38)),
+            ("menu", pygame.Rect(box.x + 64, box.y + 166, box.width - 128, 38)),
+            ("collection", pygame.Rect(box.x + 64, box.y + 210, box.width - 128, 38)),
         ]
 
     def _pause_touch_action_at(self, position: tuple[int, int]) -> str | None:
@@ -844,7 +954,12 @@ class Game:
             entries = entries_by_level.get(level_title, [])
 
             total = get_level_fragment_count(index)
-            rows.append(("header", f"{index + 1:02d}. {get_level_title(index)} ({min(len(entries), total)}/{total})"))
+            rows.append(
+                (
+                    "header",
+                    f"{index + 1:02d}. {get_level_title(index)} ({min(len(entries), total)}/{total} descobertas)",
+                )
+            )
             for info in entries:
                 rows.append(("item", info))
             if not entries:
@@ -1146,7 +1261,7 @@ class Game:
         elif self._all_fragments_collected():
             self._draw_feedback_message("Portal liberado! Agora encontre o marco final.")
 
-        if self.level_index == 0 and self.state == STATE_PLAYING and not self.touch_ui_enabled:
+        if self.level_index == 0 and self.state == STATE_PLAYING:
             self._draw_tutorial_hints()
 
     def _draw_menu(self):
@@ -1162,28 +1277,57 @@ class Game:
         )
         self.screen.blit(panel_surface, panel)
         pygame.draw.rect(self.screen, TEXT_COLOR, panel, 2, border_radius=8)
-        for _, row in self._menu_touch_actions():
-            pygame.draw.rect(self.screen, (248, 238, 190), row, border_radius=5)
-            pygame.draw.rect(self.screen, (128, 116, 86), row, 1, border_radius=5)
-
-        start_surface = self.font.render("Enter: continuar", True, TEXT_COLOR)
         progress_text = f"Fases liberadas: {self.highest_unlocked_level + 1}/{get_level_count()}"
         if self.temporary_session:
             progress_text = "Nova jornada nesta sessao"
         progress_surface = self.font.render(progress_text, True, TEXT_COLOR)
-        new_journey_surface = self.font.render("N: nova sessao", True, TEXT_COLOR)
-        select_surface = self.font.render("S: linha do tempo", True, TEXT_COLOR)
-        collection_surface = self.font.render("C: colecao", True, TEXT_COLOR)
-        help_surface = self.font.render("H: ajuda", True, TEXT_COLOR)
-        exit_surface = self.font.render("Esc: sair", True, TEXT_COLOR)
 
-        self.screen.blit(start_surface, (panel.x + 18, panel.y + 12))
-        self.screen.blit(new_journey_surface, (panel.x + 18, panel.y + 40))
-        self.screen.blit(select_surface, (panel.x + 18, panel.y + 68))
-        self.screen.blit(collection_surface, (panel.x + 18, panel.y + 96))
-        self.screen.blit(help_surface, (panel.x + 206, panel.y + 96))
-        self.screen.blit(exit_surface, (panel.x + 18, panel.y + 124))
-        self.screen.blit(progress_surface, (panel.x + 18, panel.y + 154))
+        if self.touch_ui_enabled:
+            title_surface = self.medium_font.render("Toque para comecar", True, TEXT_COLOR)
+            self.screen.blit(title_surface, (panel.x + 18, panel.y + 12))
+            self.screen.blit(
+                progress_surface,
+                progress_surface.get_rect(midleft=(panel.x + 20, panel.y + 58)),
+            )
+
+            labels = {
+                "continue": "Continuar",
+                "new": "Nova jornada",
+                "timeline": "Linha do tempo",
+                "collection": "Colecao",
+                "help": "Ajuda",
+                "fullscreen": "Tela cheia",
+            }
+            for action, row in self._menu_touch_actions():
+                pygame.draw.rect(self.screen, (248, 238, 190), row, border_radius=7)
+                pygame.draw.rect(self.screen, TEXT_COLOR, row, 2, border_radius=7)
+                label_surface = self.font.render(labels[action], True, TEXT_COLOR)
+                self.screen.blit(label_surface, label_surface.get_rect(center=row.center))
+
+        else:
+            for _, row in self._menu_touch_actions():
+                pygame.draw.rect(self.screen, (248, 238, 190), row, border_radius=5)
+                pygame.draw.rect(self.screen, (128, 116, 86), row, 1, border_radius=5)
+
+            start_surface = self.font.render("Enter: continuar", True, TEXT_COLOR)
+            new_journey_surface = self.font.render("N: nova sessao", True, TEXT_COLOR)
+            select_surface = self.font.render("S: linha do tempo", True, TEXT_COLOR)
+            collection_surface = self.font.render("C: colecao", True, TEXT_COLOR)
+            help_surface = self.font.render("H: ajuda", True, TEXT_COLOR)
+            exit_surface = self.font.render("Esc: sair", True, TEXT_COLOR)
+
+            self.screen.blit(start_surface, (panel.x + 18, panel.y + 12))
+            self.screen.blit(new_journey_surface, (panel.x + 18, panel.y + 40))
+            self.screen.blit(select_surface, (panel.x + 18, panel.y + 68))
+            self.screen.blit(collection_surface, (panel.x + 18, panel.y + 96))
+            self.screen.blit(help_surface, (panel.x + 206, panel.y + 96))
+            self.screen.blit(exit_surface, (panel.x + 18, panel.y + 124))
+            self.screen.blit(progress_surface, (panel.x + 18, panel.y + 154))
+
+        if self.feedback_message and self.feedback_message_timer > 0:
+            feedback_surface = self.font.render(self.feedback_message, True, (116, 70, 42))
+            feedback_y = panel.y - 26 if self.touch_ui_enabled else panel.y - 18
+            self.screen.blit(feedback_surface, feedback_surface.get_rect(center=(panel.centerx, feedback_y)))
 
     def _draw_menu_scene(self):
         if self.menu_image:
@@ -1297,15 +1441,20 @@ class Game:
             if is_completed:
                 status = "Concluida"
             elif is_next:
-                status = "Proxima"
+                status = "Proxima aventura"
             elif is_unlocked:
                 status = "Liberada"
             else:
-                status = "Bloqueada"
+                status = "Complete a anterior"
             text = f"{index + 1:02d}. {get_level_title(index)}"
             color = TEXT_COLOR if is_unlocked else (112, 112, 112)
-            surface = self.font.render(text, True, color)
             status_surface = self.font.render(status, True, color)
+            surface = self._render_fitting_text(
+                text,
+                color,
+                row.width - status_surface.get_width() - 54,
+                [self.font, self.small_font],
+            )
             self.screen.blit(surface, (row.x + 14, row.y + 7))
             self.screen.blit(
                 status_surface,
@@ -1396,32 +1545,38 @@ class Game:
         )
         return player_rect
 
+    def _tutorial_hint_text(self) -> str | None:
+        if not self.tutorial_actions["move"] and self.level_play_time <= 7:
+            if self.touch_ui_enabled:
+                return "Use os botoes para andar."
+            return "Use A/D ou setas para andar."
+        if not self.tutorial_actions["jump"] and self.level_play_time <= 12:
+            if self.touch_ui_enabled:
+                return "Toque em Pular."
+            return "Use Espaco para pular."
+        if not self.tutorial_actions["collect"] and self.level_play_time <= 18:
+            return "Pegue os fragmentos brilhantes."
+        return None
+
     def _draw_tutorial_hints(self):
-        hints = [
-            ("A/D", "andar", 132),
-            ("Espaco", "pular", 150),
-            ("Fragmentos", "coletar", 190),
-        ]
-        x = 24
-        y = SCREEN_HEIGHT - 64
-        for key_text, label, width in hints:
-            box = pygame.Rect(x, y, width, 38)
-            pygame.draw.rect(self.screen, (248, 238, 190), box, border_radius=6)
-            pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=6)
-            key_surface = self.font.render(key_text, True, TEXT_COLOR)
-            label_surface = self.font.render(label, True, (72, 76, 70))
-            label_x = box.x + 12 + key_surface.get_width() + 14
-            self.screen.blit(key_surface, (box.x + 10, box.y + 8))
-            self.screen.blit(label_surface, (label_x, box.y + 8))
-            x += width + 10
+        hint = self._tutorial_hint_text()
+        if not hint:
+            return
+
+        y = SCREEN_HEIGHT - 180 if self.touch_ui_enabled else SCREEN_HEIGHT - 72
+        box = pygame.Rect(24, y, 388, 44)
+        pygame.draw.rect(self.screen, (248, 238, 190), box, border_radius=7)
+        pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=7)
+        hint_surface = self.font.render(hint, True, TEXT_COLOR)
+        self.screen.blit(hint_surface, hint_surface.get_rect(center=box.center))
 
     def _draw_touch_controls(self):
         rects = self._touch_control_rects()
         self._draw_virtual_button(rects["left"], "<", "left" in self.active_touch_controls)
         self._draw_virtual_button(rects["right"], ">", "right" in self.active_touch_controls)
-        self._draw_virtual_button(rects["jump"], "Pular", "jump" in self.active_touch_controls)
-        self._draw_virtual_button(rects["pause"], "P", False, alpha=104)
-        self._draw_virtual_button(rects["collection"], "C", False, alpha=104)
+        self._draw_virtual_button(rects["jump"], "Pular", "jump" in self.active_touch_controls, alpha=100)
+        self._draw_virtual_button(rects["pause"], "P", False, alpha=116)
+        self._draw_virtual_button(rects["collection"], "C", False, alpha=116)
 
     def _draw_virtual_button(
         self,
@@ -1431,7 +1586,7 @@ class Game:
         alpha: int = 88,
     ):
         surface = pygame.Surface(rect.size, pygame.SRCALPHA)
-        fill = (226, 202, 128, 148 if active else alpha)
+        fill = (226, 202, 128, 164 if active else alpha)
         border = (*TEXT_COLOR, 216)
         pygame.draw.rect(surface, fill, surface.get_rect(), border_radius=10)
         pygame.draw.rect(surface, border, surface.get_rect(), 3, border_radius=10)
@@ -1449,7 +1604,7 @@ class Game:
         resume_surface = self.font.render("Continuar", True, TEXT_COLOR)
         restart_surface = self.font.render("Reiniciar fase", True, TEXT_COLOR)
         menu_surface = self.font.render("Voltar ao menu", True, TEXT_COLOR)
-        collection_surface = self.font.render("C abre a colecao historica", True, TEXT_COLOR)
+        collection_surface = self.font.render("Colecao", True, TEXT_COLOR)
 
         self.screen.blit(title_surface, title_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 50)))
         for action, rect in self._pause_touch_actions():
@@ -1459,9 +1614,12 @@ class Game:
                 "resume": resume_surface,
                 "restart": restart_surface,
                 "menu": menu_surface,
+                "collection": collection_surface,
             }[action]
             self.screen.blit(label, label.get_rect(center=rect.center))
-        self.screen.blit(collection_surface, collection_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 218)))
+
+        hint_surface = self.font.render("P ou Enter continua | R reinicia | M menu | C colecao", True, (72, 76, 70))
+        self.screen.blit(hint_surface, hint_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 20)))
 
     def _draw_help(self):
         self._draw_menu_scene()
@@ -1537,7 +1695,12 @@ class Game:
             if row_type == "header":
                 header_box = pygame.Rect(box.x + 108, y - 4, box.width - 138, 30)
                 pygame.draw.rect(self.screen, (238, 222, 166), header_box, border_radius=5)
-                surface = self.font.render(text, True, TEXT_COLOR)
+                surface = self._render_fitting_text(
+                    text,
+                    TEXT_COLOR,
+                    header_box.width - 42,
+                    [self.font, self.small_font],
+                )
                 pygame.draw.circle(self.screen, GOAL_COLOR, (box.x + 124, y + 11), 7)
                 self.screen.blit(surface, (box.x + 142, y))
                 y += 34
@@ -1546,6 +1709,10 @@ class Game:
                 self.screen.blit(surface, (box.x + 142, y))
                 y += 28
             else:
+                if self.recent_collection_entry and text == self.recent_collection_entry[1]:
+                    highlight = pygame.Rect(box.x + 134, y - 3, box.width - 164, 48)
+                    pygame.draw.rect(self.screen, (252, 230, 132), highlight, border_radius=5)
+                    pygame.draw.rect(self.screen, (226, 168, 74), highlight, 2, border_radius=5)
                 for line in self._wrap_text(text, 76)[:2]:
                     surface = self.font.render(line, True, (64, 68, 72))
                     self.screen.blit(surface, (box.x + 142, y))
@@ -1571,7 +1738,11 @@ class Game:
             line_surface = self.font.render(line, True, TEXT_COLOR)
             self.screen.blit(line_surface, (box.x + 22, box.y + 54 + index * 26))
 
-        continue_surface = self.font.render("Pressione Enter ou toque aqui para iniciar.", True, TEXT_COLOR)
+        if self.touch_ui_enabled:
+            continue_text = "Toque aqui para iniciar."
+        else:
+            continue_text = "Pressione Enter ou toque aqui para iniciar."
+        continue_surface = self.font.render(continue_text, True, TEXT_COLOR)
         self.screen.blit(
             continue_surface,
             continue_surface.get_rect(bottomright=(box.right - 22, box.bottom - 16)),
@@ -1711,4 +1882,12 @@ class Game:
             if surface.get_width() <= max_width:
                 return surface
 
-        return fonts[-1].render(text, True, color)
+        font = fonts[-1]
+        suffix = "..."
+        shortened = text
+        while shortened and font.render(f"{shortened}{suffix}", True, color).get_width() > max_width:
+            shortened = shortened[:-1].rstrip()
+
+        if shortened:
+            return font.render(f"{shortened}{suffix}", True, color)
+        return font.render(text[:1], True, color)

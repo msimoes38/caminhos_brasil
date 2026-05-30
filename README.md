@@ -17,7 +17,8 @@ https://msimoes38.github.io/caminhos_brasil/
 Principais recursos:
 
 - Tela inicial com imagem `abertura.png`.
-- Menu com continuar jornada, nova sessao temporaria, linha do tempo, colecao e ajuda rapida.
+- Menu com continuar jornada, nova sessao temporaria, linha do tempo, colecao, ajuda rapida e botao mobile de tela cheia.
+- Menu mobile com botoes grandes e convite para tocar quando o jogo detecta uso de toque.
 - Linha do tempo com fases bloqueadas, liberadas, proximas e concluidas.
 - Dezesseis fases historicas jogaveis.
 - Progresso salvo localmente quando possivel.
@@ -26,21 +27,23 @@ Principais recursos:
 - Camera horizontal.
 - HUD com ajuste discreto para manter titulos longos dentro do painel.
 - Controles por toque para jogar no celular em modo paisagem no navegador.
+- Dicas curtas nos primeiros segundos da fase 1, com texto adequado para teclado ou toque.
 - Fragmentos historicos coletaveis com brilho, flutuacao e mensagem "Voce sabia?".
+- Feedback positivo de coleta, como "Boa descoberta!", e destaque do portal quando todos os fragmentos sao encontrados.
 - Mensagens historicas fixas no topo; se Mig passar por tras, o painel fica temporariamente translucido.
-- Colecao historica com aparencia de album e progresso por fase.
+- Colecao historica com aparencia de album, destaque da descoberta recente e progresso por fase no formato `3/4 descobertas`.
 - Introducao narrativa por fase.
 - Nota historica e pergunta curta ao concluir fase.
 - Portal final liberado apenas apos coletar todos os fragmentos da fase.
 - Checkpoints seguros com bandeira animada.
 - Areas de cuidado mais visiveis, com aviso antes do contato.
-- Tela de pausa.
+- Tela de pausa com botoes grandes para continuar, reiniciar, voltar ao menu e abrir a colecao.
 - Tela final com resumo de fases e fragmentos.
 - Cenarios por tema desenhados com Pygame.
 - Sprite animado do Mig usando `assets/images/personagem.png`.
 - Sons leves gerados por codigo.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
-- Script de build web limpo em `scripts/build_pygbag_clean.py`, com tela de carregamento propria e ajuste para evitar travamento na tela "Ready to start !" em celulares.
+- Script de build web limpo em `scripts/build_pygbag_clean.py`, com tela de carregamento propria, metadados de app/manifest e ajuste para evitar travamento na tela "Ready to start !" em celulares.
 
 ## Fases Implementadas
 
@@ -110,8 +113,10 @@ Celular ou tela de toque:
 
 - Use o aparelho deitado, em modo paisagem.
 - Toque nas opcoes do menu para continuar, iniciar nova sessao, abrir linha do tempo, colecao ou ajuda.
+- Toque em `Tela cheia` no menu para tentar esconder a barra do navegador.
 - Durante a fase, use os botoes virtuais `<`, `>` e `Pular`.
 - Toque em `P` para pausar e em `C` para abrir a colecao.
+- Na pausa, toque em `Continuar`, `Reiniciar`, `Menu` ou `Colecao`.
 - Na linha do tempo e na colecao, toque nas opcoes ou arraste para rolar.
 
 ## Progresso E Salvamento
@@ -172,13 +177,13 @@ Teste manual recomendado:
 4. Voltar ao menu.
 5. Testar `H` para abrir ajuda rapida.
 6. Testar `N` no menu e confirmar que a jornada temporaria comeca na fase 1.
-7. Mover, pular e cair em plataformas.
-8. Coletar fragmentos.
-9. Abrir a colecao com `C`.
+7. Mover, pular e conferir as dicas iniciais da fase 1.
+8. Coletar fragmentos e observar o feedback positivo.
+9. Abrir a colecao com `C` e conferir o contador de descobertas.
 10. Ativar checkpoint.
 11. Tocar em area de cuidado e confirmar retorno seguro.
 12. Reiniciar fase com `R`.
-13. Pausar e continuar com `P`.
+13. Pausar e continuar com `P`; em toque, conferir os botoes grandes.
 14. Concluir fase.
 15. Confirmar desbloqueio da fase seguinte.
 16. Entrar pela linha do tempo com `S`.
@@ -193,12 +198,13 @@ Teste mobile recomendado apos publicar:
 1. Abrir `https://msimoes38.github.io/caminhos_brasil/` no celular.
 2. Virar o aparelho para modo paisagem.
 3. Confirmar que a tela de carregamento mostra mensagem e depois libera o menu.
-4. Tocar em continuar e iniciar uma fase.
-5. Usar `<`, `>` e `Pular` para mover Mig.
-6. Coletar um fragmento.
-7. Abrir colecao com `C`.
-8. Pausar com `P` e voltar.
-9. Abrir a linha do tempo pelo menu.
+4. Confirmar menu com convite para tocar e botao `Tela cheia`.
+5. Tocar em continuar e iniciar uma fase.
+6. Usar `<`, `>` e `Pular` para mover Mig.
+7. Coletar um fragmento.
+8. Abrir colecao com `C`.
+9. Pausar com `P` e voltar usando os botoes grandes.
+10. Abrir a linha do tempo pelo menu.
 
 Build web local:
 
@@ -294,7 +300,7 @@ Resultado: o comando iniciou e gerou build, mas na raiz do projeto ele tambem te
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Resultado validado: o build limpo empacota somente os arquivos necessarios do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma tela de carregamento propria, que pode ser liberada por toque ou automaticamente apos alguns segundos, e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A saida fica em:
+Resultado validado: o build limpo empacota somente os arquivos necessarios do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma tela de carregamento propria, manifest basico, titulo/descricao da aba, helper de tela cheia e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A tela de carregamento pode ser liberada por sinal do jogo, toque/click ou automaticamente apos alguns segundos. A saida fica em:
 
 ```text
 build/pygbag_app/build/web
@@ -305,9 +311,18 @@ Checklist apos deploy:
 - abrir a URL publicada em desktop e celular;
 - conferir se a tela de carregamento aparece com mensagem e nao fica travada;
 - usar celular em modo paisagem;
+- testar botao `Tela cheia` e, se o navegador nao permitir, orientar uso de "Adicionar a tela inicial";
 - iniciar fase, andar, pular, coletar fragmento, pausar, abrir colecao e linha do tempo;
+- recarregar a pagina e confirmar que o jogo volta ao menu sem ficar preso no carregamento;
 - testar audio no navegador;
 - observar o comportamento do save web, que ainda e um limite conhecido.
+
+Checklist curto de publicacao:
+
+- desktop: abrir, iniciar fase, andar, pular, coletar, pausar, colecao e linha do tempo;
+- celular paisagem: carregamento, menu por toque, tela cheia, fase, botoes `<`, `>`, `Pular`, `P` e `C`;
+- progresso: concluir fase, voltar ao menu, abrir linha do tempo e recarregar pagina;
+- web: confirmar titulo da aba, manifest basico e ausencia de bloqueio na tela de carregamento.
 
 ## Limites Conhecidos
 

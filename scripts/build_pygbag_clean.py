@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import stat
@@ -134,17 +135,17 @@ LOADING_MARKUP = """\
     <div id="caminhos-loading" aria-live="polite">
         <div class="panel">
             <p class="title">Caminhos do Brasil</p>
-            <p class="message" id="caminhos-loading-message">Carregando arquivos do jogo...</p>
+            <p class="message" id="caminhos-loading-message">Preparando a viagem no tempo...</p>
             <div class="bar" aria-hidden="true"></div>
-            <p class="hint">Primeira abertura pode levar alguns segundos. Se demorar, toque para continuar.</p>
+            <p class="hint">Use o celular deitado. Se demorar, toque para continuar.</p>
         </div>
     </div>
 
     <script>
     (function () {
         var messages = [
-            "Carregando arquivos do jogo...",
-            "Preparando Mig e a linha do tempo...",
+            "Preparando a viagem no tempo...",
+            "Organizando Mig e os fragmentos...",
             "Quase pronto. Use o celular deitado."
         ];
         var index = 0;
@@ -172,6 +173,28 @@ LOADING_MARKUP = """\
                 loading.style.display = "none";
             }, 320);
         }
+        window.caminhosRequestFullscreen = function () {
+            var element = document.documentElement || document.body;
+            var request = element.requestFullscreen ||
+                element.webkitRequestFullscreen ||
+                element.msRequestFullscreen;
+            var tried = false;
+            if (request) {
+                tried = true;
+                try {
+                    request.call(element);
+                } catch (error) {
+                    tried = false;
+                }
+            }
+            if (screen.orientation && screen.orientation.lock) {
+                try {
+                    screen.orientation.lock("landscape");
+                } catch (error) {
+                }
+            }
+            return tried;
+        };
         window.caminhosHideLoading = hideLoading;
         window.setTimeout(hideLoading, 8500);
         window.addEventListener("pointerdown", hideLoading, { passive: true });
@@ -181,6 +204,25 @@ LOADING_MARKUP = """\
     </script>
 """
 
+WEB_MANIFEST = {
+    "name": "Caminhos do Brasil",
+    "short_name": "Caminhos BR",
+    "description": "Jogo educativo de plataforma sobre a historia do Brasil.",
+    "start_url": "./",
+    "scope": "./",
+    "display": "fullscreen",
+    "orientation": "landscape",
+    "background_color": "#76c9d4",
+    "theme_color": "#76c9d4",
+    "icons": [
+        {
+            "src": "abertura.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any",
+        }
+    ],
+}
 
 def ignore_generated(_folder: str, names: list[str]) -> set[str]:
     return {
@@ -260,6 +302,71 @@ def patch_loading_experience(index_path: Path) -> bool:
     return True
 
 
+def patch_web_app_metadata(index_path: Path) -> bool:
+    try:
+        html = index_path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+
+    manifest_path = index_path.parent / "manifest.webmanifest"
+    try:
+        manifest_path.write_text(
+            json.dumps(WEB_MANIFEST, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except OSError:
+        return False
+
+    html = replace_title(html, "Caminhos do Brasil")
+    additions = []
+    metadata_lines = [
+        '<meta name="description" content="Jogo educativo de plataforma sobre a historia do Brasil.">',
+        '<meta name="theme-color" content="#76c9d4">',
+        '<meta name="apple-mobile-web-app-capable" content="yes">',
+        '<meta name="apple-mobile-web-app-title" content="Caminhos BR">',
+        '<meta name="mobile-web-app-capable" content="yes">',
+        '<link rel="manifest" href="manifest.webmanifest">',
+    ]
+    markers = [
+        'name="description"',
+        'name="theme-color"',
+        'apple-mobile-web-app-capable',
+        'apple-mobile-web-app-title',
+        'mobile-web-app-capable',
+        'rel="manifest"',
+    ]
+    for marker, line in zip(markers, metadata_lines):
+        if marker not in html:
+            additions.append(f"    {line}")
+
+    if additions:
+        if "</head>" not in html:
+            print("Nao foi possivel encontrar </head> para metadados web.")
+            return False
+        html = html.replace("</head>", "\n".join(additions) + "\n</head>", 1)
+
+    try:
+        index_path.write_text(html, encoding="utf-8")
+    except OSError:
+        return False
+
+    print("Metadados e manifest web aplicados ao index.html.")
+    return True
+
+
+def replace_title(html: str, title: str) -> str:
+    lower_html = html.lower()
+    start = lower_html.find("<title>")
+    end = lower_html.find("</title>", start)
+    if start == -1 or end == -1:
+        if "</head>" in html:
+            return html.replace("</head>", f"    <title>{title}</title>\n</head>", 1)
+        return html
+
+    end += len("</title>")
+    return f"{html[:start]}<title>{title}</title>{html[end:]}"
+
+
 def main() -> int:
     if STAGING_DIR.exists():
         remove_tree(STAGING_DIR)
@@ -285,6 +392,8 @@ def main() -> int:
         if not patch_mobile_ready_prompt(index_path):
             return 1
         if not patch_loading_experience(index_path):
+            return 1
+        if not patch_web_app_metadata(index_path):
             return 1
         print("Build Pygbag limpo gerado em:")
         print(STAGING_DIR / "build" / "web")

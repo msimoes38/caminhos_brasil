@@ -35,28 +35,29 @@ yolo_melhoria
 A versao atual esta jogavel e publicada para teste publico. Ela possui:
 
 - tela inicial com `abertura.png`;
-- menu com continuar, nova sessao temporaria, linha do tempo, colecao e ajuda;
+- menu com continuar, nova sessao temporaria, linha do tempo, colecao, ajuda e tela cheia no mobile;
 - 16 fases historicas em ordem cronologica;
 - introducao narrativa por fase;
 - movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo;
 - camera horizontal;
 - HUD com ajuste discreto para titulos longos;
 - controles por teclado, mouse e toque;
-- interface mobile em modo paisagem com botoes virtuais semitransparentes;
+- interface mobile em modo paisagem com menu tocavel e botoes virtuais semitransparentes;
+- dicas contextuais nos primeiros segundos da fase 1;
 - fragmentos historicos coletaveis;
 - mensagens historicas fixas no topo, com translucidez quando Mig passa por tras;
 - checkpoints seguros e respawn;
 - areas de cuidado;
 - portal final bloqueado ate todos os fragmentos da fase serem coletados;
-- feedback visual para fragmento, checkpoint, cuidado, portal e conclusao;
-- colecao historica em formato de album;
-- linha do tempo com fases liberadas, bloqueadas, proximas e concluidas;
-- tela de pausa;
+- feedback visual e texto positivo para fragmento, checkpoint, cuidado, portal e conclusao;
+- colecao historica em formato de album, com descoberta recente destacada;
+- linha do tempo com fases liberadas, bloqueadas, proximas aventuras e concluidas;
+- tela de pausa com botoes grandes para toque;
 - tela final com resumo da jornada;
 - sons simples gerados por codigo;
 - save local tolerante a falhas;
 - smoke tests permanentes;
-- build Pygbag limpo e deploy via GitHub Pages.
+- build Pygbag limpo com manifest/metadados web e deploy via GitHub Pages.
 
 ## 3. Tecnologias
 
@@ -152,8 +153,11 @@ Responsabilidades:
 - ignorar eventos de mouse gerados por toque quando apropriado;
 - controlar estados do jogo;
 - desenhar menu, ajuda, linha do tempo, colecao, fase, pausa, conclusao e final;
+- alternar textos e botoes para teclado ou toque quando o contexto mobile e detectado;
 - gerenciar progresso, colecao e salvamento;
 - desenhar HUD, mensagens historicas e botoes virtuais;
+- mostrar dicas contextuais da fase 1 e feedback positivo de coleta;
+- solicitar fullscreen no navegador quando possivel;
 - acionar efeitos visuais e sons;
 - coletar fragmentos;
 - ativar checkpoints;
@@ -328,6 +332,8 @@ Motivos para usar este script:
 - aplica patch no `index.html` gerado para celular;
 - preserva `--ume_block=0`, evitando travamento em "Ready to start !";
 - injeta tela HTML de carregamento do projeto;
+- injeta helper JavaScript para tentativa de fullscreen/orientacao paisagem;
+- injeta titulo, descricao, theme-color e `manifest.webmanifest` basico;
 - a tela de carregamento some quando o jogo chama `window.caminhosHideLoading`, por toque/click ou automaticamente apos alguns segundos.
 
 Saida:
@@ -388,10 +394,11 @@ Teclado:
 Toque:
 
 - aparelho em modo paisagem;
-- menu com areas tocaveis;
+- menu com botoes grandes para continuar, nova jornada, linha do tempo, colecao, ajuda e tela cheia;
 - intro/conclusao/final avancam por toque no painel;
 - botoes virtuais `<`, `>` e `Pular` durante a fase;
 - botoes virtuais `P` e `C` durante a fase;
+- pausa com botoes grandes para continuar, reiniciar, menu e colecao;
 - linha do tempo aceita toque em fases e arraste vertical;
 - colecao aceita arraste vertical e botao Voltar.
 
@@ -532,6 +539,7 @@ Cuidados:
 - preservar `--ume_block=0`;
 - preservar patch de `Ready to start !`;
 - preservar a tela HTML de carregamento;
+- preservar manifest/metadados web e helper de fullscreen;
 - testar em celular real apos deploy;
 - usar URL com query string para evitar cache, por exemplo `?v=5`.
 
@@ -553,6 +561,13 @@ Quando alterar UI, tambem faca teste visual local ou em SDL dummy com screenshot
 
 Quando alterar publicacao, aguarde GitHub Actions ficar verde e teste a URL publicada.
 
+Checklist curto de publicacao:
+
+- desktop: abrir, iniciar fase, andar, pular, coletar, pausar, colecao e linha do tempo;
+- celular paisagem: carregamento, menu por toque, tela cheia, fase, botoes `<`, `>`, `Pular`, `P` e `C`;
+- progresso: concluir fase, voltar ao menu, abrir linha do tempo e recarregar pagina;
+- web: confirmar titulo da aba, manifest basico e ausencia de bloqueio na tela de carregamento.
+
 ## 15. Teste Manual Minimo
 
 Local:
@@ -561,11 +576,11 @@ Local:
 2. Confirmar `abertura.png`.
 3. Pressionar `Enter`.
 4. Iniciar fase.
-5. Mover e pular.
-6. Coletar fragmento.
-7. Abrir colecao com `C`.
+5. Mover e pular, conferindo dicas iniciais na fase 1.
+6. Coletar fragmento e observar "Boa descoberta!".
+7. Abrir colecao com `C` e conferir contador de descobertas.
 8. Abrir ajuda com `H`.
-9. Pausar com `P`.
+9. Pausar com `P` e conferir botoes de pausa para toque.
 10. Reiniciar com `R`.
 11. Voltar ao menu com `M`.
 12. Abrir linha do tempo com `S`.
@@ -579,13 +594,14 @@ Mobile web:
 2. Usar celular deitado.
 3. Confirmar tela de carregamento com mensagem.
 4. Se demorar, tocar para continuar.
-5. Confirmar menu.
-6. Tocar em continuar.
-7. Tocar na introducao.
-8. Usar `<`, `>` e `Pular`.
-9. Abrir `C`, voltar.
-10. Pausar com `P`, continuar.
-11. Abrir linha do tempo pelo menu.
+5. Confirmar menu com convite para tocar.
+6. Testar botao `Tela cheia`.
+7. Tocar em continuar.
+8. Tocar na introducao.
+9. Usar `<`, `>` e `Pular`.
+10. Abrir `C`, voltar.
+11. Pausar com `P`, continuar pelos botoes grandes.
+12. Abrir linha do tempo pelo menu.
 
 ## 16. Como Adicionar Uma Fase
 
@@ -626,6 +642,8 @@ Mobile web:
 - Preserve controles de teclado e toque.
 - Preserve `--ume_block=0`.
 - Preserve a tela de carregamento web e seus fallbacks.
+- Preserve metadados/manifest web e helper de tela cheia do build limpo.
+- Preserve menu e pausa tocaveis em mobile.
 - Nao empacote venv nem save local no build.
 - Nao adicione dependencias sem necessidade clara.
 - Nao altere conteudo historico para tom pesado.

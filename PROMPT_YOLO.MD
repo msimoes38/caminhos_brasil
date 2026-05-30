@@ -82,7 +82,8 @@ O deploy acontece pelo workflow:
 O projeto ja possui:
 
 - tela inicial usando `abertura.png`;
-- menu com continuar, nova sessao temporaria, linha do tempo, colecao e ajuda;
+- menu com continuar, nova sessao temporaria, linha do tempo, colecao, ajuda e tela cheia no mobile;
+- menu mobile com botoes grandes e convite para tocar;
 - linha do tempo com fases bloqueadas, liberadas, proximas e concluidas;
 - progresso salvo localmente em `caminhos_brasil_save.json`;
 - nova jornada temporaria com `N`, sem apagar ou sobrescrever o save salvo;
@@ -92,13 +93,15 @@ O projeto ja possui:
 - HUD com ajuste discreto para titulos longos;
 - controles por toque para celular em modo paisagem no navegador;
 - botoes virtuais semitransparentes para mobile;
+- dicas curtas e contextuais nos primeiros segundos da fase 1;
 - fragmentos historicos coletaveis com brilho e flutuacao;
+- feedback positivo de coleta, como "Boa descoberta!";
 - mensagens historicas com "Voce sabia?";
 - mensagens historicas fixas no topo, com painel temporariamente translucido quando Mig passa por tras;
-- colecao historica em formato de album, agrupada por fase;
+- colecao historica em formato de album, agrupada por fase, com descoberta recente destacada;
 - introducao narrativa por fase;
 - nota historica e pergunta curta ao concluir fase;
-- tela de pausa;
+- tela de pausa com botoes grandes para toque;
 - tela final com resumo de fases e fragmentos;
 - checkpoints seguros com bandeira animada;
 - areas de cuidado com aviso visual;
@@ -110,6 +113,7 @@ O projeto ja possui:
 - smoke tests permanentes em `scripts/smoke_tests.py`;
 - build Pygbag limpo em `scripts/build_pygbag_clean.py`;
 - tela HTML de carregamento no build web, com fallback por sinal do jogo, toque/click e tempo automatico;
+- manifest/metadados web basicos e helper de fullscreen no build limpo;
 - deploy automatico pelo GitHub Pages.
 
 Observacoes importantes:
@@ -126,13 +130,14 @@ Observacoes importantes:
 - Preserve `--ume_block=0` em `scripts/build_pygbag_clean.py`.
 - Preserve o patch contra travamento na tela "Ready to start !" do Pygbag.
 - Preserve a tela HTML de carregamento. Ela deve poder sumir por sinal do jogo, toque/click e tempo automatico.
+- Preserve o manifest/metadados web e o helper de fullscreen do build limpo.
 - A pasta `build/` e artefato gerado. Ela pode ser apagada e recriada.
 
 ---
 
-## Plano De Melhorias A Implementar
+## Plano De Melhorias A Implementar Ou Revisar
 
-Implemente em ordem de prioridade. Os itens 1 e 2 sao obrigatorios e devem vir primeiro.
+Os itens 1, 2, 3, 6, 7, 8, 9, 11, 12 e 14 ja receberam uma primeira implementacao incremental. Em novas rodadas, trate esses itens como checklist de regressao e polimento antes de reimplementar. Se houver tempo, avance nos itens ainda pendentes, principalmente sensacao de movimento, dificuldade das primeiras fases e save web.
 
 1. **Tela inicial mobile mais amigavel**
    - Hoje, no celular, o usuario precisa tocar onde aparece uma instrucao baseada em teclado, como "Enter".
@@ -289,7 +294,7 @@ Esse periodo trouxe mudancas importantes e tambem desafios para muitas pessoas. 
 - R: reiniciar fase.
 - M: voltar ao menu.
 - Esc: sair.
-- No celular: usar modo paisagem, tocar nas opcoes de menu e jogar com `<`, `>` e `Pular`.
+- No celular: usar modo paisagem, tocar nas opcoes de menu, testar `Tela cheia` e jogar com `<`, `>` e `Pular`.
 
 Se adicionar novo controle, documente e mantenha simples.
 
