@@ -284,10 +284,12 @@ Valida regras basicas sem abrir janela real:
 Prepara uma copia minima em `build/pygbag_app` e executa:
 
 ```powershell
-python -m pygbag --build build/pygbag_app
+python -m pygbag --ume_block=0 --build build/pygbag_app
 ```
 
 Motivo: `pygbag .` na raiz pode empacotar `.venv_brasil` e o save local quando esses arquivos existem dentro do projeto.
+
+O `--ume_block=0` evita que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. O script ainda mantem um fallback para ajustar o `index.html` caso uma versao futura do Pygbag volte a gerar esse bloqueio.
 
 ## 6. Estados Do Jogo
 
@@ -486,6 +488,7 @@ Validacoes feitas:
 
 - `pygbag .` foi tentado na raiz. Ele iniciou e gerou build, mas tentou empacotar `.venv_brasil` e o save local porque esses itens estavam dentro da pasta do projeto.
 - `scripts/build_pygbag_clean.py` foi criado e validado. Ele empacotou apenas 13 arquivos do jogo.
+- O build limpo usa `--ume_block=0` para nao depender do toque inicial do Pygbag na tela "Ready to start !", que pode falhar em navegadores de celular.
 
 Comando recomendado para build web:
 
@@ -560,12 +563,13 @@ Teste mobile recomendado:
 
 1. Abrir a versao publicada no celular.
 2. Usar o aparelho em modo paisagem.
-3. Tocar em continuar e iniciar uma fase.
-4. Mover com `<` e `>`.
-5. Pular com `Pular`.
-6. Abrir colecao com `C`.
-7. Pausar com `P`.
-8. Abrir linha do tempo pelo menu.
+3. Confirmar que a tela "Ready to start !" nao fica travada.
+4. Tocar em continuar e iniciar uma fase.
+5. Mover com `<` e `>`.
+6. Pular com `Pular`.
+7. Abrir colecao com `C`.
+8. Pausar com `P`.
+9. Abrir linha do tempo pelo menu.
 
 ## 17. Como Adicionar Uma Nova Fase
 
@@ -606,6 +610,7 @@ Teste mobile recomendado:
 - Nao deixe checkpoints ou respawns em areas de cuidado.
 - Nao deixe fragmentos inalcancaveis.
 - Preserve controles por toque em modo paisagem ao alterar HUD, pausa, colecao ou linha do tempo.
+- Preserve `--ume_block=0` em `scripts/build_pygbag_clean.py` para evitar travamento no carregamento mobile do Pygbag.
 - Rode `python scripts\smoke_tests.py` quando alterar fases, fisica, player, save ou fluxo.
 - Ao alterar HUD ou mensagens historicas, preservar a posicao estavel do painel e a translucidez quando Mig passar por tras.
 - Use `scripts/build_pygbag_clean.py` para build web enquanto `.venv_brasil` e save local existirem na raiz.

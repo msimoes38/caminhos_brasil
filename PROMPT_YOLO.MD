@@ -102,6 +102,7 @@ Observacoes importantes:
 - O sprite usado pelo jogo e `assets/images/personagem.png`.
 - O jogo deve continuar funcionando se audio ou save falharem.
 - `pygbag .` na raiz pode empacotar `.venv_brasil` e `caminhos_brasil_save.json`; para publicacao, prefira `scripts/build_pygbag_clean.py`.
+- Preserve `--ume_block=0` em `scripts/build_pygbag_clean.py`; ele evita que celulares fiquem presos na tela "Ready to start !" do Pygbag.
 - A pasta `build/` e artefato gerado. Ela pode ser apagada e recriada.
 
 ---
@@ -277,6 +278,8 @@ Saida esperada:
 ```text
 build/pygbag_app/build/web
 ```
+
+O build limpo deve iniciar no celular sem ficar travado em "Ready to start !".
 
 Se possivel, abra o `index.html` gerado em navegador real e teste:
 

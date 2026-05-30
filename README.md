@@ -34,7 +34,7 @@ Principais recursos:
 - Sprite animado do Mig usando `assets/images/personagem.png`.
 - Sons leves gerados por codigo.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
-- Script de build web limpo em `scripts/build_pygbag_clean.py`.
+- Script de build web limpo em `scripts/build_pygbag_clean.py`, com ajuste para evitar travamento na tela "Ready to start !" em celulares.
 
 ## Fases Implementadas
 
@@ -177,12 +177,13 @@ Teste mobile recomendado apos publicar:
 
 1. Abrir `https://msimoes38.github.io/caminhos_brasil/` no celular.
 2. Virar o aparelho para modo paisagem.
-3. Tocar em continuar e iniciar uma fase.
-4. Usar `<`, `>` e `Pular` para mover Mig.
-5. Coletar um fragmento.
-6. Abrir colecao com `C`.
-7. Pausar com `P` e voltar.
-8. Abrir a linha do tempo pelo menu.
+3. Confirmar que o jogo sai da tela de carregamento e mostra o menu.
+4. Tocar em continuar e iniciar uma fase.
+5. Usar `<`, `>` e `Pular` para mover Mig.
+6. Coletar um fragmento.
+7. Abrir colecao com `C`.
+8. Pausar com `P` e voltar.
+9. Abrir a linha do tempo pelo menu.
 
 ## Estrutura De Arquivos
 
@@ -254,7 +255,7 @@ Resultado: o comando iniciou e gerou build, mas na raiz do projeto ele tambem te
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Resultado validado: o build limpo empacotou somente 13 arquivos do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). A saida fica em:
+Resultado validado: o build limpo empacotou somente 13 arquivos do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A saida fica em:
 
 ```text
 build/pygbag_app/build/web
@@ -263,6 +264,7 @@ build/pygbag_app/build/web
 Pontos ainda a validar antes de publicar:
 
 - abrir o `index.html` gerado em navegador real;
+- confirmar no celular que a tela "Ready to start !" nao fica travada;
 - testar audio no navegador;
 - avaliar armazenamento web para substituir ou complementar o save local em arquivo JSON.
 
