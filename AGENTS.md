@@ -69,13 +69,15 @@ Pensar desde o inicio em Pygbag:
 - Testar Pygbag antes de considerar a versao pronta para publicacao; se houver venv ou save na raiz, usar `scripts/build_pygbag_clean.py`.
 - Preservar `--ume_block=0` no build web para evitar que celulares fiquem presos na tela "Ready to start !" do Pygbag.
 - Preservar a tela de carregamento HTML injetada pelo build limpo, pois ela evita uma tela azul vazia no celular.
+- Preservar manifest/metadados web e helper de tela cheia do build limpo.
 
 ## Estado Atual Do Projeto
 
 O jogo ja possui:
 
 - Tela inicial com `abertura.png`.
-- Menu com continuar, nova sessao, linha do tempo e colecao.
+- Menu com continuar, nova sessao, linha do tempo, colecao, ajuda e tela cheia no mobile.
+- Menu mobile com botoes grandes e convite para tocar.
 - Linha do tempo com fases bloqueadas, liberadas e concluidas.
 - Progresso salvo localmente em JSON quando possivel.
 - Nova jornada temporaria com `N`, sem apagar o save.
@@ -84,25 +86,26 @@ O jogo ja possui:
 - Camera horizontal.
 - HUD ajusta discretamente titulos longos para caberem no painel.
 - Controles por toque para celular em modo paisagem no navegador.
+- Dicas curtas nos primeiros segundos da fase 1, ajustadas para teclado ou toque.
 - Fragmentos historicos coletaveis.
 - Colecao historica agrupada por fase.
-- Colecao historica com aparencia de album e progresso por fase.
+- Colecao historica com aparencia de album, descoberta recente destacada e progresso por fase.
 - Introducao narrativa por fase.
 - Ajuda rapida com `H`.
 - Tela final com creditos simples.
-- Tela de pausa.
+- Tela de pausa com botoes grandes para toque.
 - Checkpoints seguros.
 - Areas de cuidado.
 - Coyote time e buffer curto de pulo.
-- Feedback visual para fragmentos, checkpoints, areas de cuidado e portal.
+- Feedback visual e texto positivo para fragmentos, checkpoints, areas de cuidado e portal.
 - Mensagens historicas ficam fixas no topo e se tornam translucidas quando Mig passa por tras.
 - Sons leves gerados por codigo.
 - Sprite animado do Mig usando folha de sprites.
 - Cenarios desenhados por codigo.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
-- Build Pygbag limpo em `scripts/build_pygbag_clean.py`.
+- Build Pygbag limpo em `scripts/build_pygbag_clean.py`, com manifest/metadados web.
 - Deploy automatico no GitHub Pages pela branch `yolo_melhoria`.
-- Tela HTML de carregamento para a versao web, com fallback por toque e tempo.
+- Tela HTML de carregamento para a versao web, com fallback por sinal do jogo, toque/click e tempo.
 
 ## Arquivos Importantes
 
@@ -123,7 +126,7 @@ O jogo ja possui:
 - `src/sounds.py`: sons simples gerados por codigo.
 - `src/settings.py`: constantes gerais.
 - `scripts/smoke_tests.py`: validacao automatica leve de fases, assets e fluxo basico.
-- `scripts/build_pygbag_clean.py`: gera build web a partir de copia minima, sem empacotar venv ou save local, e injeta ajustes mobile no `index.html`.
+- `scripts/build_pygbag_clean.py`: gera build web a partir de copia minima, sem empacotar venv ou save local, e injeta ajustes mobile, fullscreen, manifest e carregamento no `index.html`.
 - `.github/workflows/pages.yml`: build e deploy para GitHub Pages quando houver push em `yolo_melhoria`.
 
 ## Fluxo Recomendado De Trabalho
@@ -166,11 +169,14 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 - A nova sessao com `N` nao deve sobrescrever o save salvo.
 - O controle `H` abre a ajuda rapida e deve continuar simples e legivel.
 - Os controles por toque devem continuar grandes, visiveis e sem cobrir HUD ou mensagens historicas.
+- O menu e a pausa mobile devem continuar com botoes grandes e textos de toque, sem remover atalhos de teclado.
+- O botao `Tela cheia` deve falhar com orientacao simples, sem quebrar desktop.
 - Nao reposicionar dinamicamente a mensagem historica durante o pulo; isso distrai o jogador. Preserve painel fixo com translucidez.
 - `pygbag .` na raiz pode empacotar `.venv_brasil` e `caminhos_brasil_save.json`; para build web, prefira `scripts/build_pygbag_clean.py`.
 - A tela "Ready to start !" do Pygbag pode travar em celular; o build limpo usa `--ume_block=0` e nao deve perder esse ajuste.
 - A tela azul vazia do template Pygbag deve continuar substituida pela tela de carregamento do projeto.
 - A tela de carregamento web deve sempre ter saida por sinal do jogo, toque/click e tempo automatico, para nunca bloquear o menu.
+- O manifest/metadados web do build limpo devem continuar presentes para melhorar uso como app no celular.
 - A URL publicada e `https://msimoes38.github.io/caminhos_brasil/`; use query string como `?v=5` para evitar cache em testes.
 
 ## Testes Recomendados
@@ -191,15 +197,16 @@ Teste manual minimo:
 - Pressionar `Enter` e iniciar fase.
 - Pressionar `N` no menu e confirmar nova jornada temporaria.
 - Pressionar `H` no menu ou na fase e confirmar ajuda rapida.
-- Mover e pular.
+- Em toque, conferir menu com convite para tocar e botao `Tela cheia`.
+- Mover, pular e conferir dicas iniciais na fase 1.
 - Em celular ou tela touch, usar modo paisagem e testar `<`, `>`, `Pular`, `P` e `C`.
-- Coletar fragmentos.
+- Coletar fragmentos e observar feedback positivo.
 - Conferir se a mensagem historica nao atrapalha o pulo; ela deve ficar fixa e translucida se Mig passar por tras.
 - Abrir colecao com `C`.
 - Ativar checkpoint.
 - Tocar em area de cuidado e confirmar retorno seguro.
 - Reiniciar fase com `R`.
-- Pausar com `P`.
+- Pausar com `P` e conferir botoes grandes em toque.
 - Concluir fase.
 - Confirmar desbloqueio da fase seguinte.
 - Abrir linha do tempo com `S`.
