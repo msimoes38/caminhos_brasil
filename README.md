@@ -255,7 +255,7 @@ Resultado: o comando iniciou e gerou build, mas na raiz do projeto ele tambem te
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Resultado validado: o build limpo empacotou somente 13 arquivos do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma tela de carregamento propria e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A saida fica em:
+Resultado validado: o build limpo empacotou somente 13 arquivos do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma tela de carregamento propria, que pode ser liberada por toque ou automaticamente apos alguns segundos, e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A saida fica em:
 
 ```text
 build/pygbag_app/build/web

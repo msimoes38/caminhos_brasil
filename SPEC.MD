@@ -291,7 +291,7 @@ Motivo: `pygbag .` na raiz pode empacotar `.venv_brasil` e o save local quando e
 
 O `--ume_block=0` evita que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. O script ainda mantem um fallback para ajustar o `index.html` caso uma versao futura do Pygbag volte a gerar esse bloqueio.
 
-O script tambem injeta uma tela HTML leve de carregamento. Ela substitui a tela azul vazia do template padrao do Pygbag e e escondida pelo jogo depois que o primeiro quadro real e desenhado.
+O script tambem injeta uma tela HTML leve de carregamento. Ela substitui a tela azul vazia do template padrao do Pygbag e e escondida pelo jogo depois que o primeiro quadro real e desenhado. Como fallback, tambem some por toque/click ou automaticamente apos alguns segundos.
 
 ## 6. Estados Do Jogo
 

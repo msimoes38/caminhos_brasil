@@ -136,7 +136,7 @@ LOADING_MARKUP = """\
             <p class="title">Caminhos do Brasil</p>
             <p class="message" id="caminhos-loading-message">Carregando arquivos do jogo...</p>
             <div class="bar" aria-hidden="true"></div>
-            <p class="hint">Primeira abertura pode levar alguns segundos. No celular, use o aparelho deitado.</p>
+            <p class="hint">Primeira abertura pode levar alguns segundos. Se demorar, toque para continuar.</p>
         </div>
     </div>
 
@@ -148,7 +148,8 @@ LOADING_MARKUP = """\
             "Quase pronto. Use o celular deitado."
         ];
         var index = 0;
-        window.setInterval(function () {
+        var hidden = false;
+        var messageTimer = window.setInterval(function () {
             var label = document.getElementById("caminhos-loading-message");
             if (!label) {
                 return;
@@ -156,16 +157,26 @@ LOADING_MARKUP = """\
             index = (index + 1) % messages.length;
             label.textContent = messages[index];
         }, 2400);
-        window.caminhosHideLoading = function () {
+        function hideLoading() {
+            if (hidden) {
+                return;
+            }
             var loading = document.getElementById("caminhos-loading");
             if (!loading) {
                 return;
             }
+            hidden = true;
+            window.clearInterval(messageTimer);
             loading.classList.add("is-hidden");
             window.setTimeout(function () {
                 loading.style.display = "none";
             }, 320);
-        };
+        }
+        window.caminhosHideLoading = hideLoading;
+        window.setTimeout(hideLoading, 8500);
+        window.addEventListener("pointerdown", hideLoading, { passive: true });
+        window.addEventListener("touchstart", hideLoading, { passive: true });
+        window.addEventListener("click", hideLoading);
     })();
     </script>
 """
