@@ -1,12 +1,10 @@
 # PROMPT YOLO - Caminhos do Brasil
 
-Voce é um agente de IA trabalhando no projeto `caminhos_brasil`, um jogo educativo 2D em Python/Pygame-CE sobre a história do Brasil para crianças. Trabalhe em modo autônomo, incremental e pragmático: preserve o que ja foi implementado, escolha novas melhorias pequenas quando solicitado, valide, atualize documentação e entregue um resumo claro.
+Voce e um agente de IA trabalhando no projeto `caminhos_brasil`, um jogo educativo 2D em Python/Pygame-CE sobre a historia do Brasil para criancas. Trabalhe em modo autonomo, incremental e pragmatico: leia o contexto, implemente melhorias pequenas e funcionais, valide, atualize documentacao e entregue um resumo claro.
 
-Atualizacao desta rodada: as melhorias de persistencia web, menu/controles touch, linha do tempo, colecao em album e variedade visual foram implementadas. Em proximas rodadas, use este arquivo como registro do que preservar e priorize validacao em navegadores reais, polimento de fases especificas e separacao gradual de telas se `src/game.py` crescer mais.
+## Contexto Obrigatorio
 
-## Contexto Obrigatório
-
-Antes de alterar código, leia:
+Antes de alterar codigo, leia:
 
 - `AGENTS.md`
 - `README.md`
@@ -23,162 +21,212 @@ Antes de alterar código, leia:
 
 Estado atual importante:
 
-- O jogo já tem 16 fases históricas, controles por teclado/toque, build Pygbag limpo e smoke tests.
-- Cada fase tem banco com 10 pílulas de conhecimento.
-- Em cada sessão, a fase 1 sorteia 4 pílulas ativas e as fases 2 a 16 sorteiam 5.
-- O Guardião do Portal pergunta apenas sobre uma pílula ativa/coletada na jogada.
-- A coleção histórica é acumulativa e mostra progresso do banco completo por fase.
-- O save web usa `localStorage` com a chave `caminhos_brasil_save_v1`, mantendo JSON local no desktop.
-- O menu touch cobre o rodape confuso da abertura e os controles virtuais nao cobrem Mig no inicio.
-- A linha do tempo reserva coluna de status, e a colecao tem visual de album com cards.
-- A versão web usa Pygbag e GitHub Pages.
-- Não adicione dependências novas.
-- Preserve o loop `async` de `main.py`.
-- Preserve `--ume_block=0`, a tela HTML de carregamento e o helper de tela cheia em `scripts/build_pygbag_clean.py`.
+- O jogo tem 16 fases historicas, controles por teclado/toque, colecao, linha do tempo, quiz do Guardiao e build Pygbag limpo.
+- A versao publicada fica em `https://msimoes38.github.io/caminhos_brasil/`.
+- O build web usa `scripts/build_pygbag_clean.py`, preservando `--ume_block=0`, tela HTML de carregamento, manifest/metadados e helper de tela cheia.
+- O save desktop usa `caminhos_brasil_save.json`.
+- O save web ja usa `localStorage` com a chave `caminhos_brasil_save_v1`.
+- A colecao ja tem visual de album com cards.
+- A linha do tempo ja reserva uma coluna de status.
+- O menu touch ja tenta cobrir texto confuso do rodape da abertura.
+- Nao adicione dependencias novas ao projeto sem necessidade clara.
+- Nao adicione Selenium ao `requirements.txt`; se precisar dele para teste publicado, instale apenas na venv local e nao versionar.
+- Preserve Python, Pygame-CE, Pygbag e o loop `async` de `main.py`.
 - Preserve linguagem infantil, acolhedora e respeitosa.
 
-## Objetivo Da Rodada Implementada
+## Diagnostico Da Versao Publicada
 
-Melhorar a versão web/mobile para teste público leve, com foco em persistência, usabilidade touch, limpeza visual e sensação de variedade entre fases.
+Uma verificacao com Selenium em Chrome headless conseguiu abrir a URL publicada, carregar o canvas `960x540`, esconder a tela de carregamento e interagir com:
 
-Esta rodada implementou, nesta ordem de prioridade:
+- menu desktop;
+- introducao da fase 1;
+- inicio da fase 1;
+- movimento e pulo;
+- colecao;
+- linha do tempo;
+- ajuda.
 
-1. Persistência no navegador usando armazenamento web.
-2. Ajustes de menu e controles touch.
-3. Limpeza da linha do tempo.
-4. Coleção histórica com aparência mais forte de álbum.
-5. Mais variedade visual por período histórico.
+Tambem foi confirmado que o pacote publicado `pygbag_app.apk` contem as melhorias recentes, incluindo `localStorage`, album da colecao e novos detalhes visuais.
 
-Faça mudanças pequenas, funcionais e coerentes com o estilo existente.
+Problemas ou oportunidades observados:
 
-## Melhorias Implementadas
+1. Em emulacao mobile/touch, o navegador reportou `navigator.maxTouchPoints = 1`, `pointer: coarse` e `hover: none`, mas o jogo ainda abriu com menu de teclado. A deteccao touch inicial via Pygbag parece insuficiente.
+2. No menu desktop, a imagem `abertura.png` ainda mostra "PRESSIONE ENTER..." enquanto o painel tambem mostra atalhos. Isso e redundante e pode poluir a leitura.
+3. O save web esta implementado e publicado, mas ainda precisa de um teste real de persistencia no navegador: concluir uma fase, recarregar e confirmar fase 2 liberada.
+4. A fase 1 funciona, mas o visual do gameplay e bem mais simples do que a tela de abertura. Pequenos detalhes e feedbacks podem reduzir essa diferenca.
+5. Como o jogo roda em canvas, leitores de tela e ferramentas de acessibilidade enxergam pouco. Vale adicionar alguma orientacao HTML simples/sem impacto visual.
 
-As listas abaixo registram o comportamento que deve ser preservado em futuras rodadas.
+## Objetivo Da Rodada
 
-### 1. Persistência No Navegador
+Melhorar a experiencia publicada, principalmente em mobile/touch e primeiro contato do jogador, sem grandes refatoracoes.
 
-Adapte `src/progress.py` para salvar e carregar progresso no navegador via `localStorage` quando o jogo estiver rodando em Pygbag.
+Priorize nesta ordem:
 
-Comportamento esperado:
+1. Corrigir deteccao inicial de touch/mobile.
+2. Limpar redundancia visual do menu inicial.
+3. Validar e, se necessario, ajustar persistencia web.
+4. Polir primeira fase e feedbacks visuais leves.
+5. Melhorar acessibilidade/instrucoes fora do canvas.
 
-- Em ambiente web, usar uma chave estável, por exemplo `caminhos_brasil_save_v1`.
-- Em ambiente local/desktop, manter o arquivo `caminhos_brasil_save.json`.
-- Se `localStorage` falhar ou não existir, cair para o comportamento atual sem quebrar o jogo.
-- `load()` e `save()` devem continuar tolerantes a erro.
-- Manter compatibilidade com o formato atual:
-  - `highest_unlocked_level`
-  - `completed_levels`
-  - `collection_entries`
-- Normalizar entradas inválidas como hoje.
-- Não perder saves antigos em arquivo local.
-- Não salvar nada durante nova jornada temporária, pois isso já é controlado em `src/game.py`.
+## Melhorias A Implementar
 
-Sugestão técnica:
+### 1. Deteccao Touch/Mobile Mais Robusta
 
-- Criar helpers privados em `ProgressStore`, como `_get_web_storage()`, `_load_from_web()`, `_save_to_web()`, `_load_from_file()` e `_save_to_file()`.
-- Para detectar web, usar `import platform` dentro de `try` e procurar `platform.window.localStorage`.
-- Não importar módulos que quebrem desktop.
-- Atualizar `scripts/smoke_tests.py` para cobrir pelo menos:
-  - formato salvo/carregado continua válido;
-  - entradas duplicadas/ruins continuam sendo ignoradas;
-  - se armazenamento web simulado falha, o store não quebra.
+Problema observado:
 
-### 2. Menu E Controles Touch
-
-Corrija dois incômodos da experiência mobile:
-
-- No menu touch, esconder ou substituir qualquer rodapé visual do tipo "PRESSIONE ENTER..." que apareça atrás/parcialmente atrás do painel mobile. Se esse texto vier da imagem `abertura.png`, cubra a faixa inferior com um painel discreto e escreva uma orientação própria para toque, como "Toque em uma opção para começar".
-- O botão virtual esquerdo cobre o Mig no começo da fase. Ajuste sem prejudicar jogadores:
-  - preferencialmente reposicione os botões virtuais um pouco mais para baixo/lados, mantendo tamanho confortável;
-  - se necessário, desloque o `START_POSITION` um pouco para a direita, mas sem quebrar câmera, tutorial, colisão ou fase 1;
-  - garanta que os botões não cubram HUD, mensagens históricas nem pílulas iniciais.
-
-Atualize smoke tests para validar que:
-
-- em modo touch, o botão esquerdo não intersecta o retângulo inicial do jogador;
-- controles de toque continuam funcionando para esquerda, direita, pular, pausa e coleção.
-
-### 3. Linha Do Tempo Mais Limpa
-
-Melhore a tela de linha do tempo em `src/game.py` para evitar texto/status encostando nos botões de rolagem.
+- Em Chrome com emulacao mobile, `navigator.maxTouchPoints`, `pointer: coarse` e `hover: none` indicavam toque, mas o jogo desenhou o menu desktop.
 
 Comportamento esperado:
 
-- Reservar uma coluna fixa à direita para status/medalha.
-- Reduzir a largura disponível do título da fase de forma consistente.
-- Manter textos longos cabendo com `_render_fitting_text`.
-- Manter toque nas linhas funcionando.
-- Manter botões de rolagem visíveis quando houver scroll.
+- Em navegador mobile/touch, o menu inicial deve abrir diretamente no layout touch.
+- O menu touch deve mostrar botoes grandes e a faixa "Toque em uma opcao para comecar".
+- Os botoes virtuais da fase devem aparecer quando o contexto touch for detectado.
+- Teclado em desktop deve continuar usando layout desktop.
+- Se o usuario tocar/clicar na tela, o jogo tambem deve ativar o modo touch como ja acontece.
 
-Atualize smoke tests se necessário para garantir que as linhas continuam tocáveis e que a seleção por toque ainda abre fase liberada.
+Sugestao tecnica:
 
-### 4. Coleção Histórica Mais Parecida Com Álbum
+- Reforcar `Game._detect_touch_context()` em `src/game.py`.
+- Alem de `navigator.maxTouchPoints`, verificar com cuidado:
+  - `window.matchMedia("(pointer: coarse)").matches`
+  - `window.matchMedia("(hover: none)").matches`
+  - `"ontouchstart" in window`
+  - `navigator.userAgent` apenas como fallback leve, sem depender exclusivamente dele.
+- Usar `try/except` para nao quebrar desktop nem Pygbag.
+- Se alguma API nao existir, ignorar e continuar.
 
-A coleção atual é funcional, mas densa. Refaça a apresentação para parecer mais um álbum de descobertas.
+Testes esperados:
+
+- Atualizar `scripts/smoke_tests.py` com simulacao simples de `platform.window`, `navigator` e `matchMedia`.
+- Verificar que `_detect_touch_context()` retorna `True` quando:
+  - `maxTouchPoints > 0`;
+  - `matchMedia("(pointer: coarse)")` retorna `matches=True`.
+- Verificar que retorna `False` em contexto desktop simulado.
+- Renderizar screenshot dummy do menu touch, se possivel.
+
+### 2. Limpeza Visual Do Menu Inicial
+
+Problema observado:
+
+- No desktop publicado, a imagem de abertura mostra "PRESSIONE ENTER PARA COMECAR" no rodape, enquanto o painel do jogo mostra "Enter: continuar".
+- Em mobile, esse texto da imagem pode competir com a faixa de orientacao por toque.
 
 Comportamento esperado:
 
-- Manter agrupamento por fase e progresso `x/10 descobertas`.
-- Mostrar pílulas em cards menores, com borda e destaque para descoberta recente.
-- Reduzir densidade por tela sem perder legibilidade.
-- Continuar com rolagem por setas/W/S e arraste no touch.
-- Manter botão Voltar.
-- Não criar cards dentro de cards; use a superfície principal do álbum e cards individuais de pílulas.
-- Se a fase não tiver descobertas, mostrar uma mensagem curta e acolhedora.
+- O menu deve ter uma mensagem principal clara, sem duplicidade visual confusa.
+- No desktop, pode manter uma faixa discreta ou cobrir o texto da imagem quando o painel estiver aberto.
+- No touch, a faixa "Toque em uma opcao para comecar" deve cobrir totalmente qualquer texto fixo da imagem.
+- Nao edite `abertura.png` se uma solucao por desenho no Pygame for suficiente.
 
-Critério visual:
+Sugestao tecnica:
 
-- Deve parecer um álbum/caderno de descobertas, não uma tabela.
-- Texto não deve ultrapassar o card.
-- Em mobile, nada deve encostar nos botões de navegação.
+- Centralizar a regra em `src/game.py`, perto de `_draw_menu`.
+- Criar/ajustar helper para desenhar uma faixa inferior consistente tanto para touch quanto desktop.
+- No desktop, usar texto curto como "Escolha uma opcao no painel".
+- Garantir que a faixa nao esconda botoes nem informacoes do painel.
 
-Atualize smoke tests para garantir que:
+### 3. Persistencia Web: Teste Real E Ajustes
 
-- a coleção abre e fecha;
-- rolagem ainda funciona;
-- coleção não duplica entradas;
-- contadores continuam usando o banco completo da fase.
+O save web ja foi implementado, mas precisa ser validado na pratica.
 
-### 5. Variedade Visual Das Fases
+Comportamento esperado:
 
-Adicione 1 ou 2 elementos visuais específicos por período/família de fase em `src/backgrounds.py`, sem aumentar peso do jogo e sem novos assets obrigatórios.
+- Em ambiente web, concluir a fase 1 deve salvar progresso em `localStorage`.
+- Ao recarregar a pagina, o menu/linha do tempo deve manter a fase 2 liberada.
+- A colecao deve persistir entradas descobertas.
+- Se `localStorage` falhar, o jogo deve continuar sem quebrar.
+- A nova jornada temporaria com `N` nao deve gravar progresso permanente.
 
-Direção:
+Sugestao tecnica:
 
-- Use formas simples desenhadas por Pygame, coerentes com o estilo atual.
-- Evite poluição visual e contraste excessivo.
-- Não atrapalhe plataformas, pílulas, HUD, mensagens históricas ou controles touch.
-- Mantenha desempenho leve no navegador.
+- Revisar `src/progress.py` sem mudar formato de save.
+- Se necessario, ajustar a deteccao de web/localStorage.
+- Evitar qualquer dependencia nova.
+- Criar teste automatizado local para `ProgressStore` ja existe; amplie somente se encontrar lacuna.
 
-Sugestões:
+Teste publicado recomendado:
 
-- `coast`: mais sinais de litoral/navegação, como aves simples, ondas ou marco costeiro.
-- `sugar`: moenda/cana mais reconhecível ou pilhas de cana.
-- `interior`: rios/trilhas mais claros.
-- `mines`: carrinho de mina, trilhos ou lampião.
-- `colonial_city`: igrejas/janelas coloniais discretas.
-- `court`: palácio mais distinto.
-- `independence`: bandeiras/símbolos cívicos discretos.
-- `empire`: jardins, postes ou edifícios imperiais.
-- `republic`: praça/coreto ou bandeiras.
-- `rural_republic`: trilhos/café mais explícitos.
-- `vargas`: fábrica/rádio/engrenagens.
-- `democracy`: praça cívica/cartazes.
-- `dictatorship`: muro de memória discreto, tom sóbrio.
-- `redemocratization`: cartazes/assembleia/Constituição.
-- `contemporary`: cidade, árvores, conectividade, diversidade.
+- Usar Chrome/Selenium apenas como ferramenta local de teste, sem versionar dependencia:
+  - instalar com `.\.venv_brasil\Scripts\python.exe -m pip install selenium` se necessario;
+  - nao alterar `requirements.txt`;
+  - usar perfil temporario em `build/`.
+- Abrir `https://msimoes38.github.io/caminhos_brasil/?v=<numero>` para evitar cache.
+- Concluir fase 1 manualmente ou automatizar o minimo possivel.
+- Recarregar e inspecionar `localStorage["caminhos_brasil_save_v1"]`.
 
-Não precisa fazer uma obra de arte nova para cada fase; foque em variedade perceptível e segura.
+### 4. Polimento Leve Da Fase 1 E Feedbacks
 
-## Documentação
+Problema observado:
 
-Atualize `README.md`, `SPEC.MD` e `AGENTS.md` se mudar comportamento, arquitetura, salvamento web, UI touch, coleção, testes ou build.
+- A abertura e muito rica visualmente, mas o gameplay da fase 1 ainda parece simples em comparacao.
 
-Não deixe a documentação dizer que o save web ainda é apenas um limite conhecido se você implementar `localStorage`.
+Comportamento esperado:
 
-Atualize `PROMPT_YOLO.MD` apenas se quiser deixar novas prioridades para uma rodada futura.
+- A fase 1 deve continuar leve e legivel, mas com mais vida visual.
+- Nao aumentar dificuldade.
+- Nao mover pilulas, checkpoints, areas de cuidado ou plataformas sem necessidade.
+- Nao atrapalhar HUD, mensagens historicas nem controles touch.
 
-## Validações Obrigatórias
+Ideias seguras:
+
+- Mais detalhes no litoral em `src/backgrounds.py`: ondas discretas, aves, marco costeiro, vegetacao baixa ou brilho no mar.
+- Pequena animacao/efeito visual no portal quando liberado.
+- Melhor destaque visual para a primeira pilula sem mudar sua posicao.
+- Feedback mais claro quando todas as pilulas ativas foram coletadas.
+
+Valide com:
+
+- `python -m compileall main.py src`
+- smoke tests;
+- screenshot ou teste visual da fase 1.
+
+### 5. Acessibilidade E Instrucoes Fora Do Canvas
+
+Problema:
+
+- O jogo roda em canvas; leitores de tela e verificadores HTML veem pouco conteudo util.
+
+Comportamento esperado:
+
+- Sem mudar a experiencia visual principal, a pagina publicada deve expor uma orientacao simples fora do canvas.
+- Isso pode ficar no `index.html` gerado pelo build limpo, em texto visualmente discreto ou `noscript`.
+- Deve explicar objetivo e controles basicos.
+- Nao atrapalhar canvas, tela de carregamento, fullscreen nem Pygbag.
+
+Sugestao tecnica:
+
+- Atualizar `scripts/build_pygbag_clean.py` para injetar uma pequena area HTML acessivel.
+- Pode ser uma `div` com classe visualmente oculta, usando CSS seguro.
+- Incluir textos curtos:
+  - "Caminhos do Brasil e um jogo educativo de plataforma."
+  - "Use teclado ou toque para mover Mig, coletar pilulas historicas e responder ao Guardiao do Portal."
+- Preservar manifest/metadados atuais.
+
+## Cuidados Historicos E De Produto
+
+- Use linguagem simples.
+- Evite descricoes fortes, violentas ou graficas.
+- Trate povos indigenas, pessoas escravizadas e temas sensiveis com respeito.
+- Nao glorifique processos controversos.
+- Valorize memoria, diversidade, cidadania e curiosidade.
+- O publico de referencia e crianca por volta de 8 anos.
+
+## Restricoes Tecnicas
+
+- Nao substituir Python, Pygame-CE ou Pygbag.
+- Nao quebrar `main.py` com loop `async`.
+- Nao adicionar dependencias novas ao projeto.
+- Nao adicionar Selenium ao projeto; use apenas para teste local se necessario.
+- Nao empacotar `.venv_brasil`, saves locais ou artefatos de teste.
+- Preservar `--ume_block=0` no build web.
+- Preservar tela de carregamento HTML e seus fallbacks.
+- Preservar helper de tela cheia e manifest.
+- Preservar controles de teclado e toque.
+- Preservar nova jornada temporaria com `N`.
+- Preservar save web/local e tolerancia a falhas.
+- Preservar checkpoints, respawns e pilulas em posicoes seguras.
+
+## Validacoes Obrigatorias
 
 Rode:
 
@@ -189,57 +237,63 @@ python -m compileall main.py src
 .\.venv_brasil\Scripts\python.exe scripts\smoke_tests.py
 ```
 
-Se alterar build web ou persistência web, rode também:
+Se alterar build web, persistencia web ou HTML publicado, rode tambem:
 
 ```powershell
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Se o Python global não tiver `pygame-ce`, mencione isso e use a venv local.
+Se o Python global nao tiver `pygame-ce`, mencione isso e use a venv local.
 
-## Teste Manual Recomendado
+## Teste Visual/Publicacao Recomendado
 
-Faça pelo menos um teste manual/local ou visual quando possível:
+Local:
 
-- Abrir menu desktop e menu touch.
-- Confirmar que o menu touch não mostra rodapé confuso atrás do painel.
-- Confirmar que o botão esquerdo touch não cobre Mig no início.
-- Iniciar fase 1, andar, pular e coletar uma pílula.
-- Abrir coleção com `C` e conferir visual de álbum.
-- Abrir linha do tempo e conferir status/scroll sem sobreposição.
-- Tocar no portal após coletar pílulas e responder ao Guardião.
-- Reiniciar/recarregar e verificar persistência quando em ambiente web.
+1. Abrir o jogo localmente.
+2. Conferir menu desktop.
+3. Simular ou forcar contexto touch e conferir menu touch.
+4. Iniciar fase 1.
+5. Mover, pular e conferir se botoes touch nao cobrem Mig.
+6. Abrir colecao.
+7. Abrir linha do tempo.
+8. Abrir ajuda.
 
-## Critérios De Aceitação
+Publicado:
 
-A rodada estará pronta quando:
+1. Abrir `https://msimoes38.github.io/caminhos_brasil/?v=<numero>`.
+2. Confirmar tela de carregamento e menu.
+3. Testar desktop.
+4. Testar em celular real, se possivel.
+5. Em celular, usar modo paisagem.
+6. Conferir que o menu inicial ja aparece em modo touch.
+7. Concluir fase 1, recarregar e verificar persistencia.
 
-- Save local continua funcionando no desktop.
-- Save web usa `localStorage` no Pygbag e não quebra se indisponível.
-- Menu touch está visualmente limpo.
-- Controles touch continuam grandes e não cobrem o Mig no início.
-- Linha do tempo não tem status encostado nos botões de rolagem.
-- Coleção parece mais um álbum e continua legível.
-- Fases têm mais variedade visual sem pesar o jogo.
+Selenium opcional apenas para teste:
+
+- Pode instalar Selenium na venv local, sem alterar dependencias do projeto.
+- Use perfil temporario dentro de `build/`.
+- Capture screenshots em `build/`, que nao devem ser commitados.
+- Se o Chrome headless falhar, tente `--user-data-dir` temporario, `--no-sandbox`, `--disable-extensions` e `--headless`.
+
+## Criterios De Aceitacao
+
+A rodada esta pronta quando:
+
+- Mobile/touch publicado abre no layout touch quando o navegador indica toque.
+- Menu inicial nao mostra orientacoes redundantes/confusas.
+- Save web continua usando `localStorage` e passa em teste real ou simulado robusto.
+- Fase 1 tem leve melhoria visual sem perder clareza.
+- Build limpo continua funcionando.
 - Smoke tests passam.
-- Build Pygbag limpo continua preservando `--ume_block=0`, tela de carregamento, manifest e fullscreen helper.
-- README/SPEC/AGENTS refletem o estado final.
+- Documentacao reflete as mudancas.
+- Nenhuma dependencia de teste foi adicionada ao projeto.
 
-## Cuidados Finais
+## Entrega Esperada
 
-- Não remova funcionalidades existentes.
-- Não altere Python, Pygame-CE ou Pygbag.
-- Não adicione dependências.
-- Não torne o jogo mais difícil.
-- Não coloque pílulas em lugares arriscados.
-- Não use linguagem histórica pesada.
-- Preserve o tom infantil, acolhedor e respeitoso.
-- Preserve compatibilidade com saves antigos.
-- Ao terminar, explique de forma curta o que mudou, quais arquivos principais foram alterados e quais validações passaram.
+Ao finalizar, diga de forma curta:
 
-## Proximas Prioridades Sugeridas
-
-1. Testar save web, audio e tela cheia em celulares e navegadores reais.
-2. Polir layouts de fases especificas sem aumentar a complexidade do gerador.
-3. Melhorar feedback visual de portal, checkpoint e pílulas se os testes com jogadores mostrarem necessidade.
-4. Separar telas de `src/game.py` apenas quando houver ganho claro de manutencao.
+- o que mudou;
+- arquivos principais alterados;
+- como testar;
+- validacoes que passaram;
+- qualquer limitacao restante, especialmente se nao foi possivel testar em celular real ou navegador publicado.
