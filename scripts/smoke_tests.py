@@ -96,6 +96,7 @@ def main() -> int:
                 errors.append(f"{label}: pilula em plataforma dificil de alcancar: {fragment.rect}.")
 
     _check_progress_store(errors)
+    _check_touch_detection(errors)
 
     game = Game()
     if game.menu_image is None:
@@ -128,6 +129,7 @@ def main() -> int:
     print("- Guardiao do Portal pergunta sobre pilula ativa, aceita erro com dica e conclui com resposta correta.")
     print("- Colecao historica acumula descobertas sem duplicar entradas.")
     print("- ProgressStore salva/carrega no arquivo local e em localStorage simulado com fallback seguro.")
+    print("- Deteccao touch inicial reconhece maxTouchPoints, matchMedia e ignora desktop simulado.")
     print("- Fluxo basico de menu, nova sessao, checkpoint, cuidado, Esc e final passa sem alterar save.")
     print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo.")
     print("- Mensagem historica mantem posicao fixa e usa translucidez quando Mig passa por tras.")
@@ -151,6 +153,83 @@ class _FailingLocalStorage:
 
     def setItem(self, _key: str, _value: str):
         raise RuntimeError("localStorage indisponivel")
+
+
+class _FakeMediaQuery:
+    def __init__(self, matches: bool):
+        self.matches = matches
+
+
+class _FakeNavigator:
+    def __init__(
+        self,
+        max_touch_points: int = 0,
+        ms_max_touch_points: int = 0,
+        user_agent: str = "Mozilla/5.0 desktop",
+    ):
+        self.maxTouchPoints = max_touch_points
+        self.msMaxTouchPoints = ms_max_touch_points
+        self.userAgent = user_agent
+
+
+class _FakeBrowserWindow:
+    def __init__(
+        self,
+        navigator: _FakeNavigator | None = None,
+        matching_queries: set[str] | None = None,
+        touch_start: bool = False,
+    ):
+        self.navigator = navigator or _FakeNavigator()
+        self.matching_queries = matching_queries or set()
+        if touch_start:
+            self.ontouchstart = None
+
+    def matchMedia(self, query: str):
+        return _FakeMediaQuery(query in self.matching_queries)
+
+    def __contains__(self, item: str) -> bool:
+        return item == "ontouchstart" and hasattr(self, "ontouchstart")
+
+
+def _check_touch_detection(errors: list[str]):
+    missing_window = object()
+    original_window = getattr(platform, "window", missing_window)
+    detector = Game.__new__(Game)
+
+    try:
+        platform.window = _FakeBrowserWindow(
+            navigator=_FakeNavigator(max_touch_points=1),
+        )
+        if not detector._detect_touch_context():
+            errors.append("Deteccao touch nao reconheceu navigator.maxTouchPoints.")
+
+        platform.window = _FakeBrowserWindow(
+            matching_queries={"(pointer: coarse)"},
+        )
+        if not detector._detect_touch_context():
+            errors.append("Deteccao touch nao reconheceu matchMedia pointer coarse.")
+
+        platform.window = _FakeBrowserWindow(
+            matching_queries={"(hover: none)"},
+        )
+        if not detector._detect_touch_context():
+            errors.append("Deteccao touch nao reconheceu matchMedia hover none.")
+
+        platform.window = _FakeBrowserWindow(touch_start=True)
+        if not detector._detect_touch_context():
+            errors.append("Deteccao touch nao reconheceu ontouchstart.")
+
+        platform.window = _FakeBrowserWindow(
+            navigator=_FakeNavigator(user_agent="Mozilla/5.0 desktop"),
+        )
+        if detector._detect_touch_context():
+            errors.append("Deteccao touch marcou desktop simulado como touch.")
+    finally:
+        if original_window is missing_window:
+            if hasattr(platform, "window"):
+                delattr(platform, "window")
+        else:
+            platform.window = original_window
 
 
 def _check_progress_store(errors: list[str]):

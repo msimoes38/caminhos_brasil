@@ -19,6 +19,8 @@ Principais recursos:
 - Tela inicial com imagem `abertura.png`.
 - Menu com continuar jornada, nova sessão temporária, linha do tempo, coleção, ajuda rápida e botão mobile de tela cheia.
 - Menu mobile com botões grandes, faixa de orientação por toque e botão de tela cheia.
+- Detecção inicial de toque/mobile reforçada para navegadores que informam `maxTouchPoints`, `pointer: coarse`, `hover: none`, `ontouchstart` ou user agent mobile.
+- Faixa inferior no menu cobre a chamada fixa da arte de abertura e evita instruções duplicadas.
 - Linha do tempo com fases bloqueadas, liberadas, próximas e concluídas.
 - Dezesseis fases históricas jogáveis.
 - Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possível.
@@ -42,11 +44,12 @@ Principais recursos:
 - Áreas de cuidado mais visíveis, com aviso antes do contato.
 - Tela de pausa com botões grandes para continuar, reiniciar, voltar ao menu e abrir a coleção.
 - Tela final com resumo de fases e pílulas descobertas.
-- Cenários por tema desenhados com Pygame, com detalhes visuais próprios de cada período.
+- Cenários por tema desenhados com Pygame, com detalhes visuais próprios de cada período, incluindo litoral inicial com ondas, espuma e vegetação baixa.
 - Sprite animado do Mig usando `assets/images/personagem.png`.
 - Sons leves gerados por codigo.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
 - Script de build web limpo em `scripts/build_pygbag_clean.py`, com tela de carregamento propria, metadados de app/manifest e ajuste para evitar travamento na tela "Ready to start !" em celulares.
+- Build web injeta uma orientação HTML acessível fora do canvas, sem impacto visual.
 
 ## Fases Implementadas
 
@@ -180,6 +183,7 @@ O smoke test confere:
 - progresso salva/carrega em arquivo local e em `localStorage` simulado, com fallback seguro;
 - fluxo basico de menu, nova sessao temporaria, colecao, checkpoint, area de cuidado, conclusao e final passa sem alterar o save.
 - fluxo basico por toque cobre menu, fase, movimento, pulo, colecao e linha do tempo;
+- detecção touch inicial reconhece `maxTouchPoints`, `matchMedia` e ignora desktop simulado;
 - botão virtual esquerdo não cobre Mig no início da fase;
 - mensagens historicas permanecem em posicao estavel e ficam translucidas quando Mig passa por tras.
 

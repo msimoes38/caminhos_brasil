@@ -131,6 +131,22 @@ LOADING_STYLE = """\
         }
 """
 
+ACCESSIBILITY_STYLE = """\
+
+        #caminhos-accessibility-info {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+            white-space: normal;
+            border: 0;
+        }
+"""
+
 LOADING_MARKUP = """\
     <div id="caminhos-loading" aria-live="polite">
         <div class="panel">
@@ -202,6 +218,15 @@ LOADING_MARKUP = """\
         window.addEventListener("click", hideLoading);
     })();
     </script>
+"""
+
+ACCESSIBILITY_MARKUP = """\
+    <section id="caminhos-accessibility-info" aria-label="Orientações do jogo">
+        <h1>Caminhos do Brasil</h1>
+        <p>Caminhos do Brasil é um jogo educativo de plataforma.</p>
+        <p>Use teclado ou toque para mover Mig, coletar pílulas históricas e responder ao Guardião do Portal.</p>
+        <p>No teclado, use setas ou A e D para mover, Espaço para pular, Enter para confirmar, C para coleção e H para ajuda.</p>
+    </section>
 """
 
 WEB_MANIFEST = {
@@ -303,6 +328,33 @@ def patch_loading_experience(index_path: Path) -> bool:
     return True
 
 
+def patch_accessibility_info(index_path: Path) -> bool:
+    try:
+        html = index_path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+
+    if "id=\"caminhos-accessibility-info\"" in html:
+        print("Orientação acessível já estava aplicada.")
+        return True
+
+    if "</style>" not in html or "<body>" not in html:
+        print("Não foi possível encontrar pontos para inserir a orientação acessível.")
+        return False
+
+    if "#caminhos-accessibility-info" not in html:
+        html = html.replace("</style>", f"{ACCESSIBILITY_STYLE}\n    </style>", 1)
+    html = html.replace("<body>", f"<body>\n{ACCESSIBILITY_MARKUP}", 1)
+
+    try:
+        index_path.write_text(html, encoding="utf-8")
+    except OSError:
+        return False
+
+    print("Orientação acessível aplicada ao index.html.")
+    return True
+
+
 def patch_web_app_metadata(index_path: Path) -> bool:
     try:
         html = index_path.read_text(encoding="utf-8")
@@ -393,6 +445,8 @@ def main() -> int:
         if not patch_mobile_ready_prompt(index_path):
             return 1
         if not patch_loading_experience(index_path):
+            return 1
+        if not patch_accessibility_info(index_path):
             return 1
         if not patch_web_app_metadata(index_path):
             return 1

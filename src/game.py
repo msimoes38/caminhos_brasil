@@ -112,9 +112,61 @@ class Game:
             import platform
 
             window = getattr(platform, "window", None)
+            if window is None:
+                return False
+
             navigator = getattr(window, "navigator", None) if window else None
-            max_touch_points = getattr(navigator, "maxTouchPoints", 0) if navigator else 0
-            return int(max_touch_points or 0) > 0
+            max_touch_points = self._safe_int(
+                getattr(navigator, "maxTouchPoints", 0) if navigator else 0
+            )
+            ms_max_touch_points = self._safe_int(
+                getattr(navigator, "msMaxTouchPoints", 0) if navigator else 0
+            )
+            if max(max_touch_points, ms_max_touch_points) > 0:
+                return True
+
+            media_queries = (
+                "(pointer: coarse)",
+                "(any-pointer: coarse)",
+                "(hover: none)",
+            )
+            if any(self._match_media(window, query) for query in media_queries):
+                return True
+
+            if self._window_supports_touch(window):
+                return True
+
+            user_agent = str(getattr(navigator, "userAgent", "") if navigator else "").lower()
+            mobile_tokens = ("android", "iphone", "ipad", "ipod", "mobile", "tablet")
+            return any(token in user_agent for token in mobile_tokens)
+        except Exception:
+            return False
+
+    def _safe_int(self, value) -> int:
+        try:
+            return int(value or 0)
+        except (TypeError, ValueError):
+            return 0
+
+    def _match_media(self, window, query: str) -> bool:
+        try:
+            match_media = getattr(window, "matchMedia", None)
+            if match_media is None:
+                return False
+            result = match_media(query)
+            return bool(getattr(result, "matches", False))
+        except Exception:
+            return False
+
+    def _window_supports_touch(self, window) -> bool:
+        try:
+            if "ontouchstart" in window:
+                return True
+        except Exception:
+            pass
+
+        try:
+            return getattr(window, "ontouchstart", None) is not None
         except Exception:
             return False
 
@@ -626,8 +678,8 @@ class Game:
         self.fragments = remaining_fragments
         if collected_any:
             if self._all_fragments_collected():
-                self.feedback_message = "Portal liberado! Procure o Guardião do Portal."
-                self.feedback_message_timer = 3.2
+                self.feedback_message = "Todas as pílulas coletadas! O portal brilhou. Procure o Guardião."
+                self.feedback_message_timer = 3.8
             self.sounds.play("collect")
 
     def _add_collection_entry(self, info: str):
@@ -1259,6 +1311,17 @@ class Game:
         pygame.draw.rect(self.screen, outline_color, goal_rect.inflate(8, 0), 2, border_radius=4)
 
         if unlocked:
+            for index in range(10):
+                angle = self.animation_time * 1.7 + index * (pi / 5)
+                ray_start = (
+                    goal_rect.centerx + int(cos(angle) * 20),
+                    goal_rect.centery + int(sin(angle) * 18),
+                )
+                ray_end = (
+                    goal_rect.centerx + int(cos(angle) * 48),
+                    goal_rect.centery + int(sin(angle) * 40),
+                )
+                pygame.draw.line(self.screen, (218, 246, 162), ray_start, ray_end, 2)
             for index in range(6):
                 angle = self.animation_time * 2.8 + index * (pi / 3)
                 sparkle_x = goal_rect.centerx + int(cos(angle) * 36)
@@ -1382,13 +1445,23 @@ class Game:
                 )
 
     def _draw_fragments(self):
-        for fragment in self.fragments:
+        for order, fragment in enumerate(self.fragments):
             fragment_rect = self._to_screen_rect(fragment.rect)
             float_y = int(sin(self.animation_time * 4 + fragment.rect.x * 0.02) * 5)
             fragment_rect.y += float_y
             center = fragment_rect.center
             glow_radius = 18 + int(sin(self.animation_time * 5 + fragment.rect.x) * 3)
+            is_first_hint = (
+                self.level_index == 0
+                and order == 0
+                and self.level_play_time <= 18
+                and not self.tutorial_actions["collect"]
+            )
 
+            if is_first_hint:
+                hint_radius = glow_radius + 8 + int(sin(self.animation_time * 6) * 2)
+                pygame.draw.circle(self.screen, (255, 248, 190), center, hint_radius, 2)
+                pygame.draw.circle(self.screen, (248, 218, 92), center, hint_radius + 6, 1)
             pygame.draw.circle(self.screen, (252, 230, 132), center, glow_radius, 2)
             pygame.draw.ellipse(self.screen, FRAGMENT_COLOR, fragment_rect)
             pygame.draw.ellipse(self.screen, FRAGMENT_OUTLINE, fragment_rect, 2)
@@ -1464,8 +1537,7 @@ class Game:
 
     def _draw_menu(self):
         self._draw_menu_scene()
-        if self.touch_ui_enabled:
-            self._draw_touch_menu_footer_cover()
+        self._draw_menu_footer_banner()
 
         panel = self._menu_panel_rect()
         panel_surface = pygame.Surface(panel.size, pygame.SRCALPHA)
@@ -1529,15 +1601,24 @@ class Game:
             feedback_y = panel.y - 26 if self.touch_ui_enabled else panel.y - 18
             self.screen.blit(feedback_surface, feedback_surface.get_rect(center=(panel.centerx, feedback_y)))
 
-    def _draw_touch_menu_footer_cover(self):
+    def _draw_menu_footer_banner(self):
         footer = pygame.Rect(0, SCREEN_HEIGHT - 58, SCREEN_WIDTH, 58)
         surface = pygame.Surface(footer.size, pygame.SRCALPHA)
         pygame.draw.rect(surface, (32, 36, 40, 255), surface.get_rect())
         pygame.draw.line(surface, (248, 238, 190, 150), (0, 0), (footer.width, 0), 2)
         self.screen.blit(surface, footer)
 
-        hint_surface = self.font.render("Toque em uma opção para começar", True, (248, 238, 190))
-        self.screen.blit(hint_surface, hint_surface.get_rect(center=(252, footer.centery)))
+        if self.touch_ui_enabled:
+            hint_text = "Toque em uma opção para começar"
+            hint_center = (252, footer.centery)
+        else:
+            hint_text = "Escolha uma opção no painel"
+            hint_center = (SCREEN_WIDTH // 2, footer.centery)
+        hint_surface = self.font.render(hint_text, True, (248, 238, 190))
+        self.screen.blit(hint_surface, hint_surface.get_rect(center=hint_center))
+
+    def _draw_touch_menu_footer_cover(self):
+        self._draw_menu_footer_banner()
 
     def _draw_menu_scene(self):
         if self.menu_image:
@@ -1780,8 +1861,9 @@ class Game:
         if not hint:
             return
 
+        x = 420 if self.touch_ui_enabled else 24
         y = SCREEN_HEIGHT - 180 if self.touch_ui_enabled else SCREEN_HEIGHT - 72
-        box = pygame.Rect(24, y, 388, 44)
+        box = pygame.Rect(x, y, 388, 44)
         pygame.draw.rect(self.screen, (248, 238, 190), box, border_radius=7)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=7)
         hint_surface = self.font.render(hint, True, TEXT_COLOR)

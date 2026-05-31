@@ -43,6 +43,8 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - HUD com ajuste discreto para títulos longos;
 - controles por teclado, mouse e toque;
 - interface mobile em modo paisagem com menu tocável, faixa de orientação e botões virtuais semitransparentes;
+- detecção inicial de toque/mobile por `maxTouchPoints`, `matchMedia`, `ontouchstart` e user agent como fallback leve;
+- faixa inferior no menu inicial para cobrir instruções fixas da arte de abertura e evitar redundância;
 - dicas contextuais nos primeiros segundos da fase 1;
 - banco com 10 pílulas de conhecimento por fase;
 - seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas fases 2 a 16;
@@ -53,6 +55,7 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - portal final bloqueado até todas as pílulas ativas da fase serem coletadas;
 - Guardião do Portal com pergunta histórica obrigatória antes da conclusão, sorteada entre as pílulas ativas da jogada;
 - feedback visual e texto positivo para pílula, checkpoint, cuidado, portal e conclusão;
+- litoral inicial com ondas, espuma, vegetação baixa e destaque sutil na primeira pílula;
 - coleção histórica acumulativa em formato de álbum, com cards de descobertas e descoberta recente destacada;
 - linha do tempo com fases liberadas, bloqueadas, próximas aventuras e concluídas, reservando coluna de status;
 - tela de pausa com botões grandes para toque;
@@ -60,7 +63,7 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - sons simples gerados por codigo;
 - save local em JSON e save web em `localStorage`, ambos tolerantes a falhas;
 - smoke tests permanentes;
-- build Pygbag limpo com manifest/metadados web e deploy via GitHub Pages.
+- build Pygbag limpo com manifest/metadados web, orientação HTML acessível fora do canvas e deploy via GitHub Pages.
 
 ## 3. Tecnologias
 
@@ -154,6 +157,7 @@ Responsabilidades:
 - tratar eventos de teclado, mouse e toque;
 - converter eventos `FINGER*` para coordenadas 960x540;
 - ignorar eventos de mouse gerados por toque quando apropriado;
+- detectar contexto touch no carregamento inicial usando APIs simples do navegador;
 - controlar estados do jogo;
 - desenhar menu, ajuda, linha do tempo, colecao, fase, pausa, quiz, conclusao e final;
 - alternar textos e botoes para teclado ou toque quando o contexto mobile e detectado;
@@ -329,6 +333,7 @@ Valida:
 - coleção histórica acumula descobertas sem duplicar entradas;
 - fluxo basico de menu, nova sessão, checkpoint, cuidado, quiz, conclusão e final;
 - fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa, quiz e linha do tempo;
+- detecção touch inicial por `maxTouchPoints`, `matchMedia` e desktop simulado;
 - botão virtual esquerdo nao cobre Mig no inicio da fase;
 - mensagem historica fica fixa e fica translucida quando Mig passa por tras;
 - teste nao altera o save local.
@@ -355,6 +360,7 @@ Motivos para usar este script:
 - aplica patch no `index.html` gerado para celular;
 - preserva `--ume_block=0`, evitando travamento em "Ready to start !";
 - injeta tela HTML de carregamento do projeto;
+- injeta uma área HTML visualmente oculta com orientação básica para leitores de tela;
 - injeta helper JavaScript para tentativa de fullscreen/orientacao paisagem;
 - injeta titulo, descricao, theme-color e `manifest.webmanifest` basico;
 - a tela de carregamento some quando o jogo chama `window.caminhosHideLoading`, por toque/click ou automaticamente apos alguns segundos.

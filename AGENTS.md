@@ -78,6 +78,8 @@ O jogo ja possui:
 - Tela inicial com `abertura.png`.
 - Menu com continuar, nova sessao, linha do tempo, colecao, ajuda e tela cheia no mobile.
 - Menu mobile com botoes grandes, convite para tocar e faixa de orientacao no rodape.
+- Deteccao inicial de toque/mobile reforcada por APIs simples do navegador.
+- Faixa inferior do menu cobre instrucoes fixas da imagem de abertura para evitar redundancia.
 - Linha do tempo com fases bloqueadas, liberadas e concluidas.
 - Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possivel.
 - Nova jornada temporaria com `N`, sem apagar o save.
@@ -105,8 +107,10 @@ O jogo ja possui:
 - Sons leves gerados por codigo.
 - Sprite animado do Mig usando folha de sprites.
 - Cenarios desenhados por codigo.
+- Litoral inicial com ondas, espuma, vegetacao baixa e destaque sutil na primeira pilula.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
 - Build Pygbag limpo em `scripts/build_pygbag_clean.py`, com manifest/metadados web.
+- Build Pygbag limpo injeta orientacao HTML acessivel fora do canvas.
 - Deploy automatico no GitHub Pages pela branch `yolo_melhoria`.
 - Tela HTML de carregamento para a versao web, com fallback por sinal do jogo, toque/click e tempo.
 

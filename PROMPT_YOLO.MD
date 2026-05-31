@@ -34,6 +34,18 @@ Estado atual importante:
 - Preserve Python, Pygame-CE, Pygbag e o loop `async` de `main.py`.
 - Preserve linguagem infantil, acolhedora e respeitosa.
 
+## Atualizacao Da Ultima Rodada
+
+Ja foram implementados nesta rodada:
+
+- deteccao inicial de touch/mobile reforcada em `src/game.py`, usando `maxTouchPoints`, `matchMedia`, `ontouchstart` e user agent como fallback leve;
+- faixa inferior consistente no menu inicial para cobrir a chamada fixa da arte de abertura e evitar instrucoes duplicadas;
+- polimento leve do litoral da fase 1, destaque sutil da primeira pilula e portal liberado com brilho mais claro;
+- orientacao HTML acessivel injetada pelo build limpo fora do canvas;
+- smoke tests para a nova deteccao touch simulada.
+
+Proximas rodadas devem priorizar validacao em celular real, teste publicado de persistencia web e novos polimentos pequenos de fase.
+
 ## Diagnostico Da Versao Publicada
 
 Uma verificacao com Selenium em Chrome headless conseguiu abrir a URL publicada, carregar o canvas `960x540`, esconder a tela de carregamento e interagir com:
@@ -48,7 +60,7 @@ Uma verificacao com Selenium em Chrome headless conseguiu abrir a URL publicada,
 
 Tambem foi confirmado que o pacote publicado `pygbag_app.apk` contem as melhorias recentes, incluindo `localStorage`, album da colecao e novos detalhes visuais.
 
-Problemas ou oportunidades observados:
+Problemas ou oportunidades observados antes da ultima rodada:
 
 1. Em emulacao mobile/touch, o navegador reportou `navigator.maxTouchPoints = 1`, `pointer: coarse` e `hover: none`, mas o jogo ainda abriu com menu de teclado. A deteccao touch inicial via Pygbag parece insuficiente.
 2. No menu desktop, a imagem `abertura.png` ainda mostra "PRESSIONE ENTER..." enquanto o painel tambem mostra atalhos. Isso e redundante e pode poluir a leitura.

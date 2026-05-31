@@ -29,11 +29,20 @@ def _draw_coast_background(screen: pygame.Surface, camera_x: int, level_width: i
 
     ocean_y = 350
     pygame.draw.rect(screen, (58, 143, 190), (0, ocean_y, SCREEN_WIDTH, 112))
+    for band in range(4):
+        y = ocean_y + 14 + band * 24
+        pygame.draw.line(screen, (82, 164, 202), (0, y), (SCREEN_WIDTH, y + 6), 2)
     pygame.draw.rect(screen, (232, 207, 132), (0, 430, SCREEN_WIDTH, 54))
+    pygame.draw.line(screen, (248, 238, 190), (0, 430), (SCREEN_WIDTH, 430), 5)
 
     for world_x in range(120, level_width, 260):
         x = world_x - int(camera_x * 0.35)
         pygame.draw.line(screen, (106, 174, 204), (x, ocean_y + 42), (x + 120, ocean_y + 42), 3)
+        pygame.draw.arc(screen, (238, 248, 246), (x - 20, ocean_y + 60, 86, 24), 0.15, 2.9, 2)
+
+    for world_x in range(70, level_width, 180):
+        x = world_x - int(camera_x * 0.42)
+        _draw_beach_grass(screen, x, 426)
 
     _draw_birds(screen, camera_x, [(260, 118), (620, 96), (980, 132)])
     _draw_coastal_marker(screen, 560 - int(camera_x * 0.32), 386)
@@ -389,6 +398,16 @@ def _draw_coastal_marker(screen: pygame.Surface, x: int, y: int):
     pygame.draw.rect(screen, (166, 132, 86), (x, y, 20, 48))
     pygame.draw.polygon(screen, (134, 102, 70), [(x - 8, y), (x + 10, y - 20), (x + 28, y)])
     pygame.draw.rect(screen, (92, 68, 44), (x - 10, y + 42, 40, 8))
+
+
+def _draw_beach_grass(screen: pygame.Surface, x: int, y: int):
+    if x < -40 or x > SCREEN_WIDTH + 40:
+        return
+
+    pygame.draw.line(screen, (70, 132, 72), (x, y + 10), (x + 10, y - 14), 3)
+    pygame.draw.line(screen, (88, 150, 78), (x + 8, y + 10), (x + 24, y - 8), 3)
+    pygame.draw.line(screen, (66, 118, 68), (x + 18, y + 10), (x + 28, y - 18), 3)
+    pygame.draw.ellipse(screen, (214, 190, 118), (x - 6, y + 8, 44, 12))
 
 
 def _draw_cane_bundle(screen: pygame.Surface, x: int, y: int):
