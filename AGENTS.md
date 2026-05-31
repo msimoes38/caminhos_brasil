@@ -77,22 +77,22 @@ O jogo ja possui:
 
 - Tela inicial com `abertura.png`.
 - Menu com continuar, nova sessao, linha do tempo, colecao, ajuda e tela cheia no mobile.
-- Menu mobile com botoes grandes e convite para tocar.
+- Menu mobile com botoes grandes, convite para tocar e faixa de orientacao no rodape.
 - Linha do tempo com fases bloqueadas, liberadas e concluidas.
-- Progresso salvo localmente em JSON quando possivel.
+- Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possivel.
 - Nova jornada temporaria com `N`, sem apagar o save.
 - Dezesseis fases historicas em ordem cronologica.
 - Movimento lateral, pulo, gravidade e colisao.
 - Camera horizontal.
 - HUD ajusta discretamente titulos longos para caberem no painel.
-- Controles por toque para celular em modo paisagem no navegador.
+- Controles por toque para celular em modo paisagem no navegador, sem cobrir Mig no inicio da fase.
 - Dicas curtas nos primeiros segundos da fase 1, ajustadas para teclado ou toque.
 - Banco com 10 pílulas de conhecimento por fase.
 - Seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas demais.
 - Pílulas históricas coletáveis.
 - Guardiao do Portal com pergunta historica obrigatoria sobre pílula ativa antes de concluir cada fase.
 - Colecao historica agrupada por fase.
-- Colecao historica com aparencia de album, descoberta recente destacada e progresso do banco por fase.
+- Colecao historica com aparencia de album, cards de descobertas, descoberta recente destacada e progresso do banco por fase.
 - Introducao narrativa por fase.
 - Ajuda rapida com `H`.
 - Tela final com creditos simples.
@@ -125,7 +125,7 @@ O jogo ja possui:
 - `src/level_data.py`: dados das fases historicas, bancos de pílulas e geracao simples de layout.
 - `src/levels.py`: conversao dos dados das fases em objetos usados pelo Pygame e seleção ativa de pílulas.
 - `src/backgrounds.py`: desenho dos cenarios por tema.
-- `src/progress.py`: salvamento local simples de progresso e colecao em JSON.
+- `src/progress.py`: salvamento de progresso e colecao em JSON no desktop e `localStorage` no navegador.
 - `src/sounds.py`: sons simples gerados por codigo.
 - `src/settings.py`: constantes gerais.
 - `scripts/smoke_tests.py`: validacao automatica leve de fases, banco de pílulas, quiz, assets e fluxo basico.
@@ -172,9 +172,10 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 - A fase 2 ja teve problemas de checkpoint e itens inalcancaveis; revisar com cuidado se alterar layout.
 - A tela inicial usa `abertura.png`; se esse arquivo faltar, `src/game.py` tem fallback desenhado por Pygame.
 - A nova sessao com `N` nao deve sobrescrever o save salvo e deve sortear nova seleção de pílulas.
+- O save web usa a chave `caminhos_brasil_save_v1` em `localStorage`; se falhar, o jogo deve continuar sem quebrar.
 - O controle `H` abre a ajuda rapida e deve continuar simples e legivel.
 - O controle `Esc` deve voltar para a tela inicial sem encerrar o runtime, especialmente na versao web.
-- Os controles por toque devem continuar grandes, visiveis e sem cobrir HUD ou mensagens historicas.
+- Os controles por toque devem continuar grandes, visiveis e sem cobrir HUD, mensagens historicas ou Mig no inicio da fase.
 - O menu e a pausa mobile devem continuar com botoes grandes e textos de toque, sem remover atalhos de teclado.
 - O botao `Tela cheia` deve falhar com orientacao simples, sem quebrar desktop.
 - Nao reposicionar dinamicamente a mensagem historica durante o pulo; isso distrai o jogador. Preserve painel fixo com translucidez.
@@ -226,9 +227,8 @@ Teste manual minimo:
 - Ajustar sensacao de movimento e pulo.
 - Melhorar feedback visual para coleta, checkpoint e objetivo final.
 - Melhorar visual de plataformas, pílulas, checkpoints e portal final.
-- Polir colecao historica como album.
+- Testar save web e audio em navegadores reais.
 - Testar build Pygbag limpo em navegador real.
-- Adaptar `src/progress.py` para armazenamento web, se necessario.
 - Separar telas de `src/game.py` se o arquivo crescer muito.
 
 ## Restricoes

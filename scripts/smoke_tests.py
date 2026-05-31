@@ -1,6 +1,9 @@
+import json
 import os
+import platform
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,6 +95,8 @@ def main() -> int:
             elif support_index not in reachable_platforms:
                 errors.append(f"{label}: pilula em plataforma dificil de alcancar: {fragment.rect}.")
 
+    _check_progress_store(errors)
+
     game = Game()
     if game.menu_image is None:
         errors.append("Abertura nao carregou a partir de abertura.png.")
@@ -122,10 +127,124 @@ def main() -> int:
     print("- Game inicializa em modo dummy com abertura e sprite do Mig.")
     print("- Guardiao do Portal pergunta sobre pilula ativa, aceita erro com dica e conclui com resposta correta.")
     print("- Colecao historica acumula descobertas sem duplicar entradas.")
+    print("- ProgressStore salva/carrega no arquivo local e em localStorage simulado com fallback seguro.")
     print("- Fluxo basico de menu, nova sessao, checkpoint, cuidado, Esc e final passa sem alterar save.")
     print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo.")
     print("- Mensagem historica mantem posicao fixa e usa translucidez quando Mig passa por tras.")
     return 0
+
+
+class _FakeLocalStorage:
+    def __init__(self):
+        self.values = {}
+
+    def getItem(self, key: str):
+        return self.values.get(key)
+
+    def setItem(self, key: str, value: str):
+        self.values[key] = value
+
+
+class _FailingLocalStorage:
+    def getItem(self, _key: str):
+        raise RuntimeError("localStorage indisponivel")
+
+    def setItem(self, _key: str, _value: str):
+        raise RuntimeError("localStorage indisponivel")
+
+
+def _check_progress_store(errors: list[str]):
+    import src.progress as progress_module
+
+    original_save_path = progress_module.SAVE_PATH
+    missing_window = object()
+    original_window = getattr(platform, "window", missing_window)
+
+    try:
+        with TemporaryDirectory() as temp_dir:
+            progress_module.SAVE_PATH = Path(temp_dir) / "save.json"
+            if hasattr(platform, "window"):
+                delattr(platform, "window")
+
+            store = progress_module.ProgressStore(4)
+            store.save(3, [("Fase", "Info")], {1, 8})
+            loaded = store.load()
+            if loaded["highest_unlocked_level"] != 3:
+                errors.append("ProgressStore local nao preservou maior fase desbloqueada.")
+            if loaded["completed_levels"] != {1}:
+                errors.append("ProgressStore local nao filtrou fases concluidas invalidas.")
+            if loaded["collection_entries"] != [("Fase", "Info")]:
+                errors.append("ProgressStore local nao preservou a colecao em formato valido.")
+
+            progress_module.SAVE_PATH.write_text(
+                json.dumps(
+                    {
+                        "highest_unlocked_level": 99,
+                        "completed_levels": [0, "x", 3, 9],
+                        "collection_entries": [
+                            ["Fase", "Info"],
+                            ["Fase", "Info"],
+                            ["incompleta"],
+                            [12, "ruim"],
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            loaded = store.load()
+            if loaded["highest_unlocked_level"] != 3:
+                errors.append("ProgressStore local nao limitou maior fase ao total de fases.")
+            if loaded["completed_levels"] != {0, 3}:
+                errors.append("ProgressStore local nao normalizou completed_levels.")
+            if loaded["collection_entries"] != [("Fase", "Info")]:
+                errors.append("ProgressStore local nao removeu entradas ruins ou duplicadas.")
+
+            storage = _FakeLocalStorage()
+            platform.window = type("Window", (), {"localStorage": storage})()
+            store.save(2, [("Web", "Pill")], {0, 2})
+            if progress_module.WEB_SAVE_KEY not in storage.values:
+                errors.append("ProgressStore web nao gravou na chave esperada do localStorage.")
+            loaded = store.load()
+            if loaded["highest_unlocked_level"] != 2 or loaded["completed_levels"] != {0, 2}:
+                errors.append("ProgressStore web nao carregou progresso salvo no localStorage.")
+            if loaded["collection_entries"] != [("Web", "Pill")]:
+                errors.append("ProgressStore web nao carregou colecao salva no localStorage.")
+
+            storage.values[progress_module.WEB_SAVE_KEY] = json.dumps(
+                {
+                    "highest_unlocked_level": 7,
+                    "completed_levels": [1, "ruim", 2],
+                    "collection_entries": [
+                        ["Web", "Pill"],
+                        ["Web", "Pill"],
+                        ["ruim"],
+                    ],
+                }
+            )
+            loaded = store.load()
+            if loaded["highest_unlocked_level"] != 3:
+                errors.append("ProgressStore web nao limitou maior fase ao total de fases.")
+            if loaded["completed_levels"] != {1, 2}:
+                errors.append("ProgressStore web nao filtrou completed_levels invalidos.")
+            if loaded["collection_entries"] != [("Web", "Pill")]:
+                errors.append("ProgressStore web nao removeu entradas ruins ou duplicadas.")
+
+            platform.window = type("Window", (), {"localStorage": _FailingLocalStorage()})()
+            try:
+                store.save(1, [("Fallback", "Ok")], {1})
+                loaded = store.load()
+            except Exception as exc:
+                errors.append(f"ProgressStore quebrou quando localStorage falhou: {exc}.")
+            else:
+                if not isinstance(loaded["collection_entries"], list):
+                    errors.append("ProgressStore com localStorage falhando retornou formato invalido.")
+    finally:
+        progress_module.SAVE_PATH = original_save_path
+        if original_window is missing_window:
+            if hasattr(platform, "window"):
+                delattr(platform, "window")
+        else:
+            platform.window = original_window
 
 
 def _check_pill_bank(index: int, label: str, errors: list[str]):
@@ -285,6 +404,15 @@ def _check_basic_flow(game: Game, errors: list[str]):
     game._handle_keydown(pygame.K_c)
     if game.state != STATE_COLLECTION:
         errors.append("C nao abriu a colecao.")
+    rows = game._collection_rows()
+    expected_counter = f"/{get_level_pill_count(0)} descobertas"
+    if not any(row_type == "header" and expected_counter in text for row_type, text in rows):
+        errors.append("Colecao nao mostra contador baseado no banco completo da fase.")
+    if len(rows) > game._collection_visible_rows():
+        previous_scroll = game.collection_scroll
+        game._handle_keydown(pygame.K_DOWN)
+        if game.collection_scroll <= previous_scroll:
+            errors.append("Colecao nao rolou com seta para baixo.")
     game._handle_keydown(pygame.K_c)
     if game.state != STATE_PLAYING:
         errors.append("C nao voltou da colecao para a fase.")
@@ -357,6 +485,9 @@ def _check_touch_flow(game: Game, errors: list[str]):
         errors.append("Toque na introducao nao iniciou a fase.")
 
     left_rect = game._touch_control_rects()["left"]
+    if left_rect.colliderect(game._get_player_screen_rect()):
+        errors.append("Botao virtual esquerdo cobre o Mig no inicio da fase.")
+
     pointer_id = ("test", 1)
     game._handle_pointer_down(left_rect.center, pointer_id)
     game._update(1 / 60)

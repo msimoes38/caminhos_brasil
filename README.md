@@ -18,15 +18,15 @@ Principais recursos:
 
 - Tela inicial com imagem `abertura.png`.
 - Menu com continuar jornada, nova sessão temporária, linha do tempo, coleção, ajuda rápida e botão mobile de tela cheia.
-- Menu mobile com botões grandes e convite para tocar quando o jogo detecta uso de toque.
+- Menu mobile com botões grandes, faixa de orientação por toque e botão de tela cheia.
 - Linha do tempo com fases bloqueadas, liberadas, próximas e concluídas.
 - Dezesseis fases históricas jogáveis.
-- Progresso salvo localmente quando possível.
+- Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possível.
 - Opção de nova jornada temporária com `N`, sem apagar o save.
 - Movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo.
 - Câmera horizontal.
 - HUD com ajuste discreto para manter títulos longos dentro do painel.
-- Controles por toque para jogar no celular em modo paisagem no navegador.
+- Controles por toque para jogar no celular em modo paisagem no navegador, posicionados para não cobrir Mig no início.
 - Dicas curtas nos primeiros segundos da fase 1, com texto adequado para teclado ou toque.
 - Banco com 10 pílulas de conhecimento por fase.
 - Seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas demais.
@@ -42,7 +42,7 @@ Principais recursos:
 - Áreas de cuidado mais visíveis, com aviso antes do contato.
 - Tela de pausa com botões grandes para continuar, reiniciar, voltar ao menu e abrir a coleção.
 - Tela final com resumo de fases e pílulas descobertas.
-- Cenários por tema desenhados com Pygame.
+- Cenários por tema desenhados com Pygame, com detalhes visuais próprios de cada período.
 - Sprite animado do Mig usando `assets/images/personagem.png`.
 - Sons leves gerados por codigo.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
@@ -128,7 +128,9 @@ Celular ou tela de toque:
 
 ## Progresso E Salvamento
 
-O jogo salva progresso local em `caminhos_brasil_save.json`.
+No desktop, o jogo salva progresso local em `caminhos_brasil_save.json`.
+
+No navegador via Pygbag, o jogo tenta usar `localStorage` com a chave `caminhos_brasil_save_v1`.
 
 O save guarda:
 
@@ -175,8 +177,10 @@ O smoke test confere:
 - `abertura.png` e `assets/images/personagem.png` carregam;
 - Guardião do Portal pergunta apenas sobre uma pílula ativa da jogada e exige resposta correta para concluir;
 - coleção histórica acumula descobertas sem duplicar entradas;
+- progresso salva/carrega em arquivo local e em `localStorage` simulado, com fallback seguro;
 - fluxo basico de menu, nova sessao temporaria, colecao, checkpoint, area de cuidado, conclusao e final passa sem alterar o save.
 - fluxo basico por toque cobre menu, fase, movimento, pulo, colecao e linha do tempo;
+- botão virtual esquerdo não cobre Mig no início da fase;
 - mensagens historicas permanecem em posicao estavel e ficam translucidas quando Mig passa por tras.
 
 Teste manual recomendado:
@@ -189,7 +193,7 @@ Teste manual recomendado:
 6. Testar `N` no menu e confirmar que a jornada temporaria comeca na fase 1.
 7. Mover, pular e conferir as dicas iniciais da fase 1.
 8. Coletar pílulas e observar o feedback positivo.
-9. Abrir a coleção com `C` e conferir o contador de descobertas.
+9. Abrir a coleção com `C` e conferir o visual de álbum e o contador de descobertas.
 10. Ativar checkpoint.
 11. Tocar em area de cuidado e confirmar retorno seguro.
 12. Reiniciar fase com `R`.
@@ -198,7 +202,7 @@ Teste manual recomendado:
 15. Errar uma alternativa de proposito e conferir dica sem punicao.
 16. Acertar a resposta e concluir a fase.
 17. Confirmar desbloqueio da fase seguinte.
-18. Entrar pela linha do tempo com `S`.
+18. Entrar pela linha do tempo com `S` e conferir status sem encostar nos botões de rolagem.
 19. Testar a fase 2, especialmente pílulas, checkpoints e quiz.
 20. Testar uma fase intermediaria.
 21. Testar a ultima fase.
@@ -267,8 +271,8 @@ src/
 - `src/player.py`: controla Mig, movimento, colisao, coyote time, buffer de pulo e animacao.
 - `src/level_data.py`: contém dados das 16 fases, bancos de pílulas históricas e geradores simples de layout.
 - `src/levels.py`: converte dados das fases em objetos `pygame.Rect`.
-- `src/backgrounds.py`: desenha cenarios por tema.
-- `src/progress.py`: salva e carrega progresso local em JSON.
+- `src/backgrounds.py`: desenha cenarios por tema, com pequenos detalhes visuais por período.
+- `src/progress.py`: salva e carrega progresso em JSON no desktop e em `localStorage` no navegador quando disponível.
 - `src/sounds.py`: gera sons simples por codigo.
 - `src/settings.py`: constantes gerais.
 - `scripts/smoke_tests.py`: validacao automatica leve.
@@ -328,8 +332,9 @@ Checklist apos deploy:
 - iniciar fase, andar, pular, coletar pílula, pausar, abrir coleção e linha do tempo;
 - responder ao Guardiao do Portal antes de concluir a fase;
 - recarregar a pagina e confirmar que o jogo volta ao menu sem ficar preso no carregamento;
+- concluir uma fase, recarregar e confirmar que o progresso web foi mantido no navegador;
 - testar audio no navegador;
-- observar o comportamento do save web, que ainda e um limite conhecido.
+- conferir se o navegador permite `localStorage`; se nao permitir, o jogo deve seguir sem quebrar.
 
 Checklist curto de publicacao:
 
@@ -341,7 +346,7 @@ Checklist curto de publicacao:
 ## Limites Conhecidos
 
 - As fases compartilham gerador simples de layout.
-- O salvamento atual e local por arquivo JSON; no navegador, pode precisar de adaptacao para armazenamento web.
+- O salvamento web depende de `localStorage`; se o navegador bloquear esse recurso, o jogo continua sem quebrar, mas pode nao persistir.
 - A interface esta otimizada para 960x540.
 - A experiencia mobile foi pensada para celular deitado; modo retrato nao possui layout dedicado.
 - As mensagens historicas usam painel fixo e translucidez para nao disputar espaco com o pulo do Mig.
@@ -351,7 +356,7 @@ Checklist curto de publicacao:
 ## Proximas Melhorias Recomendadas
 
 1. Fazer teste publico curto com criancas ou familiares observando dificuldade e leitura.
-2. Adaptar `src/progress.py` para armazenamento web quando a persistencia no navegador for prioridade.
+2. Testar persistencia web em celulares e navegadores reais.
 3. Melhorar a tela de carregamento com progresso real se o Pygbag expuser um sinal confiavel.
 4. Polir mais layouts especificos de algumas fases sem aumentar complexidade.
 5. Separar telas de `src/game.py` se o arquivo crescer mais.

@@ -224,6 +224,7 @@ WEB_MANIFEST = {
     ],
 }
 
+
 def ignore_generated(_folder: str, names: list[str]) -> set[str]:
     return {
         name

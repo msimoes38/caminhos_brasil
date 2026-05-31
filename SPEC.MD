@@ -42,7 +42,7 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - câmera horizontal;
 - HUD com ajuste discreto para títulos longos;
 - controles por teclado, mouse e toque;
-- interface mobile em modo paisagem com menu tocável e botões virtuais semitransparentes;
+- interface mobile em modo paisagem com menu tocável, faixa de orientação e botões virtuais semitransparentes;
 - dicas contextuais nos primeiros segundos da fase 1;
 - banco com 10 pílulas de conhecimento por fase;
 - seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas fases 2 a 16;
@@ -53,12 +53,12 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - portal final bloqueado até todas as pílulas ativas da fase serem coletadas;
 - Guardião do Portal com pergunta histórica obrigatória antes da conclusão, sorteada entre as pílulas ativas da jogada;
 - feedback visual e texto positivo para pílula, checkpoint, cuidado, portal e conclusão;
-- coleção histórica acumulativa em formato de álbum, com descoberta recente destacada;
-- linha do tempo com fases liberadas, bloqueadas, próximas aventuras e concluídas;
+- coleção histórica acumulativa em formato de álbum, com cards de descobertas e descoberta recente destacada;
+- linha do tempo com fases liberadas, bloqueadas, próximas aventuras e concluídas, reservando coluna de status;
 - tela de pausa com botões grandes para toque;
 - tela final com resumo da jornada;
 - sons simples gerados por codigo;
-- save local tolerante a falhas;
+- save local em JSON e save web em `localStorage`, ambos tolerantes a falhas;
 - smoke tests permanentes;
 - build Pygbag limpo com manifest/metadados web e deploy via GitHub Pages.
 
@@ -252,10 +252,16 @@ Temas atuais:
 
 ### `src/progress.py`
 
-Salva e carrega progresso local em:
+Salva e carrega progresso em arquivo local no desktop:
 
 ```text
 caminhos_brasil_save.json
+```
+
+No navegador via Pygbag, tenta usar `localStorage` com a chave:
+
+```text
+caminhos_brasil_save_v1
 ```
 
 Campos:
@@ -269,8 +275,8 @@ Requisitos:
 - falha de leitura nao pode quebrar o jogo;
 - falha de escrita nao pode quebrar o jogo;
 - save corrompido deve voltar para progresso vazio;
+- `localStorage` indisponivel deve cair para o comportamento local sem quebrar;
 - sessao temporaria iniciada com `N` nao deve sobrescrever o save;
-- adaptacao de armazenamento web deve acontecer aqui quando for prioridade.
 
 ### `src/sounds.py`
 
@@ -319,9 +325,11 @@ Valida:
 - `Game` inicializa;
 - `abertura.png` carrega;
 - sprite do Mig carrega;
+- `ProgressStore` salva/carrega em arquivo local e em `localStorage` simulado, com fallback seguro;
 - coleção histórica acumula descobertas sem duplicar entradas;
 - fluxo basico de menu, nova sessão, checkpoint, cuidado, quiz, conclusão e final;
 - fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa, quiz e linha do tempo;
+- botão virtual esquerdo nao cobre Mig no inicio da fase;
 - mensagem historica fica fixa e fica translucida quando Mig passa por tras;
 - teste nao altera o save local.
 
@@ -519,11 +527,12 @@ Esse período trouxe mudanças importantes e também desafios para muitas pessoa
 
 Comportamento atual:
 
-- `ProgressStore.load()` tenta carregar `caminhos_brasil_save.json`;
-- se falhar, retorna progresso vazio;
+- `ProgressStore.load()` tenta carregar `localStorage` no navegador e `caminhos_brasil_save.json` no desktop;
+- a chave web é `caminhos_brasil_save_v1`;
+- se `localStorage`, arquivo ou JSON falharem, retorna progresso vazio ou cai para o comportamento local sem quebrar;
 - `Enter` no menu continua a jornada salva;
 - `N` no menu cria nova jornada temporária;
-- em nova jornada temporária, `_save_progress()` não grava em disco;
+- em nova jornada temporária, `_save_progress()` não grava em disco nem em `localStorage`;
 - iniciar nova jornada temporária refaz o sorteio das pílulas ativas e mantém a coleção acumulativa na sessão;
 - coletar pílulas e concluir fases grava progresso apenas fora da sessão temporária.
 - respostas do Guardião do Portal não são salvas nesta versão.
@@ -538,9 +547,9 @@ Formato:
 }
 ```
 
-Limite conhecido:
+Observacao:
 
-- no navegador, o save por arquivo JSON pode nao persistir como esperado. A adaptacao futura deve ser feita em `src/progress.py`, preferencialmente preservando tolerancia a falhas.
+- no navegador, a persistencia depende de `localStorage`; se o navegador bloquear esse recurso, o jogo continua funcionando sem quebrar.
 
 ## 13. Publicacao Web
 
@@ -660,19 +669,18 @@ Mobile web:
 - As fases compartilham gerador simples de layout.
 - A interface base é 960x540.
 - Mobile é paisagem apenas; retrato não tem layout dedicado.
-- Save web ainda precisa de validação/adaptação.
+- Save web usa `localStorage`, mas ainda deve ser validado em navegadores reais.
 - Áudio em navegador pode variar por política do browser.
 - `src/game.py` concentra muitas responsabilidades.
 - A tela de carregamento HTML usa fallback por tempo/toque porque o sinal de carregamento do Pygbag pode variar no celular.
 
 ## 18. Prioridades Futuras
 
-1. Adaptar save para armazenamento web.
-2. Testar audio e save em navegadores reais.
-3. Polir fases específicas sem aumentar complexidade.
-4. Separar telas de `src/game.py` quando houver motivo claro.
-5. Melhorar tela de carregamento com progresso real se houver API confiável.
-6. Fazer teste com crianças/familiares e observar leitura/dificuldade.
+1. Testar audio e save web em navegadores reais.
+2. Polir fases específicas sem aumentar complexidade.
+3. Separar telas de `src/game.py` quando houver motivo claro.
+4. Melhorar tela de carregamento com progresso real se houver API confiável.
+5. Fazer teste com crianças/familiares e observar leitura/dificuldade.
 
 ## 19. Regras Para Proximos Agentes
 

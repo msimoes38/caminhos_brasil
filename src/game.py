@@ -397,7 +397,7 @@ class Game:
         self._submit_quiz_answer(option_index)
 
     def _scroll_collection_from_drag(self, start: dict, delta_y: int):
-        max_scroll = max(0, len(self._collection_rows()) - 8)
+        max_scroll = max(0, len(self._collection_rows()) - self._collection_visible_rows())
         self._scroll_from_drag(start, delta_y, max_scroll, "collection_scroll")
 
     def _scroll_level_select_from_drag(self, start: dict, delta_y: int):
@@ -542,7 +542,7 @@ class Game:
             self._restart_level()
 
     def _handle_collection_keydown(self, key: int):
-        max_scroll = max(0, len(self._collection_rows()) - 8)
+        max_scroll = max(0, len(self._collection_rows()) - self._collection_visible_rows())
         if key in (pygame.K_UP, pygame.K_w):
             self.collection_scroll = max(0, self.collection_scroll - 1)
         elif key in (pygame.K_DOWN, pygame.K_s):
@@ -1041,9 +1041,9 @@ class Game:
 
     def _touch_control_rects(self) -> dict[str, pygame.Rect]:
         return {
-            "left": pygame.Rect(24, SCREEN_HEIGHT - 112, 92, 84),
-            "right": pygame.Rect(132, SCREEN_HEIGHT - 112, 92, 84),
-            "jump": pygame.Rect(SCREEN_WIDTH - 158, SCREEN_HEIGHT - 128, 130, 100),
+            "left": pygame.Rect(24, SCREEN_HEIGHT - 64, 92, 52),
+            "right": pygame.Rect(132, SCREEN_HEIGHT - 64, 92, 52),
+            "jump": pygame.Rect(SCREEN_WIDTH - 160, SCREEN_HEIGHT - 106, 132, 90),
             "pause": pygame.Rect(SCREEN_WIDTH - 140, 68, 54, 44),
             "collection": pygame.Rect(SCREEN_WIDTH - 76, 68, 54, 44),
         }
@@ -1064,7 +1064,7 @@ class Game:
         rows = []
         for row_index, index in enumerate(range(first_index, last_index)):
             y = box.y + 82 + row_index * 43
-            rows.append((index, pygame.Rect(box.x + 84, y - 7, box.width - 124, 35)))
+            rows.append((index, pygame.Rect(box.x + 84, y - 7, box.width - 170, 35)))
         return rows
 
     def _level_select_index_at(self, position: tuple[int, int]) -> int | None:
@@ -1087,6 +1087,9 @@ class Game:
     def _collection_back_button_rect(self) -> pygame.Rect:
         box = self._collection_box_rect()
         return pygame.Rect(box.right - 116, box.y + 18, 88, 34)
+
+    def _collection_visible_rows(self) -> int:
+        return 5
 
     def _intro_box_rect(self) -> pygame.Rect:
         return pygame.Rect(70, SCREEN_HEIGHT - 195, SCREEN_WIDTH - 140, 150)
@@ -1461,6 +1464,8 @@ class Game:
 
     def _draw_menu(self):
         self._draw_menu_scene()
+        if self.touch_ui_enabled:
+            self._draw_touch_menu_footer_cover()
 
         panel = self._menu_panel_rect()
         panel_surface = pygame.Surface(panel.size, pygame.SRCALPHA)
@@ -1523,6 +1528,16 @@ class Game:
             feedback_surface = self.font.render(self.feedback_message, True, (116, 70, 42))
             feedback_y = panel.y - 26 if self.touch_ui_enabled else panel.y - 18
             self.screen.blit(feedback_surface, feedback_surface.get_rect(center=(panel.centerx, feedback_y)))
+
+    def _draw_touch_menu_footer_cover(self):
+        footer = pygame.Rect(0, SCREEN_HEIGHT - 58, SCREEN_WIDTH, 58)
+        surface = pygame.Surface(footer.size, pygame.SRCALPHA)
+        pygame.draw.rect(surface, (32, 36, 40, 255), surface.get_rect())
+        pygame.draw.line(surface, (248, 238, 190, 150), (0, 0), (footer.width, 0), 2)
+        self.screen.blit(surface, footer)
+
+        hint_surface = self.font.render("Toque em uma opção para começar", True, (248, 238, 190))
+        self.screen.blit(hint_surface, hint_surface.get_rect(center=(252, footer.centery)))
 
     def _draw_menu_scene(self):
         if self.menu_image:
@@ -1643,11 +1658,18 @@ class Game:
                 status = "Complete a anterior"
             text = f"{index + 1:02d}. {get_level_title(index)}"
             color = TEXT_COLOR if is_unlocked else (112, 112, 112)
-            status_surface = self.font.render(status, True, color)
+            status_column_width = 190
+            status_left = row.right - status_column_width
+            status_surface = self._render_fitting_text(
+                status,
+                color,
+                status_column_width - 42,
+                [self.small_font],
+            )
             surface = self._render_fitting_text(
                 text,
                 color,
-                row.width - status_surface.get_width() - 54,
+                row.width - status_column_width - 28,
                 [self.font, self.small_font],
             )
             self.screen.blit(surface, (row.x + 14, row.y + 7))
@@ -1657,7 +1679,7 @@ class Game:
             )
 
             if is_completed:
-                medal_x = row.right - 132
+                medal_x = status_left + 20
                 pygame.draw.polygon(
                     self.screen,
                     (226, 168, 74),
@@ -1925,10 +1947,14 @@ class Game:
 
     def _draw_collection(self):
         box = self._collection_box_rect()
-        pygame.draw.rect(self.screen, (246, 234, 196), box, border_radius=8)
+        pygame.draw.rect(self.screen, (244, 230, 190), box, border_radius=8)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=8)
-        pygame.draw.rect(self.screen, (226, 202, 128), (box.x, box.y, 84, box.height), border_radius=8)
-        pygame.draw.line(self.screen, TEXT_COLOR, (box.x + 84, box.y), (box.x + 84, box.bottom), 2)
+        pygame.draw.rect(self.screen, (214, 184, 118), (box.x, box.y, 76, box.height), border_radius=8)
+        pygame.draw.line(self.screen, TEXT_COLOR, (box.x + 76, box.y), (box.x + 76, box.bottom), 2)
+        for ring_y in range(box.y + 88, box.bottom - 72, 48):
+            pygame.draw.circle(self.screen, (248, 238, 190), (box.x + 38, ring_y), 9)
+            pygame.draw.circle(self.screen, TEXT_COLOR, (box.x + 38, ring_y), 9, 2)
+            pygame.draw.line(self.screen, (128, 116, 86), (box.x + 38, ring_y), (box.x + 88, ring_y), 2)
 
         title_surface = self.big_font.render("Coleção histórica", True, TEXT_COLOR)
         collected_count = len(self.collection_entries)
@@ -1938,13 +1964,13 @@ class Game:
             True,
             TEXT_COLOR,
         )
-        self.screen.blit(title_surface, title_surface.get_rect(center=(SCREEN_WIDTH // 2 + 34, box.y + 38)))
-        self.screen.blit(count_surface, count_surface.get_rect(center=(SCREEN_WIDTH // 2 + 34, box.y + 70)))
+        self.screen.blit(title_surface, title_surface.get_rect(center=(SCREEN_WIDTH // 2 + 26, box.y + 34)))
+        self.screen.blit(count_surface, count_surface.get_rect(center=(SCREEN_WIDTH // 2 + 26, box.y + 66)))
 
-        pygame.draw.circle(self.screen, GOAL_COLOR, (box.x + 42, box.y + 54), 18)
-        pygame.draw.circle(self.screen, TEXT_COLOR, (box.x + 42, box.y + 54), 18, 2)
+        pygame.draw.circle(self.screen, GOAL_COLOR, (box.x + 38, box.y + 48), 18)
+        pygame.draw.circle(self.screen, TEXT_COLOR, (box.x + 38, box.y + 48), 18, 2)
         medal_surface = self.font.render(str(collected_count), True, TEXT_COLOR)
-        self.screen.blit(medal_surface, medal_surface.get_rect(center=(box.x + 42, box.y + 54)))
+        self.screen.blit(medal_surface, medal_surface.get_rect(center=(box.x + 38, box.y + 48)))
 
         back_rect = self._collection_back_button_rect()
         pygame.draw.rect(self.screen, (226, 202, 128), back_rect, border_radius=6)
@@ -1953,35 +1979,54 @@ class Game:
         self.screen.blit(back_surface, back_surface.get_rect(center=back_rect.center))
 
         rows = self._collection_rows()
-        visible_rows = rows[self.collection_scroll : self.collection_scroll + 8]
-        y = box.y + 96
+        visible_rows = rows[self.collection_scroll: self.collection_scroll + self._collection_visible_rows()]
+        y = box.y + 94
+        content_x = box.x + 108
+        content_width = box.width - 152
         for row_type, text in visible_rows:
             if row_type == "header":
-                header_box = pygame.Rect(box.x + 108, y - 4, box.width - 138, 30)
-                pygame.draw.rect(self.screen, (238, 222, 166), header_box, border_radius=5)
+                header_box = pygame.Rect(content_x, y - 3, content_width, 32)
+                pygame.draw.rect(self.screen, (236, 216, 158), header_box, border_radius=6)
+                pygame.draw.rect(self.screen, (128, 116, 86), header_box, 1, border_radius=6)
                 surface = self._render_fitting_text(
                     text,
                     TEXT_COLOR,
-                    header_box.width - 42,
+                    header_box.width - 44,
                     [self.font, self.small_font],
                 )
-                pygame.draw.circle(self.screen, GOAL_COLOR, (box.x + 124, y + 11), 7)
-                self.screen.blit(surface, (box.x + 142, y))
-                y += 34
+                pygame.draw.circle(self.screen, GOAL_COLOR, (header_box.x + 17, header_box.centery), 7)
+                self.screen.blit(surface, surface.get_rect(midleft=(header_box.x + 34, header_box.centery)))
+                y += 40
             elif row_type == "empty":
-                surface = self.font.render(text, True, (106, 102, 88))
-                self.screen.blit(surface, (box.x + 142, y))
-                y += 28
+                empty_box = pygame.Rect(content_x + 18, y, content_width - 36, 42)
+                pygame.draw.rect(self.screen, (248, 238, 204), empty_box, border_radius=7)
+                pygame.draw.rect(self.screen, (178, 160, 116), empty_box, 1, border_radius=7)
+                surface = self._render_fitting_text(
+                    text,
+                    (106, 102, 88),
+                    empty_box.width - 28,
+                    [self.font, self.small_font],
+                )
+                self.screen.blit(surface, surface.get_rect(center=empty_box.center))
+                y += 50
             else:
-                if self.recent_collection_entry and text == self.recent_collection_entry[1]:
-                    highlight = pygame.Rect(box.x + 134, y - 3, box.width - 164, 48)
-                    pygame.draw.rect(self.screen, (252, 230, 132), highlight, border_radius=5)
-                    pygame.draw.rect(self.screen, (226, 168, 74), highlight, 2, border_radius=5)
-                for line in self._wrap_text(text, 76)[:2]:
-                    surface = self.font.render(line, True, (64, 68, 72))
-                    self.screen.blit(surface, (box.x + 142, y))
-                    y += 22
-                y += 4
+                card = pygame.Rect(content_x + 18, y, content_width - 36, 54)
+                is_recent = bool(self.recent_collection_entry and text == self.recent_collection_entry[1])
+                fill_color = (252, 236, 154) if is_recent else (255, 248, 218)
+                border_color = (226, 168, 74) if is_recent else (150, 132, 92)
+                pygame.draw.rect(self.screen, fill_color, card, border_radius=7)
+                pygame.draw.rect(self.screen, border_color, card, 2, border_radius=7)
+                pygame.draw.circle(self.screen, FRAGMENT_COLOR, (card.x + 24, card.y + 27), 11)
+                pygame.draw.circle(self.screen, FRAGMENT_OUTLINE, (card.x + 24, card.y + 27), 11, 2)
+                for index, line in enumerate(self._wrap_text(text, 62)[:2]):
+                    surface = self._render_fitting_text(
+                        line,
+                        (64, 68, 72),
+                        card.width - 62,
+                        [self.font, self.small_font],
+                    )
+                    self.screen.blit(surface, (card.x + 48, card.y + 7 + index * 22))
+                y += 60
 
         help_surface = self.font.render(
             "Setas ou arraste rolam | C, Enter, M ou Voltar fecha",

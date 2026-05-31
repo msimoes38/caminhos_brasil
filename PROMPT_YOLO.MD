@@ -1,6 +1,8 @@
 # PROMPT YOLO - Caminhos do Brasil
 
-Voce é um agente de IA trabalhando no projeto `caminhos_brasil`, um jogo educativo 2D em Python/Pygame-CE sobre a história do Brasil para crianças. Trabalhe em modo autônomo, incremental e pragmático: implemente as melhorias abaixo, valide, atualize documentação e entregue um resumo claro.
+Voce é um agente de IA trabalhando no projeto `caminhos_brasil`, um jogo educativo 2D em Python/Pygame-CE sobre a história do Brasil para crianças. Trabalhe em modo autônomo, incremental e pragmático: preserve o que ja foi implementado, escolha novas melhorias pequenas quando solicitado, valide, atualize documentação e entregue um resumo claro.
+
+Atualizacao desta rodada: as melhorias de persistencia web, menu/controles touch, linha do tempo, colecao em album e variedade visual foram implementadas. Em proximas rodadas, use este arquivo como registro do que preservar e priorize validacao em navegadores reais, polimento de fases especificas e separacao gradual de telas se `src/game.py` crescer mais.
 
 ## Contexto Obrigatório
 
@@ -26,17 +28,20 @@ Estado atual importante:
 - Em cada sessão, a fase 1 sorteia 4 pílulas ativas e as fases 2 a 16 sorteiam 5.
 - O Guardião do Portal pergunta apenas sobre uma pílula ativa/coletada na jogada.
 - A coleção histórica é acumulativa e mostra progresso do banco completo por fase.
+- O save web usa `localStorage` com a chave `caminhos_brasil_save_v1`, mantendo JSON local no desktop.
+- O menu touch cobre o rodape confuso da abertura e os controles virtuais nao cobrem Mig no inicio.
+- A linha do tempo reserva coluna de status, e a colecao tem visual de album com cards.
 - A versão web usa Pygbag e GitHub Pages.
 - Não adicione dependências novas.
 - Preserve o loop `async` de `main.py`.
 - Preserve `--ume_block=0`, a tela HTML de carregamento e o helper de tela cheia em `scripts/build_pygbag_clean.py`.
 - Preserve linguagem infantil, acolhedora e respeitosa.
 
-## Objetivo Da Rodada
+## Objetivo Da Rodada Implementada
 
 Melhorar a versão web/mobile para teste público leve, com foco em persistência, usabilidade touch, limpeza visual e sensação de variedade entre fases.
 
-Implemente nesta ordem de prioridade:
+Esta rodada implementou, nesta ordem de prioridade:
 
 1. Persistência no navegador usando armazenamento web.
 2. Ajustes de menu e controles touch.
@@ -46,7 +51,9 @@ Implemente nesta ordem de prioridade:
 
 Faça mudanças pequenas, funcionais e coerentes com o estilo existente.
 
-## Melhorias A Implementar
+## Melhorias Implementadas
+
+As listas abaixo registram o comportamento que deve ser preservado em futuras rodadas.
 
 ### 1. Persistência No Navegador
 
@@ -229,3 +236,10 @@ A rodada estará pronta quando:
 - Preserve o tom infantil, acolhedor e respeitoso.
 - Preserve compatibilidade com saves antigos.
 - Ao terminar, explique de forma curta o que mudou, quais arquivos principais foram alterados e quais validações passaram.
+
+## Proximas Prioridades Sugeridas
+
+1. Testar save web, audio e tela cheia em celulares e navegadores reais.
+2. Polir layouts de fases especificas sem aumentar a complexidade do gerador.
+3. Melhorar feedback visual de portal, checkpoint e pílulas se os testes com jogadores mostrarem necessidade.
+4. Separar telas de `src/game.py` apenas quando houver ganho claro de manutencao.

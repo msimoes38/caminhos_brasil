@@ -35,6 +35,8 @@ def _draw_coast_background(screen: pygame.Surface, camera_x: int, level_width: i
         x = world_x - int(camera_x * 0.35)
         pygame.draw.line(screen, (106, 174, 204), (x, ocean_y + 42), (x + 120, ocean_y + 42), 3)
 
+    _draw_birds(screen, camera_x, [(260, 118), (620, 96), (980, 132)])
+    _draw_coastal_marker(screen, 560 - int(camera_x * 0.32), 386)
     _draw_ship(screen, 1120 - int(camera_x * 0.25), 320)
 
 
@@ -51,6 +53,8 @@ def _draw_sugar_background(screen: pygame.Surface, camera_x: int, level_width: i
         pygame.draw.line(screen, (64, 132, 70), (x, 392), (x + 10, 345), 4)
         pygame.draw.line(screen, (92, 158, 82), (x + 8, 392), (x + 24, 350), 4)
 
+    for world_x in range(360, level_width, 460):
+        _draw_cane_bundle(screen, world_x - int(camera_x * 0.42), 382)
     _draw_engenho(screen, 1200 - int(camera_x * 0.35), 330)
 
 
@@ -62,6 +66,7 @@ def _draw_interior_background(screen: pygame.Surface, camera_x: int, level_width
     _draw_hills(screen, camera_x, level_width, (86, 145, 92), 328, 0.15)
     _draw_hills(screen, camera_x, level_width, (62, 122, 78), 372, 0.28)
     pygame.draw.rect(screen, (113, 160, 88), (0, 410, SCREEN_WIDTH, 74))
+    _draw_river_path(screen, camera_x, level_width)
 
     for world_x in range(80, level_width, 140):
         x = world_x - int(camera_x * 0.45)
@@ -75,10 +80,12 @@ def _draw_mines_background(screen: pygame.Surface, camera_x: int, level_width: i
     _draw_hills(screen, camera_x, level_width, (114, 118, 112), 330, 0.12)
     _draw_hills(screen, camera_x, level_width, (84, 92, 94), 385, 0.25)
     pygame.draw.rect(screen, (142, 122, 88), (0, 415, SCREEN_WIDTH, 62))
+    _draw_mine_tracks(screen, camera_x, level_width)
 
     for world_x in range(140, level_width, 310):
         x = world_x - int(camera_x * 0.45)
         _draw_mine_entrance(screen, x, 388)
+    _draw_mine_cart(screen, 760 - int(camera_x * 0.35), 388)
 
 
 def _draw_historic_city_background(
@@ -113,6 +120,10 @@ def _draw_historic_city_background(
         _draw_palace(screen, 1120 - int(camera_x * 0.28), 300)
     elif theme == "independence":
         _draw_flag_marker(screen, 1110 - int(camera_x * 0.28), 314, (58, 142, 82))
+    elif theme == "colonial_city":
+        _draw_church(screen, 1120 - int(camera_x * 0.3), 304)
+    elif theme == "empire":
+        _draw_garden_lamp(screen, 1120 - int(camera_x * 0.3), 352)
 
 
 def _draw_republic_background(
@@ -142,8 +153,14 @@ def _draw_republic_background(
 
     if theme == "vargas":
         _draw_factory(screen, 1200 - int(camera_x * 0.32), 315)
+        _draw_radio_tower(screen, 760 - int(camera_x * 0.32), 314)
     elif theme == "democracy":
         _draw_flag_marker(screen, 1180 - int(camera_x * 0.32), 320, (82, 150, 214))
+        _draw_civic_posters(screen, 760 - int(camera_x * 0.34), 352)
+    elif theme == "republic":
+        _draw_bandstand(screen, 1120 - int(camera_x * 0.32), 350)
+    elif theme == "rural_republic":
+        _draw_coffee_sacks(screen, 930 - int(camera_x * 0.34), 376)
 
 
 def _draw_memory_background(
@@ -169,6 +186,11 @@ def _draw_memory_background(
         x = world_x - int(camera_x * 0.35)
         _draw_memory_wall(screen, x, 356, accent)
 
+    if theme == "redemocratization":
+        _draw_constitution_book(screen, 1180 - int(camera_x * 0.32), 356)
+    else:
+        _draw_memory_candles(screen, 1180 - int(camera_x * 0.32), 382)
+
 
 def _draw_contemporary_background(screen: pygame.Surface, camera_x: int, level_width: int):
     screen.fill((126, 196, 224))
@@ -183,6 +205,7 @@ def _draw_contemporary_background(screen: pygame.Surface, camera_x: int, level_w
     for world_x in range(120, level_width, 420):
         x = world_x - int(camera_x * 0.48)
         _draw_tree(screen, x, 390)
+    _draw_connection_nodes(screen, camera_x, level_width)
 
 
 def _draw_sun(screen: pygame.Surface, position: tuple[int, int]):
@@ -348,3 +371,160 @@ def _draw_modern_building(screen: pygame.Surface, x: int, y: int):
     for row in range(4):
         for column in range(2):
             pygame.draw.rect(screen, (198, 226, 232), (x + 14 + column * 28, y + 18 + row * 24, 14, 14))
+
+
+def _draw_birds(screen: pygame.Surface, camera_x: int, positions: list[tuple[int, int]]):
+    for world_x, y in positions:
+        x = world_x - int(camera_x * 0.18)
+        if x < -40 or x > SCREEN_WIDTH + 40:
+            continue
+        pygame.draw.arc(screen, (64, 90, 112), (x - 16, y - 6, 18, 12), 0.1, 2.9, 2)
+        pygame.draw.arc(screen, (64, 90, 112), (x, y - 6, 18, 12), 0.2, 3.0, 2)
+
+
+def _draw_coastal_marker(screen: pygame.Surface, x: int, y: int):
+    if x < -80 or x > SCREEN_WIDTH + 80:
+        return
+
+    pygame.draw.rect(screen, (166, 132, 86), (x, y, 20, 48))
+    pygame.draw.polygon(screen, (134, 102, 70), [(x - 8, y), (x + 10, y - 20), (x + 28, y)])
+    pygame.draw.rect(screen, (92, 68, 44), (x - 10, y + 42, 40, 8))
+
+
+def _draw_cane_bundle(screen: pygame.Surface, x: int, y: int):
+    if x < -90 or x > SCREEN_WIDTH + 80:
+        return
+
+    pygame.draw.rect(screen, (126, 96, 54), (x - 8, y + 24, 86, 12), border_radius=4)
+    for offset in range(0, 72, 12):
+        pygame.draw.line(screen, (68, 132, 72), (x + offset, y + 30), (x + offset + 22, y), 5)
+        pygame.draw.line(screen, (108, 164, 82), (x + offset + 5, y + 30), (x + offset + 24, y + 4), 3)
+
+
+def _draw_river_path(screen: pygame.Surface, camera_x: int, level_width: int):
+    points = []
+    for world_x in range(-120, level_width + 220, 180):
+        x = world_x - int(camera_x * 0.22)
+        y = 404 + ((world_x // 180) % 2) * 22
+        points.append((x, y))
+    if len(points) >= 2:
+        pygame.draw.lines(screen, (70, 146, 180), False, points, 14)
+        pygame.draw.lines(screen, (126, 198, 214), False, points, 5)
+
+
+def _draw_mine_tracks(screen: pygame.Surface, camera_x: int, level_width: int):
+    rail_y = 436
+    for world_x in range(-80, level_width, 120):
+        x = world_x - int(camera_x * 0.44)
+        pygame.draw.line(screen, (84, 68, 50), (x, rail_y + 12), (x + 72, rail_y - 8), 3)
+    pygame.draw.line(screen, (72, 62, 54), (-20, rail_y), (SCREEN_WIDTH + 40, rail_y), 3)
+    pygame.draw.line(screen, (72, 62, 54), (-20, rail_y + 18), (SCREEN_WIDTH + 40, rail_y + 18), 3)
+
+
+def _draw_mine_cart(screen: pygame.Surface, x: int, y: int):
+    if x < -90 or x > SCREEN_WIDTH + 80:
+        return
+
+    pygame.draw.polygon(screen, (94, 82, 76), [(x, y + 34), (x + 74, y + 34), (x + 62, y + 62), (x + 12, y + 62)])
+    pygame.draw.rect(screen, (58, 54, 52), (x + 12, y + 26, 48, 14))
+    pygame.draw.circle(screen, (48, 44, 42), (x + 18, y + 66), 8)
+    pygame.draw.circle(screen, (48, 44, 42), (x + 58, y + 66), 8)
+
+
+def _draw_church(screen: pygame.Surface, x: int, y: int):
+    if x < -150 or x > SCREEN_WIDTH + 80:
+        return
+
+    pygame.draw.rect(screen, (226, 218, 184), (x, y + 42, 118, 92))
+    pygame.draw.polygon(screen, (122, 82, 68), [(x - 8, y + 42), (x + 59, y + 6), (x + 126, y + 42)])
+    pygame.draw.rect(screen, (216, 204, 168), (x + 42, y, 34, 52))
+    pygame.draw.polygon(screen, (122, 82, 68), [(x + 36, y), (x + 59, y - 24), (x + 82, y)])
+    pygame.draw.rect(screen, (72, 64, 58), (x + 46, y + 84, 26, 50))
+    pygame.draw.circle(screen, (98, 132, 152), (x + 59, y + 46), 10)
+
+
+def _draw_garden_lamp(screen: pygame.Surface, x: int, y: int):
+    if x < -80 or x > SCREEN_WIDTH + 80:
+        return
+
+    pygame.draw.rect(screen, (66, 62, 58), (x + 16, y, 6, 66))
+    pygame.draw.circle(screen, (248, 220, 116), (x + 19, y - 6), 12)
+    pygame.draw.circle(screen, (66, 62, 58), (x + 19, y - 6), 12, 2)
+    pygame.draw.circle(screen, (72, 132, 78), (x - 10, y + 62), 16)
+    pygame.draw.circle(screen, (82, 148, 86), (x + 44, y + 62), 18)
+
+
+def _draw_radio_tower(screen: pygame.Surface, x: int, y: int):
+    if x < -100 or x > SCREEN_WIDTH + 80:
+        return
+
+    pygame.draw.line(screen, (74, 78, 82), (x, y + 96), (x + 36, y), 4)
+    pygame.draw.line(screen, (74, 78, 82), (x + 72, y + 96), (x + 36, y), 4)
+    pygame.draw.line(screen, (74, 78, 82), (x + 14, y + 58), (x + 58, y + 58), 3)
+    pygame.draw.arc(screen, (74, 78, 82), (x + 12, y - 16, 48, 36), 0.2, 2.9, 2)
+    pygame.draw.arc(screen, (74, 78, 82), (x, y - 30, 72, 54), 0.2, 2.9, 2)
+
+
+def _draw_civic_posters(screen: pygame.Surface, x: int, y: int):
+    if x < -120 or x > SCREEN_WIDTH + 80:
+        return
+
+    colors = [(238, 222, 166), (206, 226, 204), (204, 222, 236)]
+    for index, color in enumerate(colors):
+        poster = pygame.Rect(x + index * 38, y + (index % 2) * 10, 30, 42)
+        pygame.draw.rect(screen, color, poster)
+        pygame.draw.rect(screen, (92, 82, 70), poster, 2)
+        pygame.draw.line(screen, (92, 82, 70), poster.midtop, (poster.centerx, poster.bottom + 22), 2)
+
+
+def _draw_bandstand(screen: pygame.Surface, x: int, y: int):
+    if x < -150 or x > SCREEN_WIDTH + 80:
+        return
+
+    pygame.draw.ellipse(screen, (160, 150, 126), (x, y + 62, 136, 28))
+    pygame.draw.polygon(screen, (104, 92, 78), [(x + 4, y + 36), (x + 68, y), (x + 132, y + 36)])
+    for column_x in (x + 24, x + 62, x + 100):
+        pygame.draw.rect(screen, (226, 218, 184), (column_x, y + 36, 10, 46))
+
+
+def _draw_coffee_sacks(screen: pygame.Surface, x: int, y: int):
+    if x < -120 or x > SCREEN_WIDTH + 80:
+        return
+
+    for index in range(3):
+        sack = pygame.Rect(x + index * 34, y + (index % 2) * 8, 34, 42)
+        pygame.draw.ellipse(screen, (156, 118, 72), sack)
+        pygame.draw.arc(screen, (94, 72, 50), sack, 0.2, 3.0, 2)
+
+
+def _draw_constitution_book(screen: pygame.Surface, x: int, y: int):
+    if x < -110 or x > SCREEN_WIDTH + 80:
+        return
+
+    pygame.draw.rect(screen, (236, 232, 210), (x, y + 16, 84, 58), border_radius=4)
+    pygame.draw.line(screen, (82, 112, 160), (x + 42, y + 18), (x + 42, y + 72), 3)
+    pygame.draw.rect(screen, (82, 150, 214), (x + 12, y + 30, 20, 8))
+    pygame.draw.rect(screen, (82, 150, 214), (x + 52, y + 30, 20, 8))
+    pygame.draw.rect(screen, (76, 154, 120), (x + 18, y, 48, 22), border_radius=4)
+
+
+def _draw_memory_candles(screen: pygame.Surface, x: int, y: int):
+    if x < -100 or x > SCREEN_WIDTH + 80:
+        return
+
+    for offset in (0, 28, 56):
+        pygame.draw.rect(screen, (238, 232, 210), (x + offset, y + 18, 14, 34), border_radius=3)
+        pygame.draw.polygon(screen, (238, 196, 82), [(x + offset + 7, y + 4), (x + offset + 2, y + 18), (x + offset + 12, y + 18)])
+
+
+def _draw_connection_nodes(screen: pygame.Surface, camera_x: int, level_width: int):
+    points = []
+    for world_x in range(220, level_width, 360):
+        x = world_x - int(camera_x * 0.3)
+        if -40 <= x <= SCREEN_WIDTH + 40:
+            y = 166 + ((world_x // 360) % 3) * 28
+            points.append((x, y))
+            pygame.draw.circle(screen, (82, 150, 214), (x, y), 6)
+            pygame.draw.circle(screen, (248, 238, 190), (x, y), 3)
+    for first, second in zip(points, points[1:]):
+        pygame.draw.line(screen, (82, 150, 214), first, second, 2)
