@@ -1,12 +1,12 @@
 # Caminhos do Brasil
 
-Jogo de plataforma 2D educativo sobre a historia do Brasil, feito em Python com Pygame-CE e publicado no navegador com Pygbag e GitHub Pages.
+Jogo de plataforma 2D educativo sobre a história do Brasil, feito em Python com Pygame-CE e publicado no navegador com Pygbag e GitHub Pages.
 
-O jogador controla Mig, um menino ficticio nascido em 2018, que viaja por diferentes periodos historicos do Brasil. A proposta e ensinar historia de forma leve, visual, respeitosa e adequada para criancas.
+O jogador controla Mig, um menino fictício nascido em 2018, que viaja por diferentes períodos históricos do Brasil. A proposta é ensinar história de forma leve, visual, respeitosa e adequada para crianças.
 
 ## Estado Atual
 
-O projeto possui uma versao jogavel para teste publico, com jornada cronologica completa, do ano de 1500 ao Brasil contemporaneo.
+O projeto possui uma versão jogável para teste público, com jornada cronológica completa, do ano de 1500 ao Brasil contemporâneo.
 
 Versao publicada:
 
@@ -17,29 +17,32 @@ https://msimoes38.github.io/caminhos_brasil/
 Principais recursos:
 
 - Tela inicial com imagem `abertura.png`.
-- Menu com continuar jornada, nova sessao temporaria, linha do tempo, colecao, ajuda rapida e botao mobile de tela cheia.
-- Menu mobile com botoes grandes e convite para tocar quando o jogo detecta uso de toque.
-- Linha do tempo com fases bloqueadas, liberadas, proximas e concluidas.
-- Dezesseis fases historicas jogaveis.
-- Progresso salvo localmente quando possivel.
-- Opcao de nova jornada temporaria com `N`, sem apagar o save.
+- Menu com continuar jornada, nova sessão temporária, linha do tempo, coleção, ajuda rápida e botão mobile de tela cheia.
+- Menu mobile com botões grandes e convite para tocar quando o jogo detecta uso de toque.
+- Linha do tempo com fases bloqueadas, liberadas, próximas e concluídas.
+- Dezesseis fases históricas jogáveis.
+- Progresso salvo localmente quando possível.
+- Opção de nova jornada temporária com `N`, sem apagar o save.
 - Movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo.
-- Camera horizontal.
-- HUD com ajuste discreto para manter titulos longos dentro do painel.
+- Câmera horizontal.
+- HUD com ajuste discreto para manter títulos longos dentro do painel.
 - Controles por toque para jogar no celular em modo paisagem no navegador.
 - Dicas curtas nos primeiros segundos da fase 1, com texto adequado para teclado ou toque.
-- Fragmentos historicos coletaveis com brilho, flutuacao e mensagem "Voce sabia?".
-- Feedback positivo de coleta, como "Boa descoberta!", e destaque do portal quando todos os fragmentos sao encontrados.
-- Mensagens historicas fixas no topo; se Mig passar por tras, o painel fica temporariamente translucido.
-- Colecao historica com aparencia de album, destaque da descoberta recente e progresso por fase no formato `3/4 descobertas`.
-- Introducao narrativa por fase.
-- Nota historica e pergunta curta ao concluir fase.
-- Portal final liberado apenas apos coletar todos os fragmentos da fase.
+- Banco com 10 pílulas de conhecimento por fase.
+- Seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas demais.
+- Pílulas históricas coletáveis com brilho, flutuação e mensagem "Você sabia?".
+- Feedback positivo de coleta, como "Boa descoberta!", e destaque do portal quando todas as pílulas da jogada são encontradas.
+- Mensagens históricas fixas no topo; se Mig passar por trás, o painel fica temporariamente translúcido.
+- Coleção histórica acumulativa com aparência de álbum, destaque da descoberta recente e progresso por fase no formato `7/10 descobertas`.
+- Introdução narrativa por fase.
+- Nota histórica e pergunta curta ao concluir fase.
+- Portal final liberado apenas após coletar todas as pílulas ativas da fase.
+- Guardião do Portal com pergunta sorteada apenas entre as pílulas que apareceram na jogada.
 - Checkpoints seguros com bandeira animada.
-- Areas de cuidado mais visiveis, com aviso antes do contato.
-- Tela de pausa com botoes grandes para continuar, reiniciar, voltar ao menu e abrir a colecao.
-- Tela final com resumo de fases e fragmentos.
-- Cenarios por tema desenhados com Pygame.
+- Áreas de cuidado mais visíveis, com aviso antes do contato.
+- Tela de pausa com botões grandes para continuar, reiniciar, voltar ao menu e abrir a coleção.
+- Tela final com resumo de fases e pílulas descobertas.
+- Cenários por tema desenhados com Pygame.
 - Sprite animado do Mig usando `assets/images/personagem.png`.
 - Sons leves gerados por codigo.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
@@ -48,21 +51,21 @@ Principais recursos:
 ## Fases Implementadas
 
 1. `1500 - Chegada dos portugueses`
-2. `Seculo XVI - Ciclo do acucar`
-3. `Seculos XVII e XVIII - Interiorizacao do territorio`
-4. `Seculo XVIII - Ciclo do ouro`
-5. `1789 - Inconfidencia Mineira`
-6. `1808 - Vinda da familia real`
-7. `1822 - Independencia`
-8. `1822 a 1889 - Imperio`
-9. `1888 - Abolicao da escravidao`
-10. `1889 - Proclamacao da Republica`
+2. `Século XVI - Ciclo do açúcar`
+3. `Séculos XVII e XVIII - Interiorização do território`
+4. `Século XVIII - Ciclo do ouro`
+5. `1789 - Inconfidência Mineira`
+6. `1808 - Vinda da família real`
+7. `1822 - Independência`
+8. `1822 a 1889 - Império`
+9. `1888 - Abolição da escravidão`
+10. `1889 - Proclamação da República`
 11. `1889 a 1930 - Primeira Republica`
 12. `1930 a 1945 - Era Vargas`
-13. `1946 a 1964 - Experiencia democratica`
+13. `1946 a 1964 - Experiência democrática`
 14. `1964 a 1985 - Ditadura militar`
-15. `1985 a 1988 - Redemocratizacao`
-16. `1988 ate hoje - Brasil contemporaneo`
+15. `1985 a 1988 - Redemocratização`
+16. `1988 até hoje - Brasil contemporâneo`
 
 Cada fase tem:
 
@@ -70,9 +73,11 @@ Cada fase tem:
 - missao;
 - nota historica de conclusao;
 - pergunta curta para pensar;
-- pelo menos 3 fragmentos;
+- banco com 10 pílulas de conhecimento;
+- seleção ativa de 4 pílulas na fase 1 e 5 pílulas nas demais;
+- pergunta do Guardião do Portal com 3 alternativas, ligada a uma pílula ativa;
 - pelo menos 1 checkpoint;
-- pelo menos 1 area de cuidado;
+- pelo menos 1 área de cuidado;
 - objetivo final em forma de portal.
 
 ## Como Executar
@@ -105,6 +110,7 @@ Teclado:
 - Setas ou W/S: navegar na linha do tempo e na colecao.
 - P: pausar ou continuar durante a fase.
 - C: abrir ou fechar a colecao historica.
+- No Guardiao do Portal, setas ou W/S escolhem e Enter confirma a resposta.
 - R: reiniciar a fase.
 - M: voltar ao menu em telas internas.
 - Esc: reiniciar a tentativa atual e voltar para a tela inicial.
@@ -116,6 +122,7 @@ Celular ou tela de toque:
 - Toque em `Tela cheia` no menu para tentar esconder a barra do navegador.
 - Durante a fase, use os botoes virtuais `<`, `>` e `Pular`.
 - Toque em `P` para pausar e em `C` para abrir a colecao.
+- No Guardiao do Portal, toque em uma alternativa para responder.
 - Na pausa, toque em `Continuar`, `Reiniciar`, `Menu` ou `Colecao`.
 - Na linha do tempo e na colecao, toque nas opcoes ou arraste para rolar.
 
@@ -127,14 +134,14 @@ O save guarda:
 
 - maior fase desbloqueada;
 - fases concluidas;
-- fragmentos ja coletados na colecao.
+- pílulas já descobertas na coleção.
 
 No menu:
 
 - `Enter` continua usando o progresso salvo.
 - `N` inicia uma nova jornada apenas na sessao atual.
 
-Ao iniciar uma nova jornada temporaria, as fases voltam a comecar bloqueadas e a colecao fica vazia, mas o arquivo de save anterior nao e apagado nem sobrescrito.
+Ao iniciar uma nova jornada temporária, as fases voltam a começar bloqueadas e a seleção de pílulas é sorteada novamente. A coleção acumulativa permanece disponível na sessão, e o arquivo de save anterior não é apagado nem sobrescrito.
 
 Se o save nao puder ser lido ou escrito, o jogo continua funcionando com progresso apenas em memoria.
 
@@ -160,11 +167,14 @@ Use o segundo comando quando o Python global nao tiver `pygame-ce` instalado.
 O smoke test confere:
 
 - existem 16 fases;
-- cada fase tem fragmentos, checkpoint e area de cuidado;
+- cada fase tem banco com 10 pílulas, checkpoint e área de cuidado;
+- a fase 1 ativa 4 pílulas por sessão, e as demais ativam 5;
 - inicio, checkpoints e respawns nao caem em areas de cuidado;
-- fragmentos ficam apoiados em plataformas proximas e alcancaveis por criterio conservador;
+- pílulas ficam apoiadas em plataformas próximas e alcançáveis por critério conservador;
 - `Game` inicializa em modo dummy;
 - `abertura.png` e `assets/images/personagem.png` carregam;
+- Guardião do Portal pergunta apenas sobre uma pílula ativa da jogada e exige resposta correta para concluir;
+- coleção histórica acumula descobertas sem duplicar entradas;
 - fluxo basico de menu, nova sessao temporaria, colecao, checkpoint, area de cuidado, conclusao e final passa sem alterar o save.
 - fluxo basico por toque cobre menu, fase, movimento, pulo, colecao e linha do tempo;
 - mensagens historicas permanecem em posicao estavel e ficam translucidas quando Mig passa por tras.
@@ -178,20 +188,22 @@ Teste manual recomendado:
 5. Testar `H` para abrir ajuda rapida.
 6. Testar `N` no menu e confirmar que a jornada temporaria comeca na fase 1.
 7. Mover, pular e conferir as dicas iniciais da fase 1.
-8. Coletar fragmentos e observar o feedback positivo.
-9. Abrir a colecao com `C` e conferir o contador de descobertas.
+8. Coletar pílulas e observar o feedback positivo.
+9. Abrir a coleção com `C` e conferir o contador de descobertas.
 10. Ativar checkpoint.
 11. Tocar em area de cuidado e confirmar retorno seguro.
 12. Reiniciar fase com `R`.
 13. Pausar e continuar com `P`; em toque, conferir os botoes grandes.
-14. Concluir fase.
-15. Confirmar desbloqueio da fase seguinte.
-16. Entrar pela linha do tempo com `S`.
-17. Testar a fase 2, especialmente fragmentos e checkpoints.
-18. Testar uma fase intermediaria.
-19. Testar a ultima fase.
-20. Ver tela final.
-21. Fechar e abrir novamente para confirmar save.
+14. Tocar no portal liberado e responder ao Guardiao do Portal.
+15. Errar uma alternativa de proposito e conferir dica sem punicao.
+16. Acertar a resposta e concluir a fase.
+17. Confirmar desbloqueio da fase seguinte.
+18. Entrar pela linha do tempo com `S`.
+19. Testar a fase 2, especialmente pílulas, checkpoints e quiz.
+20. Testar uma fase intermediaria.
+21. Testar a ultima fase.
+22. Ver tela final.
+23. Fechar e abrir novamente para confirmar save.
 
 Teste mobile recomendado apos publicar:
 
@@ -201,10 +213,11 @@ Teste mobile recomendado apos publicar:
 4. Confirmar menu com convite para tocar e botao `Tela cheia`.
 5. Tocar em continuar e iniciar uma fase.
 6. Usar `<`, `>` e `Pular` para mover Mig.
-7. Coletar um fragmento.
+7. Coletar uma pílula.
 8. Abrir colecao com `C`.
 9. Pausar com `P` e voltar usando os botoes grandes.
-10. Abrir a linha do tempo pelo menu.
+10. Responder ao Guardiao do Portal tocando em uma alternativa.
+11. Abrir a linha do tempo pelo menu.
 
 Build web local:
 
@@ -252,7 +265,7 @@ src/
 - `main.py`: ponto de entrada com loop `async`, importante para Pygbag.
 - `src/game.py`: controla estados, telas, HUD, progresso, colecao, ajuda, efeitos visuais, abertura e loop principal.
 - `src/player.py`: controla Mig, movimento, colisao, coyote time, buffer de pulo e animacao.
-- `src/level_data.py`: contem dados das 16 fases e geradores simples de layout.
+- `src/level_data.py`: contém dados das 16 fases, bancos de pílulas históricas e geradores simples de layout.
 - `src/levels.py`: converte dados das fases em objetos `pygame.Rect`.
 - `src/backgrounds.py`: desenha cenarios por tema.
 - `src/progress.py`: salva e carrega progresso local em JSON.
@@ -270,7 +283,7 @@ Como o jogo e voltado para criancas:
 - tratar temas sensiveis com respeito;
 - nao glorificar processos historicos controversos;
 - valorizar memoria, cidadania, diversidade e curiosidade;
-- manter frases curtas nos fragmentos historicos.
+- manter frases curtas nas pílulas históricas.
 
 ## Publicacao Web
 
@@ -312,15 +325,16 @@ Checklist apos deploy:
 - conferir se a tela de carregamento aparece com mensagem e nao fica travada;
 - usar celular em modo paisagem;
 - testar botao `Tela cheia` e, se o navegador nao permitir, orientar uso de "Adicionar a tela inicial";
-- iniciar fase, andar, pular, coletar fragmento, pausar, abrir colecao e linha do tempo;
+- iniciar fase, andar, pular, coletar pílula, pausar, abrir coleção e linha do tempo;
+- responder ao Guardiao do Portal antes de concluir a fase;
 - recarregar a pagina e confirmar que o jogo volta ao menu sem ficar preso no carregamento;
 - testar audio no navegador;
 - observar o comportamento do save web, que ainda e um limite conhecido.
 
 Checklist curto de publicacao:
 
-- desktop: abrir, iniciar fase, andar, pular, coletar, pausar, colecao e linha do tempo;
-- celular paisagem: carregamento, menu por toque, tela cheia, fase, botoes `<`, `>`, `Pular`, `P` e `C`;
+- desktop: abrir, iniciar fase, andar, pular, coletar, quiz, pausar, colecao e linha do tempo;
+- celular paisagem: carregamento, menu por toque, tela cheia, fase, botoes `<`, `>`, `Pular`, `P`, `C` e quiz por toque;
 - progresso: concluir fase, voltar ao menu, abrir linha do tempo e recarregar pagina;
 - web: confirmar titulo da aba, manifest basico e ausencia de bloqueio na tela de carregamento.
 

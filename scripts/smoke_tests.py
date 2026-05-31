@@ -22,8 +22,15 @@ from src.game import (
     STATE_MENU,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_QUIZ,
 )
-from src.levels import create_level, get_level_count
+from src.levels import (
+    create_level,
+    get_active_pill_count,
+    get_level_count,
+    get_level_pill_bank,
+    get_level_pill_count,
+)
 from src.settings import GRAVITY, PLAYER_JUMP_SPEED, PLAYER_SPEED
 
 
@@ -43,13 +50,22 @@ def main() -> int:
     for index in range(get_level_count()):
         level = create_level(index)
         label = f"Fase {index + 1}"
+        expected_active_pills = get_active_pill_count(index)
 
-        if not level.fragments:
-            errors.append(f"{label}: sem fragmentos.")
+        if get_level_pill_count(index) != 10:
+            errors.append(f"{label}: banco deve ter 10 pilulas.")
+        _check_pill_bank(index, label, errors)
+        if len(level.fragments) != expected_active_pills:
+            errors.append(
+                f"{label}: esperadas {expected_active_pills} pilulas ativas. "
+                f"Encontradas: {len(level.fragments)}."
+            )
         if not level.checkpoints:
             errors.append(f"{label}: sem checkpoint.")
         if not level.hazards:
             errors.append(f"{label}: sem area de cuidado.")
+        _check_level_quiz(level, label, errors)
+        _check_quiz_uses_active_pill(level, label, errors)
 
         reachable_platforms = _reachable_platform_indexes(level.platforms)
 
@@ -72,9 +88,9 @@ def main() -> int:
         for fragment in level.fragments:
             support_index = _find_fragment_support(fragment.rect, level.platforms)
             if support_index is None:
-                errors.append(f"{label}: fragmento sem plataforma proxima: {fragment.rect}.")
+                errors.append(f"{label}: pilula sem plataforma proxima: {fragment.rect}.")
             elif support_index not in reachable_platforms:
-                errors.append(f"{label}: fragmento em plataforma dificil de alcancar: {fragment.rect}.")
+                errors.append(f"{label}: pilula em plataforma dificil de alcancar: {fragment.rect}.")
 
     game = Game()
     if game.menu_image is None:
@@ -100,14 +116,68 @@ def main() -> int:
 
     print("SMOKE TESTS: OK")
     print("- 16 fases encontradas.")
-    print("- Fragmentos, checkpoints e areas de cuidado existem em todas as fases.")
+    print("- Todas as fases tem banco com 10 pilulas e selecao ativa 4/5.")
     print("- Checkpoints, respawns e inicio nao caem em areas de cuidado.")
-    print("- Fragmentos ficam apoiados em plataformas proximas e alcancaveis.")
+    print("- Pilulas ficam apoiadas em plataformas proximas e alcancaveis.")
     print("- Game inicializa em modo dummy com abertura e sprite do Mig.")
+    print("- Guardiao do Portal pergunta sobre pilula ativa, aceita erro com dica e conclui com resposta correta.")
+    print("- Colecao historica acumula descobertas sem duplicar entradas.")
     print("- Fluxo basico de menu, nova sessao, checkpoint, cuidado, Esc e final passa sem alterar save.")
-    print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao e linha do tempo.")
+    print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo.")
     print("- Mensagem historica mantem posicao fixa e usa translucidez quando Mig passa por tras.")
     return 0
+
+
+def _check_pill_bank(index: int, label: str, errors: list[str]):
+    bank = get_level_pill_bank(index)
+    seen_infos = set()
+
+    for pill_index, pill in enumerate(bank):
+        pill_label = f"{label}, pilula {pill_index + 1}"
+        if not pill.info.strip():
+            errors.append(f"{pill_label}: texto vazio.")
+        if not pill.question.strip():
+            errors.append(f"{pill_label}: pergunta vazia.")
+        if len(pill.options) != 3:
+            errors.append(f"{pill_label}: deve ter 3 alternativas.")
+        elif any(not option.strip() for option in pill.options):
+            errors.append(f"{pill_label}: alternativa vazia.")
+        if not 0 <= pill.correct_index < len(pill.options):
+            errors.append(f"{pill_label}: indice correto fora do intervalo.")
+        if not pill.hint.strip():
+            errors.append(f"{pill_label}: dica vazia.")
+        if pill.info in seen_infos:
+            errors.append(f"{pill_label}: texto duplicado no banco.")
+        seen_infos.add(pill.info)
+
+
+def _check_level_quiz(level, label: str, errors: list[str]):
+    quiz = level.quiz
+    if quiz is None:
+        errors.append(f"{label}: sem quiz do Guardiao do Portal.")
+        return
+
+    if not quiz.question.strip():
+        errors.append(f"{label}: pergunta do quiz vazia.")
+    if len(quiz.options) != 3:
+        errors.append(f"{label}: quiz deve ter 3 alternativas.")
+    elif any(not option.strip() for option in quiz.options):
+        errors.append(f"{label}: alternativa vazia no quiz.")
+    if not 0 <= quiz.correct_index < len(quiz.options):
+        errors.append(f"{label}: indice correto do quiz fora do intervalo.")
+    if not quiz.hint.strip():
+        errors.append(f"{label}: dica do quiz vazia.")
+
+
+def _check_quiz_uses_active_pill(level, label: str, errors: list[str]):
+    if level.quiz is None:
+        return
+    if level.quiz_pill_index not in level.active_pill_indexes:
+        errors.append(f"{label}: quiz nao veio de uma pilula ativa.")
+        return
+    active_questions = {fragment.quiz.question for fragment in level.fragments}
+    if level.quiz.question not in active_questions:
+        errors.append(f"{label}: quiz nao corresponde as pilulas ativas.")
 
 
 def _find_fragment_support(
@@ -173,13 +243,32 @@ def _check_basic_flow(game: Game, errors: list[str]):
         errors.append("S no menu nao abriu a linha do tempo.")
 
     game._handle_keydown(pygame.K_m)
+    saved_collection_count = len(game.collection_entries)
     game._handle_keydown(pygame.K_n)
     if not game.temporary_session:
         errors.append("N nao iniciou uma nova jornada temporaria.")
     if game.level_index != 0 or game.highest_unlocked_level != 0:
         errors.append("Nova jornada temporaria nao recomecou na fase 1.")
-    if game.collection_entries:
-        errors.append("Nova jornada temporaria nao limpou a colecao em memoria.")
+    if len(game.collection_entries) != saved_collection_count:
+        errors.append("Nova jornada temporaria alterou a colecao acumulativa em memoria.")
+    if not game.level.active_pill_indexes or game.level.quiz_pill_index not in game.level.active_pill_indexes:
+        errors.append("Nova jornada temporaria nao sorteou pilulas ativas validas.")
+    session_pill_choices = game.level.active_pill_indexes
+    session_quiz_choice = game.level.quiz_pill_index
+    game._load_level(0, STATE_INTRO)
+    if game.level.active_pill_indexes != session_pill_choices:
+        errors.append("Voltar para a mesma fase mudou as pilulas da sessao.")
+    if game.level.quiz_pill_index != session_quiz_choice:
+        errors.append("Voltar para a mesma fase mudou a pergunta da sessao.")
+
+    collection_before = len(game.collection_entries)
+    first_info = game.level.fragments[0].info
+    entry = (game.level.title, first_info)
+    expected_collection_count = collection_before + (0 if entry in game.collection_entry_set else 1)
+    game._add_collection_entry(first_info)
+    game._add_collection_entry(first_info)
+    if len(game.collection_entries) != expected_collection_count:
+        errors.append("Colecao historica duplicou uma pilula ja descoberta.")
 
     game._handle_keydown(pygame.K_RETURN)
     if game.state != STATE_PLAYING:
@@ -216,8 +305,22 @@ def _check_basic_flow(game: Game, errors: list[str]):
     game.fragments = []
     game.player.rect.center = game.level.goal.center
     game._update(1 / 60)
+    if game.state != STATE_QUIZ:
+        errors.append("Portal liberado nao abriu o Guardiao do Portal.")
+    elif game.level.quiz_pill_index not in game.level.active_pill_indexes:
+        errors.append("Guardiao do Portal perguntou sobre pilula fora da jogada.")
+
+    quiz = game.level.quiz
+    wrong_index = (quiz.correct_index + 1) % len(quiz.options)
+    game._submit_quiz_answer(wrong_index)
+    if game.state != STATE_QUIZ:
+        errors.append("Resposta errada no quiz nao manteve a fase no Guardiao do Portal.")
+    if not game.quiz_feedback:
+        errors.append("Resposta errada no quiz nao mostrou dica.")
+
+    game._submit_quiz_answer(quiz.correct_index)
     if game.state != STATE_COMPLETED:
-        errors.append("Portal liberado nao concluiu a fase.")
+        errors.append("Resposta correta no quiz nao concluiu a fase.")
 
     game._handle_keydown(pygame.K_RETURN)
     if game.level_index != 1 or game.state != STATE_INTRO:
@@ -227,6 +330,9 @@ def _check_basic_flow(game: Game, errors: list[str]):
     game.fragments = []
     game.player.rect.center = game.level.goal.center
     game._update(1 / 60)
+    if game.state != STATE_QUIZ:
+        errors.append("Ultima fase nao abriu o Guardiao do Portal antes do final.")
+    game._submit_quiz_answer(game.level.quiz.correct_index)
     game._handle_keydown(pygame.K_RETURN)
     if game.state != STATE_FINAL:
         errors.append("Ultima fase nao levou para a tela final.")
@@ -240,6 +346,8 @@ def _check_basic_flow(game: Game, errors: list[str]):
 
 
 def _check_touch_flow(game: Game, errors: list[str]):
+    game.temporary_session = True
+
     _tap(game, game._menu_touch_actions()[0][1].center)
     if game.state != STATE_INTRO:
         errors.append("Toque em continuar no menu nao abriu a introducao.")
@@ -293,6 +401,21 @@ def _check_touch_flow(game: Game, errors: list[str]):
     _tap(game, game._pause_touch_actions()[0][1].center)
     if game.state != STATE_PLAYING:
         errors.append("Toque em Continuar nao voltou da pausa para a fase.")
+
+    game.fragments = []
+    game.player.rect.center = game.level.goal.center
+    game._update(1 / 60)
+    if game.state != STATE_QUIZ:
+        errors.append("Toque no portal liberado nao abriu o Guardiao do Portal.")
+    else:
+        quiz = game.level.quiz
+        wrong_index = (quiz.correct_index + 1) % len(quiz.options)
+        _tap(game, game._quiz_option_rects()[wrong_index].center)
+        if game.state != STATE_QUIZ:
+            errors.append("Toque em alternativa errada nao manteve o quiz aberto.")
+        _tap(game, game._quiz_option_rects()[quiz.correct_index].center)
+        if game.state != STATE_COMPLETED:
+            errors.append("Toque em alternativa correta nao concluiu a fase.")
 
     game.state = STATE_MENU
     _tap(game, game._menu_touch_actions()[2][1].center)

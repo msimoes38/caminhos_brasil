@@ -1,19 +1,19 @@
 # SPEC.MD
 
-Especificacao tecnica e funcional do projeto Caminhos do Brasil.
+Especificação técnica e funcional do projeto Caminhos do Brasil.
 
-Este documento e a fonte de continuidade para outro agente de IA ou desenvolvedor trabalhar no projeto sem depender do historico da conversa.
+Este documento é a fonte de continuidade para outro agente de IA ou desenvolvedor trabalhar no projeto sem depender do histórico da conversa.
 
-## 1. Visao Geral
+## 1. Visão Geral
 
-Caminhos do Brasil e um jogo de plataforma 2D educativo sobre a historia do Brasil.
+Caminhos do Brasil é um jogo de plataforma 2D educativo sobre a história do Brasil.
 
-O jogador controla Mig, um menino ficticio nascido em 2018, que viaja por diferentes periodos historicos, de 1500 ao Brasil contemporaneo. O jogo combina plataforma simples, fragmentos historicos coletaveis, linha do tempo e colecao.
+O jogador controla Mig, um menino fictício nascido em 2018, que viaja por diferentes períodos históricos, de 1500 ao Brasil contemporâneo. O jogo combina plataforma simples, pílulas históricas coletáveis, linha do tempo e coleção.
 
 Objetivos do produto:
 
-- ensinar historia de forma leve e respeitosa;
-- ser adequado para criancas, com referencia principal por volta de 8 anos;
+- ensinar história de forma leve e respeitosa;
+- ser adequado para crianças, com referência principal por volta de 8 anos;
 - funcionar localmente com Python e Pygame-CE;
 - funcionar no navegador via Pygbag e GitHub Pages;
 - manter codigo simples, modular o suficiente e facil de continuar.
@@ -32,27 +32,30 @@ yolo_melhoria
 
 ## 2. Estado Atual Do Produto
 
-A versao atual esta jogavel e publicada para teste publico. Ela possui:
+A versão atual está jogável e publicada para teste público. Ela possui:
 
 - tela inicial com `abertura.png`;
-- menu com continuar, nova sessao temporaria, linha do tempo, colecao, ajuda e tela cheia no mobile;
-- 16 fases historicas em ordem cronologica;
-- introducao narrativa por fase;
+- menu com continuar, nova sessão temporária, linha do tempo, coleção, ajuda e tela cheia no mobile;
+- 16 fases históricas em ordem cronológica;
+- introdução narrativa por fase;
 - movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo;
-- camera horizontal;
-- HUD com ajuste discreto para titulos longos;
+- câmera horizontal;
+- HUD com ajuste discreto para títulos longos;
 - controles por teclado, mouse e toque;
-- interface mobile em modo paisagem com menu tocavel e botoes virtuais semitransparentes;
+- interface mobile em modo paisagem com menu tocável e botões virtuais semitransparentes;
 - dicas contextuais nos primeiros segundos da fase 1;
-- fragmentos historicos coletaveis;
-- mensagens historicas fixas no topo, com translucidez quando Mig passa por tras;
+- banco com 10 pílulas de conhecimento por fase;
+- seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas fases 2 a 16;
+- pílulas históricas coletáveis;
+- mensagens históricas fixas no topo, com translucidez quando Mig passa por trás;
 - checkpoints seguros e respawn;
-- areas de cuidado;
-- portal final bloqueado ate todos os fragmentos da fase serem coletados;
-- feedback visual e texto positivo para fragmento, checkpoint, cuidado, portal e conclusao;
-- colecao historica em formato de album, com descoberta recente destacada;
-- linha do tempo com fases liberadas, bloqueadas, proximas aventuras e concluidas;
-- tela de pausa com botoes grandes para toque;
+- áreas de cuidado;
+- portal final bloqueado até todas as pílulas ativas da fase serem coletadas;
+- Guardião do Portal com pergunta histórica obrigatória antes da conclusão, sorteada entre as pílulas ativas da jogada;
+- feedback visual e texto positivo para pílula, checkpoint, cuidado, portal e conclusão;
+- coleção histórica acumulativa em formato de álbum, com descoberta recente destacada;
+- linha do tempo com fases liberadas, bloqueadas, próximas aventuras e concluídas;
+- tela de pausa com botões grandes para toque;
 - tela final com resumo da jornada;
 - sons simples gerados por codigo;
 - save local tolerante a falhas;
@@ -152,14 +155,15 @@ Responsabilidades:
 - converter eventos `FINGER*` para coordenadas 960x540;
 - ignorar eventos de mouse gerados por toque quando apropriado;
 - controlar estados do jogo;
-- desenhar menu, ajuda, linha do tempo, colecao, fase, pausa, conclusao e final;
+- desenhar menu, ajuda, linha do tempo, colecao, fase, pausa, quiz, conclusao e final;
 - alternar textos e botoes para teclado ou toque quando o contexto mobile e detectado;
 - gerenciar progresso, colecao e salvamento;
 - desenhar HUD, mensagens historicas e botoes virtuais;
 - mostrar dicas contextuais da fase 1 e feedback positivo de coleta;
+- mostrar o Guardiao do Portal e validar resposta historica antes da conclusao;
 - solicitar fullscreen no navegador quando possivel;
 - acionar efeitos visuais e sons;
-- coletar fragmentos;
+- coletar pílulas históricas;
 - ativar checkpoints;
 - reiniciar tentativa ao tocar em areas de cuidado;
 - esconder a tela HTML de carregamento web pelo metodo `_hide_web_loading_overlay()`.
@@ -191,32 +195,38 @@ assets/images/personagem.png
 
 ### `src/level_data.py`
 
-Contem:
+Contém:
 
-- dataclasses `FragmentData` e `LevelData`;
-- constantes de chao;
-- geradores simples de plataformas, fragmentos, areas de cuidado e checkpoints;
+- dataclasses `KnowledgePill` e `LevelData`;
+- dataclass `QuizData` para pergunta, 3 alternativas, resposta correta e dica;
+- constantes de chão;
+- geradores simples de plataformas, áreas de cuidado e checkpoints;
 - lista `LEVELS` com 16 fases.
 
-Regras criticas:
+Regras críticas:
 
-- fragmentos devem permanecer em plataformas alcancaveis;
-- checkpoints nao podem colidir com areas de cuidado;
-- respawn de checkpoint nao pode cair em area de cuidado;
-- fase 2 ja exigiu cuidado especial com checkpoint e fragmentos.
+- cada fase deve ter exatamente 10 pílulas no banco;
+- pílulas ativas devem permanecer em plataformas alcançáveis;
+- checkpoints não podem colidir com áreas de cuidado;
+- respawn de checkpoint não pode cair em área de cuidado;
+- fase 2 já exigiu cuidado especial com checkpoint e pílulas.
 
 ### `src/levels.py`
 
 Converte os dados crus de `src/level_data.py` para objetos usados pelo Pygame.
 
-Funcoes publicas:
+Funções públicas:
 
 - `get_level_count()`
 - `get_level_title(index)`
 - `get_level_plain_title(index)`
 - `get_level_fragment_count(index)`
 - `get_total_fragment_count()`
-- `create_level(index)`
+- `get_level_pill_count(index)`
+- `get_level_pill_infos(index)`
+- `get_level_pill_bank(index)`
+- `get_active_pill_count(index)`
+- `create_level(index, active_pill_indexes=None, quiz_pill_index=None)`
 
 ### `src/backgrounds.py`
 
@@ -299,14 +309,19 @@ Teste automatizado leve em SDL dummy.
 Valida:
 
 - existem 16 fases;
-- cada fase tem fragmentos, checkpoint e area de cuidado;
+- cada fase tem banco com 10 pílulas, checkpoint e área de cuidado;
+- cada pílula tem texto, pergunta, 3 alternativas, resposta correta e dica;
+- a fase 1 ativa 4 pílulas, e as demais ativam 5;
+- cada fase tem quiz do Guardião do Portal com 3 alternativas;
+- o quiz vem de uma pílula ativa da jogada;
 - inicio, checkpoints e respawns nao caem em areas de cuidado;
-- fragmentos ficam em plataformas proximas e alcancaveis por criterio conservador;
+- pílulas ficam em plataformas próximas e alcançáveis por critério conservador;
 - `Game` inicializa;
 - `abertura.png` carrega;
 - sprite do Mig carrega;
-- fluxo basico de menu, nova sessao, checkpoint, cuidado, conclusao e final;
-- fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa e linha do tempo;
+- coleção histórica acumula descobertas sem duplicar entradas;
+- fluxo basico de menu, nova sessão, checkpoint, cuidado, quiz, conclusão e final;
+- fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa, quiz e linha do tempo;
 - mensagem historica fica fixa e fica translucida quando Mig passa por tras;
 - teste nao altera o save local.
 
@@ -351,6 +366,7 @@ Estados em `src/game.py`:
 - `intro`
 - `playing`
 - `paused`
+- `quiz`
 - `completed`
 - `collection`
 - `final`
@@ -359,8 +375,8 @@ Estados em `src/game.py`:
 Fluxo principal:
 
 ```text
-menu -> intro -> playing -> completed -> intro da proxima fase
-ultima fase completed -> final -> menu
+menu -> intro -> playing -> quiz -> completed -> intro da proxima fase
+ultima fase playing -> quiz -> completed -> final -> menu
 ```
 
 Fluxos auxiliares:
@@ -372,6 +388,8 @@ menu -> help -> menu
 playing -> paused -> playing
 playing -> collection -> playing
 playing -> help -> playing
+quiz -> collection -> quiz
+quiz -> help -> quiz
 menu -> nova sessao temporaria -> intro da fase 1
 ```
 
@@ -386,6 +404,7 @@ Teclado:
 - S: linha do tempo no menu.
 - H: ajuda rapida.
 - C: colecao historica.
+- No Guardiao do Portal, setas ou W/S escolhem e Enter confirma.
 - P: pausar ou continuar.
 - R: reiniciar fase.
 - M: voltar ao menu.
@@ -398,6 +417,7 @@ Toque:
 - intro/conclusao/final avancam por toque no painel;
 - botoes virtuais `<`, `>` e `Pular` durante a fase;
 - botoes virtuais `P` e `C` durante a fase;
+- Guardiao do Portal com alternativas grandes por toque;
 - pausa com botoes grandes para continuar, reiniciar, menu e colecao;
 - linha do tempo aceita toque em fases e arraste vertical;
 - colecao aceita arraste vertical e botao Voltar.
@@ -405,32 +425,42 @@ Toque:
 ## 9. Fases
 
 1. `1500 - Chegada dos portugueses` (`coast`)
-2. `Seculo XVI - Ciclo do acucar` (`sugar`)
-3. `Seculos XVII e XVIII - Interiorizacao do territorio` (`interior`)
-4. `Seculo XVIII - Ciclo do ouro` (`mines`)
-5. `1789 - Inconfidencia Mineira` (`colonial_city`)
-6. `1808 - Vinda da familia real` (`court`)
-7. `1822 - Independencia` (`independence`)
-8. `1822 a 1889 - Imperio` (`empire`)
-9. `1888 - Abolicao da escravidao` (`empire`)
-10. `1889 - Proclamacao da Republica` (`republic`)
+2. `Século XVI - Ciclo do açúcar` (`sugar`)
+3. `Séculos XVII e XVIII - Interiorização do território` (`interior`)
+4. `Século XVIII - Ciclo do ouro` (`mines`)
+5. `1789 - Inconfidência Mineira` (`colonial_city`)
+6. `1808 - Vinda da família real` (`court`)
+7. `1822 - Independência` (`independence`)
+8. `1822 a 1889 - Império` (`empire`)
+9. `1888 - Abolição da escravidão` (`empire`)
+10. `1889 - Proclamação da República` (`republic`)
 11. `1889 a 1930 - Primeira Republica` (`rural_republic`)
 12. `1930 a 1945 - Era Vargas` (`vargas`)
-13. `1946 a 1964 - Experiencia democratica` (`democracy`)
+13. `1946 a 1964 - Experiência democrática` (`democracy`)
 14. `1964 a 1985 - Ditadura militar` (`dictatorship`)
-15. `1985 a 1988 - Redemocratizacao` (`redemocratization`)
-16. `1988 ate hoje - Brasil contemporaneo` (`contemporary`)
+15. `1985 a 1988 - Redemocratização` (`redemocratization`)
+16. `1988 até hoje - Brasil contemporâneo` (`contemporary`)
 
 Cada fase deve ter:
 
-- introducao curta;
-- missao;
-- nota historica de conclusao;
-- pergunta de reflexao;
-- pelo menos 3 fragmentos;
+- introdução curta;
+- missão;
+- nota histórica de conclusão;
+- pergunta de reflexão;
+- banco com 10 pílulas de conhecimento;
+- seleção ativa de 4 pílulas na fase 1 e 5 pílulas nas demais;
+- quiz do Guardião do Portal com 3 alternativas e dica de erro, ligado a uma pílula ativa;
 - pelo menos 1 checkpoint;
-- pelo menos 1 area de cuidado;
+- pelo menos 1 área de cuidado;
 - portal final.
+
+Regras atuais das pílulas:
+
+- o sorteio das pílulas vale enquanto o jogo está aberto;
+- voltar para a mesma fase na mesma sessão mantém a mesma seleção;
+- iniciar nova jornada temporária com `N` refaz o sorteio;
+- o Guardião do Portal só pergunta sobre uma pílula ativa da jogada;
+- a coleção mostra progresso do banco completo da fase, por exemplo `7/10 descobertas`.
 
 ## 10. Modelo De Dados
 
@@ -447,37 +477,42 @@ width
 start_position
 platforms
 goal
-fragments
+pill_bank
 hazards
 checkpoints
 ```
 
-`FragmentData`:
+`KnowledgePill`:
 
 ```text
-area
 info
+question
+options
+correct_index
+hint
 ```
 
-`Level` em `src/levels.py` converte tuplas para `pygame.Rect`.
+`QuizData` mantém o mesmo formato para a pergunta apresentada pelo Guardião do Portal.
 
-## 11. Conteudo Historico
+`Level` em `src/levels.py` converte tuplas para `pygame.Rect` e recebe a seleção ativa da sessão.
 
-Diretrizes obrigatorias:
+## 11. Conteúdo Histórico
+
+Diretrizes obrigatórias:
 
 - linguagem simples;
 - frases curtas;
 - tom acolhedor;
-- sem descricoes graficas;
+- sem descrições gráficas;
 - sem glorificar processos violentos ou controversos;
-- tratar temas sensiveis com respeito;
-- valorizar povos indigenas, pessoas escravizadas, cidadania, diversidade e memoria;
-- manter perspectiva educativa, nao panfletaria.
+- tratar temas sensíveis com respeito;
+- valorizar povos indígenas, pessoas escravizadas, cidadania, diversidade e memória;
+- manter perspectiva educativa, não panfletária.
 
 Formula segura para temas sensiveis:
 
 ```text
-Esse periodo trouxe mudancas importantes e tambem desafios para muitas pessoas. E um tema que deve ser estudado com cuidado e respeito.
+Esse período trouxe mudanças importantes e também desafios para muitas pessoas. É um tema que deve ser estudado com cuidado e respeito.
 ```
 
 ## 12. Salvamento
@@ -487,9 +522,11 @@ Comportamento atual:
 - `ProgressStore.load()` tenta carregar `caminhos_brasil_save.json`;
 - se falhar, retorna progresso vazio;
 - `Enter` no menu continua a jornada salva;
-- `N` no menu cria nova jornada temporaria;
-- em nova jornada temporaria, `_save_progress()` nao grava em disco;
-- coletar fragmentos e concluir fases grava progresso apenas fora da sessao temporaria.
+- `N` no menu cria nova jornada temporária;
+- em nova jornada temporária, `_save_progress()` não grava em disco;
+- iniciar nova jornada temporária refaz o sorteio das pílulas ativas e mantém a coleção acumulativa na sessão;
+- coletar pílulas e concluir fases grava progresso apenas fora da sessão temporária.
+- respostas do Guardião do Portal não são salvas nesta versão.
 
 Formato:
 
@@ -497,7 +534,7 @@ Formato:
 {
   "highest_unlocked_level": 0,
   "completed_levels": [0, 1],
-  "collection_entries": [["Titulo da fase", "Texto do fragmento"]]
+  "collection_entries": [["Título da fase", "Texto da pílula"]]
 }
 ```
 
@@ -557,18 +594,18 @@ python -m compileall main.py src
 
 Use `python scripts\smoke_tests.py` se o Python global tiver `pygame-ce`.
 
-Quando alterar UI, tambem faca teste visual local ou em SDL dummy com screenshot.
+Quando alterar UI, também faça teste visual local ou em SDL dummy com screenshot.
 
 Quando alterar publicacao, aguarde GitHub Actions ficar verde e teste a URL publicada.
 
 Checklist curto de publicacao:
 
-- desktop: abrir, iniciar fase, andar, pular, coletar, pausar, colecao e linha do tempo;
-- celular paisagem: carregamento, menu por toque, tela cheia, fase, botoes `<`, `>`, `Pular`, `P` e `C`;
-- progresso: concluir fase, voltar ao menu, abrir linha do tempo e recarregar pagina;
-- web: confirmar titulo da aba, manifest basico e ausencia de bloqueio na tela de carregamento.
+- desktop: abrir, iniciar fase, andar, pular, coletar pílula, quiz, pausar, coleção e linha do tempo;
+- celular paisagem: carregamento, menu por toque, tela cheia, fase, botões `<`, `>`, `Pular`, `P`, `C` e quiz por toque;
+- progresso: concluir fase, voltar ao menu, abrir linha do tempo e recarregar página;
+- web: confirmar título da aba, manifest básico e ausência de bloqueio na tela de carregamento.
 
-## 15. Teste Manual Minimo
+## 15. Teste Manual Mínimo
 
 Local:
 
@@ -577,16 +614,17 @@ Local:
 3. Pressionar `Enter`.
 4. Iniciar fase.
 5. Mover e pular, conferindo dicas iniciais na fase 1.
-6. Coletar fragmento e observar "Boa descoberta!".
-7. Abrir colecao com `C` e conferir contador de descobertas.
+6. Coletar pílula e observar "Boa descoberta!".
+7. Abrir coleção com `C` e conferir contador de descobertas.
 8. Abrir ajuda com `H`.
-9. Pausar com `P` e conferir botoes de pausa para toque.
+9. Pausar com `P` e conferir botões de pausa para toque.
 10. Reiniciar com `R`.
 11. Voltar ao menu com `M`.
 12. Abrir linha do tempo com `S`.
-13. Testar `N` para nova jornada temporaria.
-14. Concluir uma fase.
-15. Confirmar desbloqueio da fase seguinte.
+13. Testar `N` para nova jornada temporária.
+14. Responder ao Guardião do Portal.
+15. Concluir uma fase.
+16. Confirmar desbloqueio da fase seguinte.
 
 Mobile web:
 
@@ -595,33 +633,35 @@ Mobile web:
 3. Confirmar tela de carregamento com mensagem.
 4. Se demorar, tocar para continuar.
 5. Confirmar menu com convite para tocar.
-6. Testar botao `Tela cheia`.
+6. Testar botão `Tela cheia`.
 7. Tocar em continuar.
-8. Tocar na introducao.
+8. Tocar na introdução.
 9. Usar `<`, `>` e `Pular`.
 10. Abrir `C`, voltar.
-11. Pausar com `P`, continuar pelos botoes grandes.
-12. Abrir linha do tempo pelo menu.
+11. Pausar com `P`, continuar pelos botões grandes.
+12. Responder ao Guardião do Portal tocando em uma alternativa.
+13. Abrir linha do tempo pelo menu.
 
 ## 16. Como Adicionar Uma Fase
 
 1. Abrir `src/level_data.py`.
 2. Adicionar `_make_level(...)` ou `LevelData` manual.
-3. Definir titulo, ano, missao, nota historica, intro, tema e fragmentos.
+3. Definir título, ano, missão, nota histórica, intro, tema e banco com 10 pílulas.
 4. Reusar tema existente ou criar novo em `src/backgrounds.py`.
-5. Garantir plataformas alcancaveis.
-6. Garantir fragmentos alcancaveis.
+5. Garantir plataformas alcançáveis.
+6. Garantir pílulas ativas alcançáveis.
 7. Garantir checkpoints e respawns seguros.
-8. Rodar smoke tests.
-9. Atualizar README e SPEC se a quantidade/ordem de fases mudar.
+8. Garantir pergunta simples, 3 alternativas, resposta correta e dica curta em cada pílula.
+9. Rodar smoke tests.
+10. Atualizar README e SPEC se a quantidade/ordem de fases mudar.
 
 ## 17. Limites Conhecidos
 
 - As fases compartilham gerador simples de layout.
-- A interface base e 960x540.
-- Mobile e paisagem apenas; retrato nao tem layout dedicado.
-- Save web ainda precisa de validacao/adaptacao.
-- Audio em navegador pode variar por politica do browser.
+- A interface base é 960x540.
+- Mobile é paisagem apenas; retrato não tem layout dedicado.
+- Save web ainda precisa de validação/adaptação.
+- Áudio em navegador pode variar por política do browser.
 - `src/game.py` concentra muitas responsabilidades.
 - A tela de carregamento HTML usa fallback por tempo/toque porque o sinal de carregamento do Pygbag pode variar no celular.
 
@@ -629,10 +669,10 @@ Mobile web:
 
 1. Adaptar save para armazenamento web.
 2. Testar audio e save em navegadores reais.
-3. Polir fases especificas sem aumentar complexidade.
+3. Polir fases específicas sem aumentar complexidade.
 4. Separar telas de `src/game.py` quando houver motivo claro.
-5. Melhorar tela de carregamento com progresso real se houver API confiavel.
-6. Fazer teste com criancas/familiares e observar leitura/dificuldade.
+5. Melhorar tela de carregamento com progresso real se houver API confiável.
+6. Fazer teste com crianças/familiares e observar leitura/dificuldade.
 
 ## 19. Regras Para Proximos Agentes
 
@@ -643,13 +683,13 @@ Mobile web:
 - Preserve `--ume_block=0`.
 - Preserve a tela de carregamento web e seus fallbacks.
 - Preserve metadados/manifest web e helper de tela cheia do build limpo.
-- Preserve menu e pausa tocaveis em mobile.
-- Nao empacote venv nem save local no build.
-- Nao adicione dependencias sem necessidade clara.
-- Nao altere conteudo historico para tom pesado.
-- Nao quebre nova jornada temporaria com `N`.
-- Nao deixe checkpoints, respawns ou inicio em areas de cuidado.
-- Nao deixe fragmentos inalcancaveis.
-- Preserve painel historico fixo com translucidez quando Mig passa por tras.
-- Atualize documentacao quando mudar comportamento, arquitetura, publicacao ou testes.
-- Rode validacoes proporcionais ao risco da mudanca.
+- Preserve menu e pausa tocáveis em mobile.
+- Não empacote venv nem save local no build.
+- Não adicione dependências sem necessidade clara.
+- Não altere conteúdo histórico para tom pesado.
+- Não quebre nova jornada temporária com `N`.
+- Não deixe checkpoints, respawns ou início em áreas de cuidado.
+- Não deixe pílulas inalcançáveis.
+- Preserve painel histórico fixo com translucidez quando Mig passa por trás.
+- Atualize documentação quando mudar comportamento, arquitetura, publicação ou testes.
+- Rode validações proporcionais ao risco da mudança.

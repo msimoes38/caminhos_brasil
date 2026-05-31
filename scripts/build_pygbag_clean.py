@@ -145,7 +145,7 @@ LOADING_MARKUP = """\
     (function () {
         var messages = [
             "Preparando a viagem no tempo...",
-            "Organizando Mig e os fragmentos...",
+            "Organizando Mig e as pílulas...",
             "Quase pronto. Use o celular deitado."
         ];
         var index = 0;
@@ -207,7 +207,7 @@ LOADING_MARKUP = """\
 WEB_MANIFEST = {
     "name": "Caminhos do Brasil",
     "short_name": "Caminhos BR",
-    "description": "Jogo educativo de plataforma sobre a historia do Brasil.",
+    "description": "Jogo educativo de plataforma sobre a história do Brasil.",
     "start_url": "./",
     "scope": "./",
     "display": "fullscreen",
@@ -254,7 +254,7 @@ def patch_mobile_ready_prompt(index_path: Path) -> bool:
         return False
 
     if "platform.window.canvas.style.pointerEvents = \"none\"" in html:
-        print("Patch mobile do Ready to start ja estava aplicado.")
+        print("Patch mobile do Ready to start já estava aplicado.")
         return True
 
     if READY_PROMPT_MARKER not in html:
@@ -262,7 +262,7 @@ def patch_mobile_ready_prompt(index_path: Path) -> bool:
         return True
 
     if READY_TOUCH_TARGET not in html:
-        print("Nao foi possivel encontrar o bloco Ready to start para patch mobile.")
+        print("Não foi possível encontrar o bloco Ready to start para patch mobile.")
         return False
 
     html = html.replace(READY_TOUCH_TARGET, READY_TOUCH_PATCH, 1)
@@ -283,11 +283,11 @@ def patch_loading_experience(index_path: Path) -> bool:
         return False
 
     if "id=\"caminhos-loading\"" in html:
-        print("Tela de carregamento mobile ja estava aplicada.")
+        print("Tela de carregamento mobile já estava aplicada.")
         return True
 
     if "</style>" not in html or "<body>" not in html:
-        print("Nao foi possivel encontrar pontos para inserir a tela de carregamento.")
+        print("Não foi possível encontrar pontos para inserir a tela de carregamento.")
         return False
 
     html = html.replace("</style>", f"{LOADING_STYLE}\n    </style>", 1)
@@ -320,7 +320,7 @@ def patch_web_app_metadata(index_path: Path) -> bool:
     html = replace_title(html, "Caminhos do Brasil")
     additions = []
     metadata_lines = [
-        '<meta name="description" content="Jogo educativo de plataforma sobre a historia do Brasil.">',
+        '<meta name="description" content="Jogo educativo de plataforma sobre a história do Brasil.">',
         '<meta name="theme-color" content="#76c9d4">',
         '<meta name="apple-mobile-web-app-capable" content="yes">',
         '<meta name="apple-mobile-web-app-title" content="Caminhos BR">',
@@ -341,7 +341,7 @@ def patch_web_app_metadata(index_path: Path) -> bool:
 
     if additions:
         if "</head>" not in html:
-            print("Nao foi possivel encontrar </head> para metadados web.")
+            print("Não foi possível encontrar </head> para metadados web.")
             return False
         html = html.replace("</head>", "\n".join(additions) + "\n</head>", 1)
 

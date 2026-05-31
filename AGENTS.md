@@ -39,7 +39,7 @@ Como o jogo e voltado para criancas:
 - Nao glorifique personagens ou processos historicos controversos.
 - Valorize aprendizado historico, memoria, diversidade e cidadania.
 - Ao mencionar povos indigenas, pessoas escravizadas ou grupos afetados por processos historicos, use linguagem respeitosa e cuidadosa.
-- Prefira frases curtas nos fragmentos e notas de fase.
+- Prefira frases curtas nas pílulas históricas e notas de fase.
 
 Exemplo de tom adequado:
 
@@ -87,9 +87,12 @@ O jogo ja possui:
 - HUD ajusta discretamente titulos longos para caberem no painel.
 - Controles por toque para celular em modo paisagem no navegador.
 - Dicas curtas nos primeiros segundos da fase 1, ajustadas para teclado ou toque.
-- Fragmentos historicos coletaveis.
+- Banco com 10 pílulas de conhecimento por fase.
+- Seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas demais.
+- Pílulas históricas coletáveis.
+- Guardiao do Portal com pergunta historica obrigatoria sobre pílula ativa antes de concluir cada fase.
 - Colecao historica agrupada por fase.
-- Colecao historica com aparencia de album, descoberta recente destacada e progresso por fase.
+- Colecao historica com aparencia de album, descoberta recente destacada e progresso do banco por fase.
 - Introducao narrativa por fase.
 - Ajuda rapida com `H`.
 - Tela final com creditos simples.
@@ -97,7 +100,7 @@ O jogo ja possui:
 - Checkpoints seguros.
 - Areas de cuidado.
 - Coyote time e buffer curto de pulo.
-- Feedback visual e texto positivo para fragmentos, checkpoints, areas de cuidado e portal.
+- Feedback visual e texto positivo para pílulas, checkpoints, areas de cuidado e portal.
 - Mensagens historicas ficam fixas no topo e se tornam translucidas quando Mig passa por tras.
 - Sons leves gerados por codigo.
 - Sprite animado do Mig usando folha de sprites.
@@ -119,13 +122,13 @@ O jogo ja possui:
 - `assets/images/personagem.png`: folha de sprites do Mig durante o jogo.
 - `src/game.py`: loop principal, estados, telas, HUD, fluxo e progresso.
 - `src/player.py`: movimento, colisao, animacao e desenho do Mig.
-- `src/level_data.py`: dados das fases historicas e geracao simples de layout.
-- `src/levels.py`: conversao dos dados das fases em objetos usados pelo Pygame.
+- `src/level_data.py`: dados das fases historicas, bancos de pílulas e geracao simples de layout.
+- `src/levels.py`: conversao dos dados das fases em objetos usados pelo Pygame e seleção ativa de pílulas.
 - `src/backgrounds.py`: desenho dos cenarios por tema.
 - `src/progress.py`: salvamento local simples de progresso e colecao em JSON.
 - `src/sounds.py`: sons simples gerados por codigo.
 - `src/settings.py`: constantes gerais.
-- `scripts/smoke_tests.py`: validacao automatica leve de fases, assets e fluxo basico.
+- `scripts/smoke_tests.py`: validacao automatica leve de fases, banco de pílulas, quiz, assets e fluxo basico.
 - `scripts/build_pygbag_clean.py`: gera build web a partir de copia minima, sem empacotar venv ou save local, e injeta ajustes mobile, fullscreen, manifest e carregamento no `index.html`.
 - `.github/workflows/pages.yml`: build e deploy para GitHub Pages quando houver push em `yolo_melhoria`.
 
@@ -163,10 +166,12 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 
 - Checkpoints nao devem ficar sobre areas de cuidado.
 - O respawn de checkpoints tambem nao pode cair em areas de cuidado.
-- Fragmentos devem ficar apoiados em plataformas alcancaveis pelo pulo atual do Mig.
-- A fase 2 ja teve problemas de checkpoint e fragmentos inalcancaveis; revisar com cuidado se alterar layout.
+- Pílulas ativas devem ficar apoiadas em plataformas alcancaveis pelo pulo atual do Mig.
+- Perguntas do Guardiao devem se basear em mensagens ja apresentadas na fase.
+- Respostas erradas no Guardiao devem ensinar com dica curta, sem punir ou reiniciar a fase.
+- A fase 2 ja teve problemas de checkpoint e itens inalcancaveis; revisar com cuidado se alterar layout.
 - A tela inicial usa `abertura.png`; se esse arquivo faltar, `src/game.py` tem fallback desenhado por Pygame.
-- A nova sessao com `N` nao deve sobrescrever o save salvo.
+- A nova sessao com `N` nao deve sobrescrever o save salvo e deve sortear nova seleção de pílulas.
 - O controle `H` abre a ajuda rapida e deve continuar simples e legivel.
 - O controle `Esc` deve voltar para a tela inicial sem encerrar o runtime, especialmente na versao web.
 - Os controles por toque devem continuar grandes, visiveis e sem cobrir HUD ou mensagens historicas.
@@ -201,7 +206,8 @@ Teste manual minimo:
 - Em toque, conferir menu com convite para tocar e botao `Tela cheia`.
 - Mover, pular e conferir dicas iniciais na fase 1.
 - Em celular ou tela touch, usar modo paisagem e testar `<`, `>`, `Pular`, `P` e `C`.
-- Coletar fragmentos e observar feedback positivo.
+- Coletar pílulas e observar feedback positivo.
+- Responder ao Guardiao do Portal; testar erro com dica e acerto para concluir.
 - Conferir se a mensagem historica nao atrapalha o pulo; ela deve ficar fixa e translucida se Mig passar por tras.
 - Abrir colecao com `C`.
 - Ativar checkpoint.
@@ -219,7 +225,7 @@ Teste manual minimo:
 
 - Ajustar sensacao de movimento e pulo.
 - Melhorar feedback visual para coleta, checkpoint e objetivo final.
-- Melhorar visual de plataformas, fragmentos, checkpoints e portal final.
+- Melhorar visual de plataformas, pílulas, checkpoints e portal final.
 - Polir colecao historica como album.
 - Testar build Pygbag limpo em navegador real.
 - Adaptar `src/progress.py` para armazenamento web, se necessario.
