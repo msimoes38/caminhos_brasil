@@ -389,7 +389,7 @@ Teclado:
 - P: pausar ou continuar.
 - R: reiniciar fase.
 - M: voltar ao menu.
-- Esc: sair.
+- Esc: reiniciar a tentativa atual e voltar para a tela inicial.
 
 Toque:
 

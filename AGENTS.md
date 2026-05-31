@@ -168,6 +168,7 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 - A tela inicial usa `abertura.png`; se esse arquivo faltar, `src/game.py` tem fallback desenhado por Pygame.
 - A nova sessao com `N` nao deve sobrescrever o save salvo.
 - O controle `H` abre a ajuda rapida e deve continuar simples e legivel.
+- O controle `Esc` deve voltar para a tela inicial sem encerrar o runtime, especialmente na versao web.
 - Os controles por toque devem continuar grandes, visiveis e sem cobrir HUD ou mensagens historicas.
 - O menu e a pausa mobile devem continuar com botoes grandes e textos de toque, sem remover atalhos de teclado.
 - O botao `Tela cheia` deve falhar com orientacao simples, sem quebrar desktop.

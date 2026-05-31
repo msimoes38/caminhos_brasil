@@ -404,7 +404,7 @@ class Game:
 
     def _handle_keydown(self, key: int):
         if key == pygame.K_ESCAPE:
-            self.running = False
+            self._return_to_start_screen()
             return
 
         if key == pygame.K_c:
@@ -732,6 +732,13 @@ class Game:
         self._load_level(self.level_index, STATE_PLAYING)
         self.feedback_message = feedback_message
         self.feedback_message_timer = 2.5 if feedback_message else 0
+
+    def _return_to_start_screen(self):
+        self.previous_state = STATE_MENU
+        self.collection_scroll = 0
+        self.selected_level_index = min(self.highest_unlocked_level, get_level_count() - 1)
+        self._sync_level_select_scroll()
+        self._load_level(self.level_index, STATE_MENU)
 
     def _reset_attempt(self, feedback_message: str):
         self.player = Player(self.respawn_position)
@@ -1314,7 +1321,7 @@ class Game:
             select_surface = self.font.render("S: linha do tempo", True, TEXT_COLOR)
             collection_surface = self.font.render("C: colecao", True, TEXT_COLOR)
             help_surface = self.font.render("H: ajuda", True, TEXT_COLOR)
-            exit_surface = self.font.render("Esc: sair", True, TEXT_COLOR)
+            exit_surface = self.font.render("Esc: inicio", True, TEXT_COLOR)
 
             self.screen.blit(start_surface, (panel.x + 18, panel.y + 12))
             self.screen.blit(new_journey_surface, (panel.x + 18, panel.y + 40))

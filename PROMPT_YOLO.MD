@@ -293,7 +293,7 @@ Esse periodo trouxe mudancas importantes e tambem desafios para muitas pessoas. 
 - P: pausar ou continuar.
 - R: reiniciar fase.
 - M: voltar ao menu.
-- Esc: sair.
+- Esc: reiniciar a tentativa atual e voltar para a tela inicial.
 - No celular: usar modo paisagem, tocar nas opcoes de menu, testar `Tela cheia` e jogar com `<`, `>` e `Pular`.
 
 Se adicionar novo controle, documente e mantenha simples.

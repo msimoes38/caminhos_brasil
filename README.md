@@ -107,7 +107,7 @@ Teclado:
 - C: abrir ou fechar a colecao historica.
 - R: reiniciar a fase.
 - M: voltar ao menu em telas internas.
-- Esc: sair.
+- Esc: reiniciar a tentativa atual e voltar para a tela inicial.
 
 Celular ou tela de toque:
 

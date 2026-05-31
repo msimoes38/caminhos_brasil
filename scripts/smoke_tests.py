@@ -104,7 +104,7 @@ def main() -> int:
     print("- Checkpoints, respawns e inicio nao caem em areas de cuidado.")
     print("- Fragmentos ficam apoiados em plataformas proximas e alcancaveis.")
     print("- Game inicializa em modo dummy com abertura e sprite do Mig.")
-    print("- Fluxo basico de menu, nova sessao, checkpoint, cuidado e final passa sem alterar save.")
+    print("- Fluxo basico de menu, nova sessao, checkpoint, cuidado, Esc e final passa sem alterar save.")
     print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao e linha do tempo.")
     print("- Mensagem historica mantem posicao fixa e usa translucidez quando Mig passa por tras.")
     return 0
@@ -230,6 +230,13 @@ def _check_basic_flow(game: Game, errors: list[str]):
     game._handle_keydown(pygame.K_RETURN)
     if game.state != STATE_FINAL:
         errors.append("Ultima fase nao levou para a tela final.")
+
+    game._load_level(1, STATE_PLAYING)
+    game._handle_keydown(pygame.K_ESCAPE)
+    if game.state != STATE_MENU:
+        errors.append("Esc nao voltou para a tela inicial.")
+    if not game.running:
+        errors.append("Esc encerrou o runtime em vez de manter o jogo aberto.")
 
 
 def _check_touch_flow(game: Game, errors: list[str]):
