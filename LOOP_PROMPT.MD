@@ -54,7 +54,7 @@ O jogo ja possui:
 - checkpoints, areas de cuidado, camera horizontal e respawn seguro;
 - banco com 10 pilulas por fase e selecao ativa por sessao;
 - Guardiao do Portal com pergunta sobre pilula ativa;
-- save local em JSON e tentativa de save web via `localStorage`;
+- save local em JSON e save web via `localStorage`, preferindo helpers JS injetados pelo build limpo;
 - build Pygbag limpo com `--ume_block=0`, tela de carregamento, manifest e helper de fullscreen;
 - smoke tests permanentes.
 
@@ -65,7 +65,15 @@ Achados recentes de Selenium na URL publicada:
 - emulacao mobile/touch reportou `maxTouchPoints = 1`, `pointer: coarse = true` e `hover: none = true`, mas o menu publicado ainda abriu no layout de teclado;
 - o pacote publicado contem a deteccao touch robusta, entao o problema pode estar no acesso Python/Pygbag as APIs JS ou no momento da deteccao;
 - um save valido gravado manualmente em `localStorage["caminhos_brasil_save_v1"]` nao foi refletido no menu apos reload, que continuou mostrando `Fases liberadas: 1/16`;
-- portanto, web/mobile e save web sao prioridades maximas antes de grandes polimentos.
+- portanto, web/mobile e save web continuam prioridades maximas antes de grandes polimentos ate validacao no publicado.
+
+Atualizacao local desta rodada:
+
+- o build limpo injeta `window.caminhosTouchContext` antes do jogo iniciar;
+- o build limpo injeta `window.caminhosReadSave()`, `window.caminhosWriteSave(data)` e `window.caminhosClearSave()` para `localStorage`;
+- `Game._detect_touch_context()` consulta a flag JS primeiro e faz rechecagem tardia no menu se nenhum teclado foi usado;
+- `ProgressStore` usa os helpers JS como caminho principal e preserva fallback direto para `platform.window.localStorage`;
+- smoke tests cobrem flag JS de touch, helpers JS de save e injeção idempotente da ponte web.
 
 ## Restricoes Fortes
 
@@ -234,8 +242,8 @@ Resolva antes de grandes melhorias visuais.
 
 Comece por estas metas, nesta ordem, salvo se o estado local ja tiver resolvido alguma:
 
-1. Corrigir touch inicial no publicado com flag JS `window.caminhosTouchContext`.
-2. Corrigir leitura/escrita web real com helpers JS para `localStorage`.
+1. Validar no publicado o touch inicial corrigido com flag JS `window.caminhosTouchContext`.
+2. Validar no publicado a leitura/escrita web real com helpers JS para `localStorage`.
 3. Criar teste Selenium opcional que valide menu touch e save injetado.
 4. Melhorar feedback do portal bloqueado/liberado e tutorial inicial.
 5. Polir visual das fases 1 e 2 sem mudar dificuldade.

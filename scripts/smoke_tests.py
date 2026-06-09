@@ -97,6 +97,7 @@ def main() -> int:
 
     _check_progress_store(errors)
     _check_touch_detection(errors)
+    _check_build_web_bridge_patch(errors)
 
     game = Game()
     if game.menu_image is None:
@@ -128,8 +129,9 @@ def main() -> int:
     print("- Game inicializa em modo dummy com abertura e sprite do Mig.")
     print("- Guardiao do Portal pergunta sobre pilula ativa, aceita erro com dica e conclui com resposta correta.")
     print("- Colecao historica acumula descobertas sem duplicar entradas.")
-    print("- ProgressStore salva/carrega no arquivo local e em localStorage simulado com fallback seguro.")
-    print("- Deteccao touch inicial reconhece maxTouchPoints, matchMedia e ignora desktop simulado.")
+    print("- ProgressStore salva/carrega no arquivo local, helper web e localStorage simulado com fallback seguro.")
+    print("- Deteccao touch inicial reconhece flag JS, maxTouchPoints, matchMedia e ignora desktop simulado.")
+    print("- Build limpo injeta a ponte web de touch/save no index.html.")
     print("- Fluxo basico de menu, nova sessao, checkpoint, cuidado, Esc e final passa sem alterar save.")
     print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo.")
     print("- Mensagem historica mantem posicao fixa e usa translucidez quando Mig passa por tras.")
@@ -155,6 +157,24 @@ class _FailingLocalStorage:
         raise RuntimeError("localStorage indisponivel")
 
 
+class _FakeWebSaveHelpers:
+    def __init__(self, key: str):
+        self.key = key
+        self.values = {}
+        self.localStorage = _FailingLocalStorage()
+
+    def caminhosReadSave(self):
+        return self.values.get(self.key)
+
+    def caminhosWriteSave(self, data: str):
+        self.values[self.key] = data
+        return True
+
+    def caminhosClearSave(self):
+        self.values.pop(self.key, None)
+        return True
+
+
 class _FakeMediaQuery:
     def __init__(self, matches: bool):
         self.matches = matches
@@ -178,9 +198,12 @@ class _FakeBrowserWindow:
         navigator: _FakeNavigator | None = None,
         matching_queries: set[str] | None = None,
         touch_start: bool = False,
+        touch_context=None,
     ):
         self.navigator = navigator or _FakeNavigator()
         self.matching_queries = matching_queries or set()
+        if touch_context is not None:
+            self.caminhosTouchContext = touch_context
         if touch_start:
             self.ontouchstart = None
 
@@ -197,6 +220,17 @@ def _check_touch_detection(errors: list[str]):
     detector = Game.__new__(Game)
 
     try:
+        platform.window = _FakeBrowserWindow(touch_context=True)
+        if not detector._detect_touch_context():
+            errors.append("Deteccao touch nao reconheceu window.caminhosTouchContext.")
+
+        platform.window = _FakeBrowserWindow(
+            navigator=_FakeNavigator(max_touch_points=1),
+            touch_context=False,
+        )
+        if detector._detect_touch_context():
+            errors.append("Deteccao touch nao priorizou window.caminhosTouchContext falso.")
+
         platform.window = _FakeBrowserWindow(
             navigator=_FakeNavigator(max_touch_points=1),
         )
@@ -224,6 +258,14 @@ def _check_touch_detection(errors: list[str]):
         )
         if detector._detect_touch_context():
             errors.append("Deteccao touch marcou desktop simulado como touch.")
+
+        detector.state = STATE_MENU
+        detector.touch_ui_enabled = False
+        detector.keyboard_input_seen = False
+        platform.window = _FakeBrowserWindow(touch_context=True)
+        detector._refresh_late_touch_context()
+        if not detector.touch_ui_enabled:
+            errors.append("Rechecagem tardia no menu nao ativou layout touch.")
     finally:
         if original_window is missing_window:
             if hasattr(platform, "window"):
@@ -278,6 +320,17 @@ def _check_progress_store(errors: list[str]):
             if loaded["collection_entries"] != [("Fase", "Info")]:
                 errors.append("ProgressStore local nao removeu entradas ruins ou duplicadas.")
 
+            helper_window = _FakeWebSaveHelpers(progress_module.WEB_SAVE_KEY)
+            platform.window = helper_window
+            store.save(1, [("Helper", "Pill")], {0, 1})
+            if progress_module.WEB_SAVE_KEY not in helper_window.values:
+                errors.append("ProgressStore web nao gravou usando helper JS.")
+            loaded = store.load()
+            if loaded["highest_unlocked_level"] != 1 or loaded["completed_levels"] != {0, 1}:
+                errors.append("ProgressStore web nao carregou progresso salvo via helper JS.")
+            if loaded["collection_entries"] != [("Helper", "Pill")]:
+                errors.append("ProgressStore web nao carregou colecao salva via helper JS.")
+
             storage = _FakeLocalStorage()
             platform.window = type("Window", (), {"localStorage": storage})()
             store.save(2, [("Web", "Pill")], {0, 2})
@@ -324,6 +377,38 @@ def _check_progress_store(errors: list[str]):
                 delattr(platform, "window")
         else:
             platform.window = original_window
+
+
+def _check_build_web_bridge_patch(errors: list[str]):
+    import scripts.build_pygbag_clean as build_script
+
+    with TemporaryDirectory() as temp_dir:
+        index_path = Path(temp_dir) / "index.html"
+        index_path.write_text(
+            "<html><head><style></style></head><body></body></html>",
+            encoding="utf-8",
+        )
+        if not build_script.patch_web_bridge(index_path):
+            errors.append("Patch da ponte web touch/save falhou em index.html valido.")
+            return
+
+        html = index_path.read_text(encoding="utf-8")
+        expected_markers = (
+            "window.caminhosTouchContext",
+            "window.caminhosReadSave",
+            "window.caminhosWriteSave",
+            "window.caminhosClearSave",
+            "caminhos_brasil_save_v1",
+        )
+        for marker in expected_markers:
+            if marker not in html:
+                errors.append(f"Patch da ponte web nao inseriu marcador {marker}.")
+
+        if not build_script.patch_web_bridge(index_path):
+            errors.append("Patch da ponte web nao foi idempotente.")
+        html_after_second_patch = index_path.read_text(encoding="utf-8")
+        if html_after_second_patch != html:
+            errors.append("Patch da ponte web duplicou conteudo ao rodar novamente.")
 
 
 def _check_pill_bank(index: int, label: str, errors: list[str]):

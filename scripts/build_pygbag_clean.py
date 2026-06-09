@@ -229,6 +229,92 @@ ACCESSIBILITY_MARKUP = """\
     </section>
 """
 
+WEB_BRIDGE_SCRIPT = """\
+    <script>
+    (function () {
+        var saveKey = "caminhos_brasil_save_v1";
+
+        function hasMatchingMedia(query) {
+            try {
+                return Boolean(window.matchMedia && window.matchMedia(query).matches);
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function detectTouchContext() {
+            try {
+                if (navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0) {
+                    return true;
+                }
+            } catch (error) {
+            }
+            if (
+                hasMatchingMedia("(pointer: coarse)") ||
+                hasMatchingMedia("(any-pointer: coarse)") ||
+                hasMatchingMedia("(hover: none)")
+            ) {
+                return true;
+            }
+            try {
+                if ("ontouchstart" in window) {
+                    return true;
+                }
+            } catch (error) {
+            }
+            try {
+                return /android|iphone|ipad|ipod|mobile|tablet/i.test(navigator.userAgent || "");
+            } catch (error) {
+                return false;
+            }
+        }
+
+        window.caminhosTouchContext = detectTouchContext();
+        window.caminhosReadSave = function () {
+            try {
+                if (!window.localStorage) {
+                    return null;
+                }
+                return window.localStorage.getItem(saveKey);
+            } catch (error) {
+                return null;
+            }
+        };
+        window.caminhosWriteSave = function (data) {
+            try {
+                if (!window.localStorage) {
+                    return false;
+                }
+                window.localStorage.setItem(saveKey, String(data));
+                return true;
+            } catch (error) {
+                return false;
+            }
+        };
+        window.caminhosClearSave = function () {
+            try {
+                if (!window.localStorage) {
+                    return false;
+                }
+                window.localStorage.removeItem(saveKey);
+                return true;
+            } catch (error) {
+                return false;
+            }
+        };
+
+        window.addEventListener("pointerdown", function (event) {
+            if (event.pointerType === "touch" || event.pointerType === "pen") {
+                window.caminhosTouchContext = true;
+            }
+        }, { passive: true });
+        window.addEventListener("touchstart", function () {
+            window.caminhosTouchContext = true;
+        }, { passive: true });
+    })();
+    </script>
+"""
+
 WEB_MANIFEST = {
     "name": "Caminhos do Brasil",
     "short_name": "Caminhos BR",
@@ -355,6 +441,31 @@ def patch_accessibility_info(index_path: Path) -> bool:
     return True
 
 
+def patch_web_bridge(index_path: Path) -> bool:
+    try:
+        html = index_path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+
+    if "window.caminhosTouchContext" in html and "window.caminhosReadSave" in html:
+        print("Ponte web touch/save já estava aplicada.")
+        return True
+
+    if "</head>" not in html:
+        print("Não foi possível encontrar </head> para inserir a ponte web.")
+        return False
+
+    html = html.replace("</head>", f"{WEB_BRIDGE_SCRIPT}\n</head>", 1)
+
+    try:
+        index_path.write_text(html, encoding="utf-8")
+    except OSError:
+        return False
+
+    print("Ponte web touch/save aplicada ao index.html.")
+    return True
+
+
 def patch_web_app_metadata(index_path: Path) -> bool:
     try:
         html = index_path.read_text(encoding="utf-8")
@@ -443,6 +554,8 @@ def main() -> int:
     if result.returncode == 0:
         index_path = STAGING_DIR / "build" / "web" / "index.html"
         if not patch_mobile_ready_prompt(index_path):
+            return 1
+        if not patch_web_bridge(index_path):
             return 1
         if not patch_loading_experience(index_path):
             return 1

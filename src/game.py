@@ -71,6 +71,7 @@ class Game:
         self.session_random = Random()
         self.session_pill_choices: dict[int, tuple[int, ...]] = {}
         self.session_quiz_choices: dict[int, int] = {}
+        self.keyboard_input_seen = False
         self.touch_ui_enabled = self._detect_touch_context()
         self.touch_control_by_pointer = {}
         self.active_touch_controls = set()
@@ -115,6 +116,10 @@ class Game:
             if window is None:
                 return False
 
+            web_touch_context = self._web_touch_context_flag(window)
+            if web_touch_context is not None:
+                return web_touch_context
+
             navigator = getattr(window, "navigator", None) if window else None
             max_touch_points = self._safe_int(
                 getattr(navigator, "maxTouchPoints", 0) if navigator else 0
@@ -141,6 +146,24 @@ class Game:
             return any(token in user_agent for token in mobile_tokens)
         except Exception:
             return False
+
+    def _web_touch_context_flag(self, window) -> bool | None:
+        try:
+            value = getattr(window, "caminhosTouchContext", None)
+        except Exception:
+            return None
+
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return value
+
+        text = str(value).strip().lower()
+        if text in ("true", "1", "yes"):
+            return True
+        if text in ("false", "0", "no", "none", "null", "undefined", ""):
+            return False
+        return None
 
     def _safe_int(self, value) -> int:
         try:
@@ -175,6 +198,7 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
+                self.keyboard_input_seen = True
                 if event.key in (
                     pygame.K_LEFT,
                     pygame.K_RIGHT,
@@ -610,6 +634,7 @@ class Game:
         self.animation_time += dt
         self._update_effects(dt)
         self._update_quiz_feedback(dt)
+        self._refresh_late_touch_context()
 
         if self.state != STATE_PLAYING:
             self._update_feedback_message(dt)
@@ -654,6 +679,12 @@ class Game:
                 self._open_quiz_or_complete()
             else:
                 self._show_goal_feedback()
+
+    def _refresh_late_touch_context(self):
+        if self.touch_ui_enabled or self.keyboard_input_seen or self.state != STATE_MENU:
+            return
+        if self._detect_touch_context():
+            self.touch_ui_enabled = True
 
     def _collect_fragments(self):
         remaining_fragments = []

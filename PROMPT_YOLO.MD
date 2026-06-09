@@ -25,7 +25,7 @@ Estado atual importante:
 - A versao publicada fica em `https://msimoes38.github.io/caminhos_brasil/`.
 - O build web usa `scripts/build_pygbag_clean.py`, preservando `--ume_block=0`, tela HTML de carregamento, manifest/metadados e helper de tela cheia.
 - O save desktop usa `caminhos_brasil_save.json`.
-- O save web ja usa `localStorage` com a chave `caminhos_brasil_save_v1`.
+- O save web usa `localStorage` com a chave `caminhos_brasil_save_v1`, preferindo helpers JS injetados pelo build limpo.
 - A colecao ja tem visual de album com cards.
 - A linha do tempo ja reserva uma coluna de status.
 - O menu touch ja tenta cobrir texto confuso do rodape da abertura.
@@ -38,6 +38,10 @@ Estado atual importante:
 
 Ja foram implementados nesta rodada:
 
+- ponte JS no build limpo com `window.caminhosTouchContext`, `window.caminhosReadSave()`, `window.caminhosWriteSave(data)` e `window.caminhosClearSave()`;
+- `Game._detect_touch_context()` consulta a flag JS antes dos fallbacks e rechecagem tardia no menu antes de qualquer uso do teclado;
+- `ProgressStore` usa os helpers JS de save como caminho principal e preserva fallback direto para `platform.window.localStorage`;
+- smoke tests para flag JS de touch, helpers JS de save e injeção idempotente da ponte web no `index.html`;
 - deteccao inicial de touch/mobile reforcada em `src/game.py`, usando `maxTouchPoints`, `matchMedia`, `ontouchstart` e user agent como fallback leve;
 - faixa inferior consistente no menu inicial para cobrir a chamada fixa da arte de abertura e evitar instrucoes duplicadas;
 - polimento leve do litoral da fase 1, destaque sutil da primeira pilula e portal liberado com brilho mais claro;
@@ -62,9 +66,9 @@ Tambem foi confirmado que o pacote publicado `pygbag_app.apk` contem as melhoria
 
 Problemas ou oportunidades observados antes da ultima rodada:
 
-1. Em emulacao mobile/touch, o navegador reportou `navigator.maxTouchPoints = 1`, `pointer: coarse` e `hover: none`, mas o jogo ainda abriu com menu de teclado. A deteccao touch inicial via Pygbag parece insuficiente.
+1. Em emulacao mobile/touch, o navegador reportou `navigator.maxTouchPoints = 1`, `pointer: coarse` e `hover: none`, mas o jogo ainda abriu com menu de teclado. Ha correcao local via `window.caminhosTouchContext`, mas ela ainda precisa ser validada apos deploy.
 2. No menu desktop, a imagem `abertura.png` ainda mostra "PRESSIONE ENTER..." enquanto o painel tambem mostra atalhos. Isso e redundante e pode poluir a leitura.
-3. O save web esta implementado e publicado, mas ainda precisa de um teste real de persistencia no navegador: concluir uma fase, recarregar e confirmar fase 2 liberada.
+3. O save web agora tem helpers JS no build local, mas ainda precisa de um teste real de persistencia no navegador publicado: concluir uma fase, recarregar e confirmar fase 2 liberada.
 4. A fase 1 funciona, mas o visual do gameplay e bem mais simples do que a tela de abertura. Pequenos detalhes e feedbacks podem reduzir essa diferenca.
 5. Como o jogo roda em canvas, leitores de tela e ferramentas de acessibilidade enxergam pouco. Vale adicionar alguma orientacao HTML simples/sem impacto visual.
 
@@ -74,9 +78,9 @@ Melhorar a experiencia publicada, principalmente em mobile/touch e primeiro cont
 
 Priorize nesta ordem:
 
-1. Corrigir deteccao inicial de touch/mobile.
-2. Limpar redundancia visual do menu inicial.
-3. Validar e, se necessario, ajustar persistencia web.
+1. Validar no publicado a deteccao inicial de touch/mobile corrigida pela flag JS.
+2. Validar persistencia web real com os helpers JS.
+3. Criar teste Selenium opcional, se isso ajudar a repetir a validacao sem nova dependencia versionada.
 4. Polir primeira fase e feedbacks visuais leves.
 5. Melhorar acessibilidade/instrucoes fora do canvas.
 

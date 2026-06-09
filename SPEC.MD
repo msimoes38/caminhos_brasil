@@ -43,7 +43,7 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - HUD com ajuste discreto para títulos longos;
 - controles por teclado, mouse e toque;
 - interface mobile em modo paisagem com menu tocável, faixa de orientação e botões virtuais semitransparentes;
-- detecção inicial de toque/mobile por `maxTouchPoints`, `matchMedia`, `ontouchstart` e user agent como fallback leve;
+- detecção inicial de toque/mobile por `window.caminhosTouchContext` injetado no build, com `maxTouchPoints`, `matchMedia`, `ontouchstart` e user agent como fallbacks leves;
 - faixa inferior no menu inicial para cobrir instruções fixas da arte de abertura e evitar redundância;
 - dicas contextuais nos primeiros segundos da fase 1;
 - banco com 10 pílulas de conhecimento por fase;
@@ -61,7 +61,7 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - tela de pausa com botões grandes para toque;
 - tela final com resumo da jornada;
 - sons simples gerados por codigo;
-- save local em JSON e save web em `localStorage`, ambos tolerantes a falhas;
+- save local em JSON e save web em `localStorage` via helpers JS do build limpo, ambos tolerantes a falhas;
 - smoke tests permanentes;
 - build Pygbag limpo com manifest/metadados web, orientação HTML acessível fora do canvas e deploy via GitHub Pages.
 
@@ -157,7 +157,7 @@ Responsabilidades:
 - tratar eventos de teclado, mouse e toque;
 - converter eventos `FINGER*` para coordenadas 960x540;
 - ignorar eventos de mouse gerados por toque quando apropriado;
-- detectar contexto touch no carregamento inicial usando APIs simples do navegador;
+- detectar contexto touch no carregamento inicial usando `window.caminhosTouchContext` antes dos fallbacks por APIs simples do navegador;
 - controlar estados do jogo;
 - desenhar menu, ajuda, linha do tempo, colecao, fase, pausa, quiz, conclusao e final;
 - alternar textos e botoes para teclado ou toque quando o contexto mobile e detectado;
@@ -274,6 +274,8 @@ Campos:
 - `completed_levels`
 - `collection_entries`
 
+O build limpo injeta `window.caminhosReadSave()` e `window.caminhosWriteSave(data)`. `ProgressStore` usa esses helpers primeiro e mantém acesso direto a `platform.window.localStorage` como fallback.
+
 Requisitos:
 
 - falha de leitura nao pode quebrar o jogo;
@@ -329,11 +331,12 @@ Valida:
 - `Game` inicializa;
 - `abertura.png` carrega;
 - sprite do Mig carrega;
-- `ProgressStore` salva/carrega em arquivo local e em `localStorage` simulado, com fallback seguro;
+- `ProgressStore` salva/carrega em arquivo local, helpers JS simulados e `localStorage` simulado, com fallback seguro;
 - coleção histórica acumula descobertas sem duplicar entradas;
 - fluxo basico de menu, nova sessão, checkpoint, cuidado, quiz, conclusão e final;
 - fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa, quiz e linha do tempo;
-- detecção touch inicial por `maxTouchPoints`, `matchMedia` e desktop simulado;
+- detecção touch inicial por `window.caminhosTouchContext`, `maxTouchPoints`, `matchMedia` e desktop simulado;
+- patch de build injeta a ponte web touch/save de forma idempotente;
 - botão virtual esquerdo nao cobre Mig no inicio da fase;
 - mensagem historica fica fixa e fica translucida quando Mig passa por tras;
 - teste nao altera o save local.
@@ -359,6 +362,8 @@ Motivos para usar este script:
 - empacota apenas os arquivos necessarios;
 - aplica patch no `index.html` gerado para celular;
 - preserva `--ume_block=0`, evitando travamento em "Ready to start !";
+- injeta `window.caminhosTouchContext` antes do jogo iniciar;
+- injeta helpers `window.caminhosReadSave()`, `window.caminhosWriteSave(data)` e `window.caminhosClearSave()` para `localStorage`;
 - injeta tela HTML de carregamento do projeto;
 - injeta uma área HTML visualmente oculta com orientação básica para leitores de tela;
 - injeta helper JavaScript para tentativa de fullscreen/orientacao paisagem;
@@ -533,7 +538,7 @@ Esse período trouxe mudanças importantes e também desafios para muitas pessoa
 
 Comportamento atual:
 
-- `ProgressStore.load()` tenta carregar `localStorage` no navegador e `caminhos_brasil_save.json` no desktop;
+- `ProgressStore.load()` tenta carregar `localStorage` no navegador por helpers JS do build, depois fallback direto, e `caminhos_brasil_save.json` no desktop;
 - a chave web é `caminhos_brasil_save_v1`;
 - se `localStorage`, arquivo ou JSON falharem, retorna progresso vazio ou cai para o comportamento local sem quebrar;
 - `Enter` no menu continua a jornada salva;
@@ -675,7 +680,7 @@ Mobile web:
 - As fases compartilham gerador simples de layout.
 - A interface base é 960x540.
 - Mobile é paisagem apenas; retrato não tem layout dedicado.
-- Save web usa `localStorage`, mas ainda deve ser validado em navegadores reais.
+- Save web usa helpers JS para `localStorage`, com fallback direto, mas ainda deve ser validado em navegadores reais apos deploy.
 - Áudio em navegador pode variar por política do browser.
 - `src/game.py` concentra muitas responsabilidades.
 - A tela de carregamento HTML usa fallback por tempo/toque porque o sinal de carregamento do Pygbag pode variar no celular.
@@ -696,7 +701,7 @@ Mobile web:
 - Preserve controles de teclado e toque.
 - Preserve `--ume_block=0`.
 - Preserve a tela de carregamento web e seus fallbacks.
-- Preserve metadados/manifest web e helper de tela cheia do build limpo.
+- Preserve metadados/manifest web, ponte JS de touch/save e helper de tela cheia do build limpo.
 - Preserve menu e pausa tocáveis em mobile.
 - Não empacote venv nem save local no build.
 - Não adicione dependências sem necessidade clara.

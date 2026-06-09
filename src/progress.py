@@ -36,14 +36,20 @@ class ProgressStore:
         self._save_to_file(data)
 
     def _load_from_web(self) -> dict[str, Any] | None:
-        storage = self._get_web_storage()
-        if storage is None:
+        window = self._get_browser_window()
+        if window is None:
             return None
 
-        try:
-            raw_data = storage.getItem(WEB_SAVE_KEY)
-        except Exception:
-            return None
+        raw_data, helper_available = self._read_from_web_helper(window)
+        if not helper_available:
+            storage = self._get_web_storage(window)
+            if storage is None:
+                return None
+
+            try:
+                raw_data = storage.getItem(WEB_SAVE_KEY)
+            except Exception:
+                return None
 
         if not raw_data:
             return self._empty_progress()
@@ -56,12 +62,21 @@ class ProgressStore:
         return self._normalize_progress(data)
 
     def _save_to_web(self, data: dict[str, Any]) -> bool:
-        storage = self._get_web_storage()
+        window = self._get_browser_window()
+        if window is None:
+            return False
+
+        raw_data = json.dumps(data, ensure_ascii=False)
+        helper_saved, helper_available = self._write_to_web_helper(window, raw_data)
+        if helper_available:
+            return helper_saved
+
+        storage = self._get_web_storage(window)
         if storage is None:
             return False
 
         try:
-            storage.setItem(WEB_SAVE_KEY, json.dumps(data, ensure_ascii=False))
+            storage.setItem(WEB_SAVE_KEY, raw_data)
         except Exception:
             return False
 
@@ -83,14 +98,54 @@ class ProgressStore:
         except OSError:
             return
 
-    def _get_web_storage(self):
+    def _get_browser_window(self):
         try:
             import platform
 
-            window = getattr(platform, "window", None)
+            return getattr(platform, "window", None)
+        except Exception:
+            return None
+
+    def _get_web_storage(self, window):
+        try:
             return getattr(window, "localStorage", None) if window else None
         except Exception:
             return None
+
+    def _read_from_web_helper(self, window) -> tuple[Any, bool]:
+        try:
+            helper = getattr(window, "caminhosReadSave", None)
+        except Exception:
+            return None, False
+
+        if helper is None:
+            return None, False
+
+        try:
+            return helper(), True
+        except Exception:
+            return None, False
+
+    def _write_to_web_helper(self, window, raw_data: str) -> tuple[bool, bool]:
+        try:
+            helper = getattr(window, "caminhosWriteSave", None)
+        except Exception:
+            return False, False
+
+        if helper is None:
+            return False, False
+
+        try:
+            result = helper(raw_data)
+        except Exception:
+            return False, False
+
+        return self._truthy_web_result(result), True
+
+    def _truthy_web_result(self, result) -> bool:
+        if isinstance(result, bool):
+            return result
+        return str(result).strip().lower() in ("true", "1", "yes")
 
     def _progress_payload(
         self,

@@ -69,7 +69,7 @@ Pensar desde o inicio em Pygbag:
 - Testar Pygbag antes de considerar a versao pronta para publicacao; se houver venv ou save na raiz, usar `scripts/build_pygbag_clean.py`.
 - Preservar `--ume_block=0` no build web para evitar que celulares fiquem presos na tela "Ready to start !" do Pygbag.
 - Preservar a tela de carregamento HTML injetada pelo build limpo, pois ela evita uma tela azul vazia no celular.
-- Preservar manifest/metadados web e helper de tela cheia do build limpo.
+- Preservar manifest/metadados web, ponte JS de touch/save e helper de tela cheia do build limpo.
 
 ## Estado Atual Do Projeto
 
@@ -78,10 +78,10 @@ O jogo ja possui:
 - Tela inicial com `abertura.png`.
 - Menu com continuar, nova sessao, linha do tempo, colecao, ajuda e tela cheia no mobile.
 - Menu mobile com botoes grandes, convite para tocar e faixa de orientacao no rodape.
-- Deteccao inicial de toque/mobile reforcada por APIs simples do navegador.
+- Deteccao inicial de toque/mobile reforcada por `window.caminhosTouchContext` injetado no build e APIs simples do navegador.
 - Faixa inferior do menu cobre instrucoes fixas da imagem de abertura para evitar redundancia.
 - Linha do tempo com fases bloqueadas, liberadas e concluidas.
-- Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possivel.
+- Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possivel, preferindo helpers JS do build limpo.
 - Nova jornada temporaria com `N`, sem apagar o save.
 - Dezesseis fases historicas em ordem cronologica.
 - Movimento lateral, pulo, gravidade e colisao.
@@ -129,11 +129,11 @@ O jogo ja possui:
 - `src/level_data.py`: dados das fases historicas, bancos de pílulas e geracao simples de layout.
 - `src/levels.py`: conversao dos dados das fases em objetos usados pelo Pygame e seleção ativa de pílulas.
 - `src/backgrounds.py`: desenho dos cenarios por tema.
-- `src/progress.py`: salvamento de progresso e colecao em JSON no desktop e `localStorage` no navegador.
+- `src/progress.py`: salvamento de progresso e colecao em JSON no desktop e `localStorage` no navegador, com helpers JS como caminho principal quando presentes.
 - `src/sounds.py`: sons simples gerados por codigo.
 - `src/settings.py`: constantes gerais.
 - `scripts/smoke_tests.py`: validacao automatica leve de fases, banco de pílulas, quiz, assets e fluxo basico.
-- `scripts/build_pygbag_clean.py`: gera build web a partir de copia minima, sem empacotar venv ou save local, e injeta ajustes mobile, fullscreen, manifest e carregamento no `index.html`.
+- `scripts/build_pygbag_clean.py`: gera build web a partir de copia minima, sem empacotar venv ou save local, e injeta ajustes mobile, ponte JS de touch/save, fullscreen, manifest e carregamento no `index.html`.
 - `.github/workflows/pages.yml`: build e deploy para GitHub Pages quando houver push em `yolo_melhoria`.
 
 ## Fluxo Recomendado De Trabalho
@@ -176,7 +176,7 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 - A fase 2 ja teve problemas de checkpoint e itens inalcancaveis; revisar com cuidado se alterar layout.
 - A tela inicial usa `abertura.png`; se esse arquivo faltar, `src/game.py` tem fallback desenhado por Pygame.
 - A nova sessao com `N` nao deve sobrescrever o save salvo e deve sortear nova seleção de pílulas.
-- O save web usa a chave `caminhos_brasil_save_v1` em `localStorage`; se falhar, o jogo deve continuar sem quebrar.
+- O save web usa a chave `caminhos_brasil_save_v1` em `localStorage`, preferindo `window.caminhosReadSave()` e `window.caminhosWriteSave(data)`; se falhar, o jogo deve continuar sem quebrar.
 - O controle `H` abre a ajuda rapida e deve continuar simples e legivel.
 - O controle `Esc` deve voltar para a tela inicial sem encerrar o runtime, especialmente na versao web.
 - Os controles por toque devem continuar grandes, visiveis e sem cobrir HUD, mensagens historicas ou Mig no inicio da fase.
@@ -188,6 +188,7 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 - A tela azul vazia do template Pygbag deve continuar substituida pela tela de carregamento do projeto.
 - A tela de carregamento web deve sempre ter saida por sinal do jogo, toque/click e tempo automatico, para nunca bloquear o menu.
 - O manifest/metadados web do build limpo devem continuar presentes para melhorar uso como app no celular.
+- A flag `window.caminhosTouchContext` e os helpers JS de save devem continuar injetados antes do jogo iniciar.
 - A URL publicada e `https://msimoes38.github.io/caminhos_brasil/`; use query string como `?v=5` para evitar cache em testes.
 
 ## Testes Recomendados

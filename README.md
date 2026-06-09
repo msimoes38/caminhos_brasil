@@ -19,11 +19,11 @@ Principais recursos:
 - Tela inicial com imagem `abertura.png`.
 - Menu com continuar jornada, nova sessão temporária, linha do tempo, coleção, ajuda rápida e botão mobile de tela cheia.
 - Menu mobile com botões grandes, faixa de orientação por toque e botão de tela cheia.
-- Detecção inicial de toque/mobile reforçada para navegadores que informam `maxTouchPoints`, `pointer: coarse`, `hover: none`, `ontouchstart` ou user agent mobile.
+- Detecção inicial de toque/mobile reforçada por flag JS do build (`window.caminhosTouchContext`) e fallbacks para `maxTouchPoints`, `pointer: coarse`, `hover: none`, `ontouchstart` ou user agent mobile.
 - Faixa inferior no menu cobre a chamada fixa da arte de abertura e evita instruções duplicadas.
 - Linha do tempo com fases bloqueadas, liberadas, próximas e concluídas.
 - Dezesseis fases históricas jogáveis.
-- Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possível.
+- Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possível, preferindo helpers JS injetados pelo build limpo.
 - Opção de nova jornada temporária com `N`, sem apagar o save.
 - Movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo.
 - Câmera horizontal.
@@ -48,7 +48,7 @@ Principais recursos:
 - Sprite animado do Mig usando `assets/images/personagem.png`.
 - Sons leves gerados por codigo.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
-- Script de build web limpo em `scripts/build_pygbag_clean.py`, com tela de carregamento propria, metadados de app/manifest e ajuste para evitar travamento na tela "Ready to start !" em celulares.
+- Script de build web limpo em `scripts/build_pygbag_clean.py`, com ponte JS para touch/save, tela de carregamento propria, metadados de app/manifest e ajuste para evitar travamento na tela "Ready to start !" em celulares.
 - Build web injeta uma orientação HTML acessível fora do canvas, sem impacto visual.
 
 ## Fases Implementadas
@@ -133,7 +133,7 @@ Celular ou tela de toque:
 
 No desktop, o jogo salva progresso local em `caminhos_brasil_save.json`.
 
-No navegador via Pygbag, o jogo tenta usar `localStorage` com a chave `caminhos_brasil_save_v1`.
+No navegador via Pygbag, o jogo tenta usar `localStorage` com a chave `caminhos_brasil_save_v1`. O build limpo injeta os helpers `window.caminhosReadSave()` e `window.caminhosWriteSave(data)`, usados como caminho principal antes do fallback direto para `platform.window.localStorage`.
 
 O save guarda:
 
@@ -180,10 +180,11 @@ O smoke test confere:
 - `abertura.png` e `assets/images/personagem.png` carregam;
 - Guardião do Portal pergunta apenas sobre uma pílula ativa da jogada e exige resposta correta para concluir;
 - coleção histórica acumula descobertas sem duplicar entradas;
-- progresso salva/carrega em arquivo local e em `localStorage` simulado, com fallback seguro;
+- progresso salva/carrega em arquivo local, helpers JS simulados e `localStorage` simulado, com fallback seguro;
 - fluxo basico de menu, nova sessao temporaria, colecao, checkpoint, area de cuidado, conclusao e final passa sem alterar o save.
 - fluxo basico por toque cobre menu, fase, movimento, pulo, colecao e linha do tempo;
-- detecção touch inicial reconhece `maxTouchPoints`, `matchMedia` e ignora desktop simulado;
+- detecção touch inicial reconhece `window.caminhosTouchContext`, `maxTouchPoints`, `matchMedia` e ignora desktop simulado;
+- build limpo injeta a ponte web de touch/save de forma idempotente;
 - botão virtual esquerdo não cobre Mig no início da fase;
 - mensagens historicas permanecem em posicao estavel e ficam translucidas quando Mig passa por tras.
 
@@ -276,11 +277,11 @@ src/
 - `src/level_data.py`: contém dados das 16 fases, bancos de pílulas históricas e geradores simples de layout.
 - `src/levels.py`: converte dados das fases em objetos `pygame.Rect`.
 - `src/backgrounds.py`: desenha cenarios por tema, com pequenos detalhes visuais por período.
-- `src/progress.py`: salva e carrega progresso em JSON no desktop e em `localStorage` no navegador quando disponível.
+- `src/progress.py`: salva e carrega progresso em JSON no desktop e em `localStorage` no navegador quando disponível, usando helpers JS do build limpo quando presentes.
 - `src/sounds.py`: gera sons simples por codigo.
 - `src/settings.py`: constantes gerais.
 - `scripts/smoke_tests.py`: validacao automatica leve.
-- `scripts/build_pygbag_clean.py`: cria uma copia minima, roda build Pygbag sem empacotar venv/save local e injeta ajustes mobile no `index.html`.
+- `scripts/build_pygbag_clean.py`: cria uma copia minima, roda build Pygbag sem empacotar venv/save local e injeta ajustes mobile, ponte JS de touch/save e metadados no `index.html`.
 
 ## Diretriz De Conteudo
 
@@ -321,7 +322,7 @@ Resultado: o comando iniciou e gerou build, mas na raiz do projeto ele tambem te
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Resultado validado: o build limpo empacota somente os arquivos necessarios do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma tela de carregamento propria, manifest basico, titulo/descricao da aba, helper de tela cheia e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A tela de carregamento pode ser liberada por sinal do jogo, toque/click ou automaticamente apos alguns segundos. A saida fica em:
+Resultado validado: o build limpo empacota somente os arquivos necessarios do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma ponte JS para `window.caminhosTouchContext`, helpers de save em `localStorage`, tela de carregamento propria, manifest basico, titulo/descricao da aba, helper de tela cheia e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A tela de carregamento pode ser liberada por sinal do jogo, toque/click ou automaticamente apos alguns segundos. A saida fica em:
 
 ```text
 build/pygbag_app/build/web
@@ -350,7 +351,7 @@ Checklist curto de publicacao:
 ## Limites Conhecidos
 
 - As fases compartilham gerador simples de layout.
-- O salvamento web depende de `localStorage`; se o navegador bloquear esse recurso, o jogo continua sem quebrar, mas pode nao persistir.
+- O salvamento web depende de `localStorage` acessado pelos helpers JS do build; se o navegador bloquear esse recurso, o jogo continua sem quebrar, mas pode nao persistir.
 - A interface esta otimizada para 960x540.
 - A experiencia mobile foi pensada para celular deitado; modo retrato nao possui layout dedicado.
 - As mensagens historicas usam painel fixo e translucidez para nao disputar espaco com o pulo do Mig.
