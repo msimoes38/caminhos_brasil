@@ -80,33 +80,34 @@ O jogo ja possui:
 - Menu mobile com botoes grandes, convite para tocar e faixa de orientacao no rodape.
 - Deteccao inicial de toque/mobile reforcada por `window.caminhosTouchContext` injetado no build e APIs simples do navegador.
 - Faixa inferior do menu cobre instrucoes fixas da imagem de abertura para evitar redundancia.
-- Linha do tempo com fases bloqueadas, liberadas e concluidas.
+- Linha do tempo com fases bloqueadas, liberadas, proximas e concluidas, com icones/frases de blocos historicos.
 - Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possivel, preferindo helpers JS do build limpo.
 - Nova jornada temporaria com `N`, sem apagar o save.
 - Dezesseis fases historicas em ordem cronologica.
-- Movimento lateral, pulo, gravidade e colisao.
+- Movimento lateral, pulo, gravidade, colisao e resposta de toque levemente mais rapida.
 - Camera horizontal.
 - HUD ajusta discretamente titulos longos para caberem no painel.
 - Controles por toque para celular em modo paisagem no navegador, sem cobrir Mig no inicio da fase.
-- Dicas curtas nos primeiros segundos da fase 1, ajustadas para teclado ou toque.
+- Tutorial inicial da fase 1 guiado por acoes, ajustado para teclado ou toque.
 - Banco com 10 pílulas de conhecimento por fase.
 - Seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas demais.
 - Pílulas históricas coletáveis.
-- Guardiao do Portal com pergunta historica obrigatoria sobre pílula ativa antes de concluir cada fase.
+- Missao extra opcional em cada fase, com marcador `Extra`, dica contextual e feedback positivo.
+- Guardiao do Portal com frase de contexto do bloco historico e pergunta historica obrigatoria sobre pílula ativa antes de concluir cada fase.
 - Colecao historica agrupada por fase.
-- Colecao historica com aparencia de album, cards de descobertas, descoberta recente destacada e progresso do banco por fase.
+- Colecao historica com aparencia de album, cards de descobertas, descoberta recente destacada, progresso do banco por fase, celebracao 10/10 e selos por blocos historicos.
 - Introducao narrativa por fase.
 - Ajuda rapida com `H`.
-- Tela final com creditos simples.
+- Tela final com resumo da jornada, descobertas da sessao, missoes extras observadas, creditos simples e selos conquistados.
 - Tela de pausa com botoes grandes para toque.
 - Checkpoints seguros.
 - Areas de cuidado.
 - Coyote time e buffer curto de pulo.
 - Feedback visual e texto positivo para pílulas, checkpoints, areas de cuidado e portal.
 - Mensagens historicas ficam fixas no topo e se tornam translucidas quando Mig passa por tras.
-- Sons leves gerados por codigo.
+- Sons leves gerados por codigo, incluindo sinais para missao extra, resposta correta e selo.
 - Sprite animado do Mig usando folha de sprites.
-- Cenarios desenhados por codigo.
+- Cenarios desenhados por codigo, com detalhes adicionais no engenho, memoria civica e Brasil contemporaneo.
 - Litoral inicial com ondas, espuma, vegetacao baixa e destaque sutil na primeira pilula.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
 - Build Pygbag limpo em `scripts/build_pygbag_clean.py`, com manifest/metadados web.
@@ -119,7 +120,7 @@ O jogo ja possui:
 - `README.md`: explicacao para executar, jogar e testar.
 - `SPEC.MD`: especificacao tecnica e funcional atualizada para continuidade do projeto.
 - `AGENTS.md`: instrucoes de trabalho para agentes de IA.
-- `PROMPT_YOLO.MD`: prompt longo para rodadas autonomas futuras, quando o usuario pedir esse modo.
+- `PROMPT_LOOP.MD`: prompt longo para ciclos incrementais de melhoria quando o usuario pedir esse modo.
 - `main.py`: ponto de entrada compativel com Pygbag.
 - `requirements.txt`: dependencias do projeto.
 - `abertura.png`: imagem principal da tela inicial.
@@ -127,12 +128,12 @@ O jogo ja possui:
 - `src/game.py`: loop principal, estados, telas, HUD, fluxo e progresso.
 - `src/player.py`: movimento, colisao, animacao e desenho do Mig.
 - `src/level_data.py`: dados das fases historicas, bancos de pílulas e geracao simples de layout.
-- `src/levels.py`: conversao dos dados das fases em objetos usados pelo Pygame e seleção ativa de pílulas.
+- `src/levels.py`: conversao dos dados das fases em objetos usados pelo Pygame, seleção ativa de pílulas e blocos historicos dos selos.
 - `src/backgrounds.py`: desenho dos cenarios por tema.
 - `src/progress.py`: salvamento de progresso e colecao em JSON no desktop e `localStorage` no navegador, com helpers JS como caminho principal quando presentes.
 - `src/sounds.py`: sons simples gerados por codigo.
 - `src/settings.py`: constantes gerais.
-- `scripts/smoke_tests.py`: validacao automatica leve de fases, banco de pílulas, quiz, assets e fluxo basico.
+- `scripts/smoke_tests.py`: validacao automatica leve de fases, banco de pílulas, quiz, selos, assets e fluxo basico.
 - `scripts/build_pygbag_clean.py`: gera build web a partir de copia minima, sem empacotar venv ou save local, e injeta ajustes mobile, ponte JS de touch/save, fullscreen, manifest e carregamento no `index.html`.
 - `.github/workflows/pages.yml`: build e deploy para GitHub Pages quando houver push em `yolo_melhoria`.
 
@@ -164,13 +165,14 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 7. Se a mudanca tocar jogabilidade, testar manualmente a fase afetada.
 8. Se a mudanca tocar menu, imagens ou telas, renderizar/abrir o jogo e conferir visualmente.
 9. Atualizar `README.md`, `SPEC.MD` ou `AGENTS.md` quando a mudanca afetar comportamento, arquitetura, publicacao ou processo.
-10. Atualizar `PROMPT_YOLO.MD` quando o estado geral do projeto ou as prioridades de agentes mudarem.
+10. Atualizar `PROMPT_LOOP.MD` quando o estado geral do projeto ou as prioridades de ciclos mudarem.
 
 ## Pontos De Atencao Recentes
 
 - Checkpoints nao devem ficar sobre areas de cuidado.
 - O respawn de checkpoints tambem nao pode cair em areas de cuidado.
 - Pílulas ativas devem ficar apoiadas em plataformas alcancaveis pelo pulo atual do Mig.
+- Missoes extras devem ficar em plataformas alcancaveis, fora de areas de cuidado e sem sobrepor pílulas ativas.
 - Perguntas do Guardiao devem se basear em mensagens ja apresentadas na fase.
 - Respostas erradas no Guardiao devem ensinar com dica curta, sem punir ou reiniciar a fase.
 - A fase 2 ja teve problemas de checkpoint e itens inalcancaveis; revisar com cuidado se alterar layout.
@@ -179,7 +181,7 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 - O save web usa a chave `caminhos_brasil_save_v1` em `localStorage`, preferindo `window.caminhosReadSave()` e `window.caminhosWriteSave(data)`; se falhar, o jogo deve continuar sem quebrar.
 - O controle `H` abre a ajuda rapida e deve continuar simples e legivel.
 - O controle `Esc` deve voltar para a tela inicial sem encerrar o runtime, especialmente na versao web.
-- Os controles por toque devem continuar grandes, visiveis e sem cobrir HUD, mensagens historicas ou Mig no inicio da fase.
+- Os controles por toque devem continuar grandes, visiveis, responsivos e sem cobrir HUD, mensagens historicas ou Mig no inicio da fase.
 - O menu e a pausa mobile devem continuar com botoes grandes e textos de toque, sem remover atalhos de teclado.
 - O botao `Tela cheia` deve falhar com orientacao simples, sem quebrar desktop.
 - Nao reposicionar dinamicamente a mensagem historica durante o pulo; isso distrai o jogador. Preserve painel fixo com translucidez.
@@ -210,9 +212,11 @@ Teste manual minimo:
 - Pressionar `N` no menu e confirmar nova jornada temporaria.
 - Pressionar `H` no menu ou na fase e confirmar ajuda rapida.
 - Em toque, conferir menu com convite para tocar e botao `Tela cheia`.
-- Mover, pular e conferir dicas iniciais na fase 1.
+- Mover, pular e conferir tutorial guiado por acoes na fase 1.
+- Tocar no marcador `Extra` e conferir feedback positivo da missao opcional.
 - Em celular ou tela touch, usar modo paisagem e testar `<`, `>`, `Pular`, `P` e `C`.
 - Coletar pílulas e observar feedback positivo.
+- Conferir se a colecao destaca descoberta recente e album completo quando chegar a 10/10.
 - Responder ao Guardiao do Portal; testar erro com dica e acerto para concluir.
 - Conferir se a mensagem historica nao atrapalha o pulo; ela deve ficar fixa e translucida se Mig passar por tras.
 - Abrir colecao com `C`.
@@ -223,6 +227,7 @@ Teste manual minimo:
 - Concluir fase.
 - Confirmar desbloqueio da fase seguinte.
 - Abrir linha do tempo com `S`.
+- Conferir icone/frase de bloco historico na linha do tempo.
 - Testar fase 2.
 - Testar uma fase intermediaria.
 - Testar a ultima fase e tela final.

@@ -64,6 +64,7 @@ def _draw_sugar_background(screen: pygame.Surface, camera_x: int, level_width: i
 
     for world_x in range(360, level_width, 460):
         _draw_cane_bundle(screen, world_x - int(camera_x * 0.42), 382)
+    _draw_water_channel(screen, camera_x, level_width)
     _draw_engenho(screen, 1200 - int(camera_x * 0.35), 330)
 
 
@@ -194,11 +195,14 @@ def _draw_memory_background(
     for world_x in range(240, level_width, 520):
         x = world_x - int(camera_x * 0.35)
         _draw_memory_wall(screen, x, 356, accent)
+        _draw_memory_ribbons(screen, x + 18, 346, accent)
 
     if theme == "redemocratization":
         _draw_constitution_book(screen, 1180 - int(camera_x * 0.32), 356)
+        _draw_civic_lights(screen, 820 - int(camera_x * 0.3), 312)
     else:
         _draw_memory_candles(screen, 1180 - int(camera_x * 0.32), 382)
+        _draw_civic_lights(screen, 820 - int(camera_x * 0.3), 328)
 
 
 def _draw_contemporary_background(screen: pygame.Surface, camera_x: int, level_width: int):
@@ -215,6 +219,8 @@ def _draw_contemporary_background(screen: pygame.Surface, camera_x: int, level_w
         x = world_x - int(camera_x * 0.48)
         _draw_tree(screen, x, 390)
     _draw_connection_nodes(screen, camera_x, level_width)
+    _draw_school_front(screen, 1040 - int(camera_x * 0.36), 324)
+    _draw_solar_panels(screen, 690 - int(camera_x * 0.34), 386)
 
 
 def _draw_sun(screen: pygame.Surface, position: tuple[int, int]):
@@ -269,6 +275,23 @@ def _draw_engenho(screen: pygame.Surface, x: int, y: int):
     pygame.draw.circle(screen, (86, 74, 58), (x - 18, y + 86), 28, 5)
     pygame.draw.line(screen, (86, 74, 58), (x - 46, y + 86), (x + 10, y + 86), 4)
     pygame.draw.line(screen, (86, 74, 58), (x - 18, y + 58), (x - 18, y + 114), 4)
+    for angle in range(0, 360, 45):
+        endpoint = (
+            x - 18 + int(28 * pygame.math.Vector2(1, 0).rotate(angle).x),
+            y + 86 + int(28 * pygame.math.Vector2(1, 0).rotate(angle).y),
+        )
+        pygame.draw.line(screen, (124, 96, 66), (x - 18, y + 86), endpoint, 2)
+
+
+def _draw_water_channel(screen: pygame.Surface, camera_x: int, level_width: int):
+    points = []
+    for world_x in range(-80, level_width + 160, 160):
+        x = world_x - int(camera_x * 0.5)
+        y = 420 + ((world_x // 160) % 2) * 8
+        points.append((x, y))
+    if len(points) >= 2:
+        pygame.draw.lines(screen, (86, 150, 184), False, points, 8)
+        pygame.draw.lines(screen, (204, 232, 232), False, points, 2)
 
 
 def _draw_tree(screen: pygame.Surface, x: int, y: int):
@@ -372,6 +395,33 @@ def _draw_memory_wall(
     pygame.draw.rect(screen, (236, 232, 210), (x + 18, y + 16, 76, 28))
 
 
+def _draw_memory_ribbons(
+    screen: pygame.Surface,
+    x: int,
+    y: int,
+    accent: tuple[int, int, int],
+):
+    if x < -120 or x > SCREEN_WIDTH + 80:
+        return
+
+    for offset, color in enumerate(((236, 232, 210), (248, 218, 92), accent)):
+        ribbon_x = x + offset * 24
+        pygame.draw.line(screen, color, (ribbon_x, y), (ribbon_x + 14, y + 28), 4)
+        pygame.draw.line(screen, color, (ribbon_x + 14, y + 28), (ribbon_x + 30, y), 4)
+
+
+def _draw_civic_lights(screen: pygame.Surface, x: int, y: int):
+    if x < -160 or x > SCREEN_WIDTH + 80:
+        return
+
+    pygame.draw.line(screen, (78, 82, 86), (x, y + 90), (x + 132, y + 90), 3)
+    for offset in (0, 44, 88, 132):
+        pole_x = x + offset
+        pygame.draw.rect(screen, (78, 82, 86), (pole_x - 2, y + 24, 4, 68))
+        pygame.draw.circle(screen, (248, 238, 190), (pole_x, y + 18), 10)
+        pygame.draw.circle(screen, (226, 168, 74), (pole_x, y + 18), 10, 2)
+
+
 def _draw_modern_building(screen: pygame.Surface, x: int, y: int):
     if x < -90 or x > SCREEN_WIDTH + 80:
         return
@@ -380,6 +430,43 @@ def _draw_modern_building(screen: pygame.Surface, x: int, y: int):
     for row in range(4):
         for column in range(2):
             pygame.draw.rect(screen, (198, 226, 232), (x + 14 + column * 28, y + 18 + row * 24, 14, 14))
+
+
+def _draw_school_front(screen: pygame.Surface, x: int, y: int):
+    if x < -180 or x > SCREEN_WIDTH + 90:
+        return
+
+    pygame.draw.rect(screen, (224, 198, 128), (x, y + 48, 150, 86), border_radius=3)
+    pygame.draw.polygon(screen, (112, 86, 62), [(x - 10, y + 48), (x + 75, y), (x + 160, y + 48)])
+    pygame.draw.rect(screen, (92, 122, 150), (x + 58, y + 86, 34, 48))
+    for offset in (18, 106):
+        pygame.draw.rect(screen, (196, 228, 232), (x + offset, y + 70, 26, 24))
+        pygame.draw.rect(screen, (92, 122, 150), (x + offset, y + 70, 26, 24), 2)
+    pygame.draw.rect(screen, (248, 238, 190), (x + 46, y + 38, 58, 20), border_radius=4)
+    pygame.draw.rect(screen, (112, 86, 62), (x + 46, y + 38, 58, 20), 2, border_radius=4)
+
+
+def _draw_solar_panels(screen: pygame.Surface, x: int, y: int):
+    if x < -160 or x > SCREEN_WIDTH + 80:
+        return
+
+    for offset in (0, 54, 108):
+        panel = pygame.Rect(x + offset, y, 42, 24)
+        pygame.draw.polygon(
+            screen,
+            (52, 92, 122),
+            [
+                panel.topleft,
+                (panel.right, panel.y + 4),
+                (panel.right - 6, panel.bottom),
+                (panel.x - 6, panel.bottom - 4),
+            ],
+        )
+        pygame.draw.line(screen, (190, 224, 232), (panel.x + 8, panel.y + 2), (panel.x + 2, panel.bottom - 4), 1)
+        pygame.draw.line(screen, (190, 224, 232), (panel.x + 22, panel.y + 3), (panel.x + 16, panel.bottom - 3), 1)
+        pygame.draw.line(screen, (82, 74, 62), (panel.centerx, panel.bottom - 2), (panel.centerx, y + 54), 3)
+    pygame.draw.line(screen, (82, 74, 62), (x - 12, y + 54), (x + 154, y + 54), 3)
+
 
 
 def _draw_birds(screen: pygame.Surface, camera_x: int, positions: list[tuple[int, int]]):

@@ -21,32 +21,33 @@ Principais recursos:
 - Menu mobile com botões grandes, faixa de orientação por toque e botão de tela cheia.
 - Detecção inicial de toque/mobile reforçada por flag JS do build (`window.caminhosTouchContext`) e fallbacks para `maxTouchPoints`, `pointer: coarse`, `hover: none`, `ontouchstart` ou user agent mobile.
 - Faixa inferior no menu cobre a chamada fixa da arte de abertura e evita instruções duplicadas.
-- Linha do tempo com fases bloqueadas, liberadas, próximas e concluídas.
+- Linha do tempo com fases bloqueadas, liberadas, próximas e concluídas, com ícones de blocos históricos e frase de contexto.
 - Dezesseis fases históricas jogáveis.
 - Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possível, preferindo helpers JS injetados pelo build limpo.
 - Opção de nova jornada temporária com `N`, sem apagar o save.
-- Movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo.
+- Movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo, com resposta de toque levemente mais rápida.
 - Câmera horizontal.
 - HUD com ajuste discreto para manter títulos longos dentro do painel.
 - Controles por toque para jogar no celular em modo paisagem no navegador, posicionados para não cobrir Mig no início.
-- Dicas curtas nos primeiros segundos da fase 1, com texto adequado para teclado ou toque.
+- Tutorial inicial guiado por ações na fase 1, com texto adequado para teclado ou toque.
 - Banco com 10 pílulas de conhecimento por fase.
 - Seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas demais.
 - Pílulas históricas coletáveis com brilho, flutuação e mensagem "Você sabia?".
+- Missão extra opcional em cada fase, com marcador próprio, dica contextual e feedback positivo.
 - Feedback positivo de coleta, como "Boa descoberta!", e destaque do portal quando todas as pílulas da jogada são encontradas.
 - Mensagens históricas fixas no topo; se Mig passar por trás, o painel fica temporariamente translúcido.
-- Coleção histórica acumulativa com aparência de álbum, destaque da descoberta recente e progresso por fase no formato `7/10 descobertas`.
+- Coleção histórica acumulativa com aparência de álbum, destaque da descoberta recente, progresso por fase, celebração de álbum 10/10 e selos por blocos históricos.
 - Introdução narrativa por fase.
 - Nota histórica e pergunta curta ao concluir fase.
 - Portal final liberado apenas após coletar todas as pílulas ativas da fase.
-- Guardião do Portal com pergunta sorteada apenas entre as pílulas que apareceram na jogada.
+- Guardião do Portal com frase de contexto do bloco histórico, pergunta sorteada apenas entre as pílulas que apareceram na jogada e dica acolhedora em caso de erro.
 - Checkpoints seguros com bandeira animada.
 - Áreas de cuidado mais visíveis, com aviso antes do contato.
 - Tela de pausa com botões grandes para continuar, reiniciar, voltar ao menu e abrir a coleção.
-- Tela final com resumo de fases e pílulas descobertas.
-- Cenários por tema desenhados com Pygame, com detalhes visuais próprios de cada período, incluindo litoral inicial com ondas, espuma e vegetação baixa.
+- Tela final com resumo de fases, pílulas descobertas, missões extras observadas, descobertas da sessão e selos da jornada conquistados.
+- Cenários por tema desenhados com Pygame, com detalhes visuais próprios de cada período, incluindo litoral inicial, engenho, memória cívica e Brasil contemporâneo.
 - Sprite animado do Mig usando `assets/images/personagem.png`.
-- Sons leves gerados por codigo.
+- Sons leves gerados por codigo para pulo, coleta, checkpoint, quiz, missão extra, selo e conclusão.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
 - Script de build web limpo em `scripts/build_pygbag_clean.py`, com ponte JS para touch/save, tela de carregamento propria, metadados de app/manifest e ajuste para evitar travamento na tela "Ready to start !" em celulares.
 - Build web injeta uma orientação HTML acessível fora do canvas, sem impacto visual.
@@ -179,10 +180,12 @@ O smoke test confere:
 - `Game` inicializa em modo dummy;
 - `abertura.png` e `assets/images/personagem.png` carregam;
 - Guardião do Portal pergunta apenas sobre uma pílula ativa da jogada e exige resposta correta para concluir;
-- coleção histórica acumula descobertas sem duplicar entradas;
+- coleção histórica acumula descobertas sem duplicar entradas e celebra álbum 10/10;
+- missões extras ficam em plataformas alcançáveis, fora de áreas de cuidado e sem sobrepor pílulas ativas;
+- selos da jornada cobrem blocos históricos completos sem repetir fases;
 - progresso salva/carrega em arquivo local, helpers JS simulados e `localStorage` simulado, com fallback seguro;
 - fluxo basico de menu, nova sessao temporaria, colecao, checkpoint, area de cuidado, conclusao e final passa sem alterar o save.
-- fluxo basico por toque cobre menu, fase, movimento, pulo, colecao e linha do tempo;
+- fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo;
 - detecção touch inicial reconhece `window.caminhosTouchContext`, `maxTouchPoints`, `matchMedia` e ignora desktop simulado;
 - build limpo injeta a ponte web de touch/save de forma idempotente;
 - botão virtual esquerdo não cobre Mig no início da fase;
@@ -196,23 +199,24 @@ Teste manual recomendado:
 4. Voltar ao menu.
 5. Testar `H` para abrir ajuda rapida.
 6. Testar `N` no menu e confirmar que a jornada temporaria comeca na fase 1.
-7. Mover, pular e conferir as dicas iniciais da fase 1.
+7. Mover, pular e conferir o tutorial inicial guiado por ações.
 8. Coletar pílulas e observar o feedback positivo.
-9. Abrir a coleção com `C` e conferir o visual de álbum e o contador de descobertas.
-10. Ativar checkpoint.
-11. Tocar em area de cuidado e confirmar retorno seguro.
-12. Reiniciar fase com `R`.
-13. Pausar e continuar com `P`; em toque, conferir os botoes grandes.
-14. Tocar no portal liberado e responder ao Guardiao do Portal.
-15. Errar uma alternativa de proposito e conferir dica sem punicao.
-16. Acertar a resposta e concluir a fase.
-17. Confirmar desbloqueio da fase seguinte.
-18. Entrar pela linha do tempo com `S` e conferir status sem encostar nos botões de rolagem.
-19. Testar a fase 2, especialmente pílulas, checkpoints e quiz.
-20. Testar uma fase intermediaria.
-21. Testar a ultima fase.
-22. Ver tela final.
-23. Fechar e abrir novamente para confirmar save.
+9. Tocar no marcador `Extra` e conferir a missão opcional.
+10. Abrir a coleção com `C` e conferir o visual de álbum, contador de descobertas, descoberta recente e selos da jornada.
+11. Ativar checkpoint.
+12. Tocar em area de cuidado e confirmar retorno seguro.
+13. Reiniciar fase com `R`.
+14. Pausar e continuar com `P`; em toque, conferir os botoes grandes.
+15. Tocar no portal liberado e responder ao Guardiao do Portal.
+16. Errar uma alternativa de proposito e conferir dica sem punicao.
+17. Acertar a resposta e concluir a fase.
+18. Confirmar desbloqueio da fase seguinte.
+19. Entrar pela linha do tempo com `S` e conferir status, ícone e frase do bloco histórico.
+20. Testar a fase 2, especialmente pílulas, missão extra, checkpoints e quiz.
+21. Testar uma fase intermediaria.
+22. Testar a ultima fase.
+23. Ver tela final com resumo de selos, descobertas da sessão e missões extras.
+24. Fechar e abrir novamente para confirmar save.
 
 Teste mobile recomendado apos publicar:
 
@@ -223,10 +227,11 @@ Teste mobile recomendado apos publicar:
 5. Tocar em continuar e iniciar uma fase.
 6. Usar `<`, `>` e `Pular` para mover Mig.
 7. Coletar uma pílula.
-8. Abrir colecao com `C`.
-9. Pausar com `P` e voltar usando os botoes grandes.
-10. Responder ao Guardiao do Portal tocando em uma alternativa.
-11. Abrir a linha do tempo pelo menu.
+8. Tocar no marcador `Extra`.
+9. Abrir colecao com `C`.
+10. Pausar com `P` e voltar usando os botoes grandes.
+11. Responder ao Guardiao do Portal tocando em uma alternativa.
+12. Abrir a linha do tempo pelo menu.
 
 Build web local:
 
@@ -248,7 +253,7 @@ requirements.txt
 README.md
 AGENTS.md
 SPEC.MD
-PROMPT_YOLO.MD
+PROMPT_LOOP.MD
 abertura.png
 caminhos_brasil_save.json       # gerado em execucao local
 assets/
@@ -275,7 +280,7 @@ src/
 - `src/game.py`: controla estados, telas, HUD, progresso, colecao, ajuda, efeitos visuais, abertura e loop principal.
 - `src/player.py`: controla Mig, movimento, colisao, coyote time, buffer de pulo e animacao.
 - `src/level_data.py`: contém dados das 16 fases, bancos de pílulas históricas e geradores simples de layout.
-- `src/levels.py`: converte dados das fases em objetos `pygame.Rect`.
+- `src/levels.py`: converte dados das fases em objetos `pygame.Rect` e declara os blocos históricos dos selos da jornada.
 - `src/backgrounds.py`: desenha cenarios por tema, com pequenos detalhes visuais por período.
 - `src/progress.py`: salva e carrega progresso em JSON no desktop e em `localStorage` no navegador quando disponível, usando helpers JS do build limpo quando presentes.
 - `src/sounds.py`: gera sons simples por codigo.

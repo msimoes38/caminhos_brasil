@@ -14,6 +14,15 @@ class Fragment:
 
 
 @dataclass(frozen=True)
+class SideMission:
+    rect: pygame.Rect
+    title: str
+    prompt: str
+    complete_message: str
+    icon: str
+
+
+@dataclass(frozen=True)
 class Level:
     title: str
     year: str
@@ -31,10 +40,52 @@ class Level:
     quiz: QuizData | None
     active_pill_indexes: tuple[int, ...]
     quiz_pill_index: int | None
+    side_mission: SideMission
+
+
+@dataclass(frozen=True)
+class HistoryBlock:
+    name: str
+    short_label: str
+    level_indexes: tuple[int, ...]
+    phrase: str
+
+
+HISTORY_BLOCKS = (
+    HistoryBlock("Primeiros contatos", "1", (0,), "Muitos povos já viviam aqui."),
+    HistoryBlock("Brasil colonial", "C", (1, 2, 3, 4, 5), "Trabalho, caminhos e poder mudaram o território."),
+    HistoryBlock("Independência e Império", "I", (6, 7, 8), "O país mudou de forma, mas muitos desafios continuaram."),
+    HistoryBlock("República e democracia", "R", (9, 10, 11, 12, 13, 14), "Participação, direitos e memória ajudam a cuidar do Brasil."),
+    HistoryBlock("Brasil de hoje", "H", (15,), "A história continua com cidadania, diversidade e futuro."),
+)
+
+
+SIDE_MISSION_DATA = (
+    ("Observe o marco do litoral", "Encontre o marco de memória perto da praia.", "Marco observado! A memória começa pelos povos que já viviam aqui.", "marker"),
+    ("Ative a placa do engenho", "Procure a placa de cuidado no caminho da cana.", "Placa ativada! Trabalho e respeito caminham juntos nesta fase.", "sign"),
+    ("Encontre o mapa das trilhas", "Toque no mapa antigo das rotas do interior.", "Mapa encontrado! Rios e trilhas guardam muitos saberes.", "map"),
+    ("Acenda a lanterna das minas", "Procure uma lanterna segura entre as montanhas.", "Lanterna acesa! Ela ajuda Mig a observar as mudanças das vilas.", "lamp"),
+    ("Leia a carta de ideias", "Encontre uma carta na praça colonial.", "Carta lida! Ideias também fazem parte da história.", "letter"),
+    ("Visite a biblioteca da corte", "Procure o pequeno livro perto da cidade.", "Livro visitado! Conhecimento circulou por novos espaços.", "book"),
+    ("Observe o marco da mudança", "Toque no símbolo da independência.", "Marco observado! Mudanças políticas pedem perguntas e cuidado.", "flag"),
+    ("Registre o jardim imperial", "Encontre o selo do jardim.", "Jardim registrado! O Império teve diferenças e continuidades.", "garden"),
+    ("Guarde a memória da liberdade", "Procure o símbolo de memória e dignidade.", "Memória guardada! Liberdade e dignidade merecem respeito.", "memory"),
+    ("Toque o sino da praça", "Encontre o pequeno sino republicano.", "Sino tocado! A República trouxe novas disputas e escolhas.", "bell"),
+    ("Confira os trilhos do café", "Procure a placa dos caminhos do café.", "Trilhos conferidos! Economia e política marcaram esse período.", "rails"),
+    ("Sintonize o rádio da cidade", "Encontre o rádio da Era Vargas.", "Rádio sintonizado! Comunicação também conta história.", "radio"),
+    ("Leia o cartaz da participação", "Procure o cartaz cívico da praça.", "Cartaz lido! Democracia precisa de diálogo e respeito.", "poster"),
+    ("Acenda a luz da memória", "Encontre uma luz de cuidado no caminho.", "Luz acesa! Memória ajuda a valorizar direitos.", "light"),
+    ("Abra o livro cidadão", "Procure o livro da Constituição.", "Livro aberto! Direitos são construídos com participação.", "constitution"),
+    ("Conecte o presente", "Encontre o símbolo de conexão do Brasil de hoje.", "Conexão feita! O presente também faz parte da história.", "connection"),
+)
 
 
 def get_level_count() -> int:
     return len(LEVELS)
+
+
+def get_history_blocks() -> tuple[HistoryBlock, ...]:
+    return HISTORY_BLOCKS
 
 
 def get_level_title(index: int) -> str:
@@ -91,6 +142,7 @@ def create_level(
 
     platforms = [pygame.Rect(platform) for platform in data.platforms]
     fragments = _fragments_from_pills(platforms, data.pill_bank, active_pill_indexes, index)
+    side_mission = _side_mission_for_level(platforms, fragments, index)
     return Level(
         title=data.title,
         year=data.year,
@@ -108,6 +160,7 @@ def create_level(
         quiz=_quiz_for_pill(data.pill_bank[quiz_pill_index], index, quiz_pill_index),
         active_pill_indexes=active_pill_indexes,
         quiz_pill_index=quiz_pill_index,
+        side_mission=side_mission,
     )
 
 
@@ -176,6 +229,55 @@ def _nearest_unused_platform_index(
             return right
 
     return desired
+
+
+def _side_mission_for_level(
+    platforms: list[pygame.Rect],
+    fragments: list[Fragment],
+    level_index: int,
+) -> SideMission:
+    title, prompt, complete_message, icon = SIDE_MISSION_DATA[level_index]
+    usable_platforms = platforms[1:]
+    if usable_platforms:
+        preferred_index = min(len(usable_platforms) - 1, 1 + (level_index % 3))
+        platform_order = [usable_platforms[preferred_index]] + [
+            platform
+            for index, platform in enumerate(usable_platforms)
+            if index != preferred_index
+        ]
+        rect = _free_side_mission_rect(platform_order, fragments, level_index)
+    else:
+        rect = pygame.Rect(220 + level_index * 12, 356, 36, 36)
+
+    return SideMission(
+        rect=rect,
+        title=title,
+        prompt=prompt,
+        complete_message=complete_message,
+        icon=icon,
+    )
+
+
+def _free_side_mission_rect(
+    platforms: list[pygame.Rect],
+    fragments: list[Fragment],
+    level_index: int,
+) -> pygame.Rect:
+    for platform in platforms:
+        candidate_offsets = [platform.centerx - platform.x - 18]
+        if platform.width >= 124:
+            edge_offsets = [28, platform.width - 64]
+            if level_index % 2:
+                edge_offsets.reverse()
+            candidate_offsets = edge_offsets + candidate_offsets
+
+        for offset_x in candidate_offsets:
+            rect = pygame.Rect(platform.x + offset_x, platform.top - 56, 36, 36)
+            if not any(rect.colliderect(fragment.rect.inflate(12, 8)) for fragment in fragments):
+                return rect
+
+    platform = platforms[0]
+    return pygame.Rect(platform.x + 12, platform.top - 56, 36, 36)
 
 
 def _quiz_for_pill(pill: KnowledgePill, level_index: int, pill_index: int) -> QuizData:

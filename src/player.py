@@ -59,6 +59,8 @@ class Player:
         target_speed = horizontal_direction * PLAYER_SPEED
         if horizontal_direction:
             acceleration = PLAYER_GROUND_ACCELERATION if self.on_ground else PLAYER_AIR_ACCELERATION
+            if touch_direction:
+                acceleration *= 1.12
             self.velocity.x = self._approach(
                 self.velocity.x,
                 target_speed,

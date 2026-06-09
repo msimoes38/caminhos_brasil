@@ -38,29 +38,30 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - menu com continuar, nova sessão temporária, linha do tempo, coleção, ajuda e tela cheia no mobile;
 - 16 fases históricas em ordem cronológica;
 - introdução narrativa por fase;
-- movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo;
+- movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo, com resposta de toque levemente mais rápida;
 - câmera horizontal;
 - HUD com ajuste discreto para títulos longos;
 - controles por teclado, mouse e toque;
 - interface mobile em modo paisagem com menu tocável, faixa de orientação e botões virtuais semitransparentes;
 - detecção inicial de toque/mobile por `window.caminhosTouchContext` injetado no build, com `maxTouchPoints`, `matchMedia`, `ontouchstart` e user agent como fallbacks leves;
 - faixa inferior no menu inicial para cobrir instruções fixas da arte de abertura e evitar redundância;
-- dicas contextuais nos primeiros segundos da fase 1;
+- tutorial contextual da fase 1 guiado por ações realizadas;
 - banco com 10 pílulas de conhecimento por fase;
 - seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas fases 2 a 16;
 - pílulas históricas coletáveis;
+- missão extra opcional em cada fase, posicionada em plataforma alcançável e sem sobrepor pílulas ativas;
 - mensagens históricas fixas no topo, com translucidez quando Mig passa por trás;
 - checkpoints seguros e respawn;
 - áreas de cuidado;
 - portal final bloqueado até todas as pílulas ativas da fase serem coletadas;
-- Guardião do Portal com pergunta histórica obrigatória antes da conclusão, sorteada entre as pílulas ativas da jogada;
+- Guardião do Portal com frase de contexto do bloco histórico, pergunta histórica obrigatória antes da conclusão, sorteada entre as pílulas ativas da jogada;
 - feedback visual e texto positivo para pílula, checkpoint, cuidado, portal e conclusão;
 - litoral inicial com ondas, espuma, vegetação baixa e destaque sutil na primeira pílula;
-- coleção histórica acumulativa em formato de álbum, com cards de descobertas e descoberta recente destacada;
-- linha do tempo com fases liberadas, bloqueadas, próximas aventuras e concluídas, reservando coluna de status;
+- coleção histórica acumulativa em formato de álbum, com cards de descobertas, descoberta recente destacada, celebração de álbum 10/10 e selos por blocos históricos;
+- linha do tempo com fases liberadas, bloqueadas, próximas aventuras e concluídas, reservando coluna de status e exibindo ícones/frase de bloco histórico;
 - tela de pausa com botões grandes para toque;
-- tela final com resumo da jornada;
-- sons simples gerados por codigo;
+- tela final com resumo da jornada, descobertas da sessão, missões extras observadas e selos conquistados;
+- sons simples gerados por codigo, incluindo sinais para missão extra, resposta correta e selo;
 - save local em JSON e save web em `localStorage` via helpers JS do build limpo, ambos tolerantes a falhas;
 - smoke tests permanentes;
 - build Pygbag limpo com manifest/metadados web, orientação HTML acessível fora do canvas e deploy via GitHub Pages.
@@ -96,7 +97,7 @@ requirements.txt
 README.md
 AGENTS.md
 SPEC.MD
-PROMPT_YOLO.MD
+PROMPT_LOOP.MD
 abertura.png
 caminhos_brasil_save.json       # gerado localmente em execucao
 assets/
@@ -125,9 +126,9 @@ Arquivos de continuidade:
 - `README.md`: visao para usuario/desenvolvedor, execucao, controles, testes e publicacao.
 - `AGENTS.md`: regras obrigatorias para agentes de IA que forem trabalhar no projeto.
 - `SPEC.MD`: especificacao tecnica e funcional atualizada.
-- `PROMPT_YOLO.MD`: prompt longo para rodadas autonomas futuras, quando o usuario quiser pedir uma revisao/polimento maior.
+- `PROMPT_LOOP.MD`: prompt longo para ciclos incrementais de melhoria quando o usuario pedir uma rodada guiada por prioridades.
 
-Regra: sempre atualize `README.md`, `AGENTS.md` e `SPEC.MD` quando mudar comportamento, arquitetura, publicacao, controles ou processo de teste. Atualize `PROMPT_YOLO.MD` quando o estado geral do projeto ou as prioridades de agentes mudarem.
+Regra: sempre atualize `README.md`, `AGENTS.md` e `SPEC.MD` quando mudar comportamento, arquitetura, publicacao, controles ou processo de teste. Atualize `PROMPT_LOOP.MD` quando o estado geral do projeto ou as prioridades de ciclos mudarem.
 
 ## 6. Arquivos Principais
 
@@ -162,8 +163,9 @@ Responsabilidades:
 - desenhar menu, ajuda, linha do tempo, colecao, fase, pausa, quiz, conclusao e final;
 - alternar textos e botoes para teclado ou toque quando o contexto mobile e detectado;
 - gerenciar progresso, colecao e salvamento;
+- calcular e desenhar selos da jornada a partir das fases concluídas;
 - desenhar HUD, mensagens historicas e botoes virtuais;
-- mostrar dicas contextuais da fase 1 e feedback positivo de coleta;
+- mostrar tutorial guiado por ações na fase 1 e feedback positivo de coleta;
 - mostrar o Guardiao do Portal e validar resposta historica antes da conclusao;
 - solicitar fullscreen no navegador quando possivel;
 - acionar efeitos visuais e sons;
@@ -230,6 +232,7 @@ Funções públicas:
 - `get_level_pill_infos(index)`
 - `get_level_pill_bank(index)`
 - `get_active_pill_count(index)`
+- `get_history_blocks()`
 - `create_level(index, active_pill_indexes=None, quiz_pill_index=None)`
 
 ### `src/backgrounds.py`
@@ -293,6 +296,9 @@ Eventos com som:
 - pulo;
 - coleta;
 - checkpoint;
+- missão extra;
+- resposta correta no Guardião;
+- selo da jornada;
 - conclusao;
 - final;
 - menu;
@@ -327,13 +333,14 @@ Valida:
 - cada fase tem quiz do Guardião do Portal com 3 alternativas;
 - o quiz vem de uma pílula ativa da jogada;
 - inicio, checkpoints e respawns nao caem em areas de cuidado;
-- pílulas ficam em plataformas próximas e alcançáveis por critério conservador;
+- pílulas e missões extras ficam em plataformas próximas e alcançáveis por critério conservador;
 - `Game` inicializa;
 - `abertura.png` carrega;
 - sprite do Mig carrega;
 - `ProgressStore` salva/carrega em arquivo local, helpers JS simulados e `localStorage` simulado, com fallback seguro;
-- coleção histórica acumula descobertas sem duplicar entradas;
-- fluxo basico de menu, nova sessão, checkpoint, cuidado, quiz, conclusão e final;
+- coleção histórica acumula descobertas sem duplicar entradas e celebra álbum completo 10/10;
+- selos da jornada cobrem todos os blocos históricos sem repetir fases e possuem frase de contexto;
+- fluxo basico de menu, nova sessão, missão extra, checkpoint, cuidado, quiz, conclusão e final;
 - fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa, quiz e linha do tempo;
 - detecção touch inicial por `window.caminhosTouchContext`, `maxTouchPoints`, `matchMedia` e desktop simulado;
 - patch de build injeta a ponte web touch/save de forma idempotente;
@@ -469,6 +476,7 @@ Cada fase deve ter:
 - pergunta de reflexão;
 - banco com 10 pílulas de conhecimento;
 - seleção ativa de 4 pílulas na fase 1 e 5 pílulas nas demais;
+- missão extra opcional simples, em plataforma alcançável e sem sobrepor pílulas ativas;
 - quiz do Guardião do Portal com 3 alternativas e dica de erro, ligado a uma pílula ativa;
 - pelo menos 1 checkpoint;
 - pelo menos 1 área de cuidado;
@@ -480,7 +488,9 @@ Regras atuais das pílulas:
 - voltar para a mesma fase na mesma sessão mantém a mesma seleção;
 - iniciar nova jornada temporária com `N` refaz o sorteio;
 - o Guardião do Portal só pergunta sobre uma pílula ativa da jogada;
-- a coleção mostra progresso do banco completo da fase, por exemplo `7/10 descobertas`.
+- a coleção mostra progresso do banco completo da fase, por exemplo `7/10 descobertas`;
+- ao reunir 10/10 descobertas de uma fase, a coleção destaca o álbum completo;
+- a coleção e a tela final mostram selos por blocos históricos concluídos.
 
 ## 10. Modelo De Dados
 
@@ -514,7 +524,28 @@ hint
 
 `QuizData` mantém o mesmo formato para a pergunta apresentada pelo Guardião do Portal.
 
+`SideMission`:
+
+```text
+rect
+title
+prompt
+complete_message
+icon
+```
+
+`HistoryBlock`:
+
+```text
+name
+short_label
+level_indexes
+phrase
+```
+
 `Level` em `src/levels.py` converte tuplas para `pygame.Rect` e recebe a seleção ativa da sessão.
+
+`HistoryBlock` em `src/levels.py` agrupa fases para os selos da jornada. Os selos são calculados em memória a partir de `completed_levels`; não há campo novo no save.
 
 ## 11. Conteúdo Histórico
 
@@ -634,18 +665,19 @@ Local:
 2. Confirmar `abertura.png`.
 3. Pressionar `Enter`.
 4. Iniciar fase.
-5. Mover e pular, conferindo dicas iniciais na fase 1.
+5. Mover e pular, conferindo o tutorial guiado por ações na fase 1.
 6. Coletar pílula e observar "Boa descoberta!".
-7. Abrir coleção com `C` e conferir contador de descobertas.
-8. Abrir ajuda com `H`.
-9. Pausar com `P` e conferir botões de pausa para toque.
-10. Reiniciar com `R`.
-11. Voltar ao menu com `M`.
-12. Abrir linha do tempo com `S`.
-13. Testar `N` para nova jornada temporária.
-14. Responder ao Guardião do Portal.
-15. Concluir uma fase.
-16. Confirmar desbloqueio da fase seguinte.
+7. Tocar no marcador `Extra` e observar a missão opcional.
+8. Abrir coleção com `C` e conferir contador de descobertas.
+9. Abrir ajuda com `H`.
+10. Pausar com `P` e conferir botões de pausa para toque.
+11. Reiniciar com `R`.
+12. Voltar ao menu com `M`.
+13. Abrir linha do tempo com `S` e conferir ícone/frase de bloco.
+14. Testar `N` para nova jornada temporária.
+15. Responder ao Guardião do Portal.
+16. Concluir uma fase.
+17. Confirmar desbloqueio da fase seguinte.
 
 Mobile web:
 
@@ -658,10 +690,11 @@ Mobile web:
 7. Tocar em continuar.
 8. Tocar na introdução.
 9. Usar `<`, `>` e `Pular`.
-10. Abrir `C`, voltar.
-11. Pausar com `P`, continuar pelos botões grandes.
-12. Responder ao Guardião do Portal tocando em uma alternativa.
-13. Abrir linha do tempo pelo menu.
+10. Tocar no marcador `Extra`.
+11. Abrir `C`, voltar.
+12. Pausar com `P`, continuar pelos botões grandes.
+13. Responder ao Guardião do Portal tocando em uma alternativa.
+14. Abrir linha do tempo pelo menu.
 
 ## 16. Como Adicionar Uma Fase
 
@@ -673,8 +706,9 @@ Mobile web:
 6. Garantir pílulas ativas alcançáveis.
 7. Garantir checkpoints e respawns seguros.
 8. Garantir pergunta simples, 3 alternativas, resposta correta e dica curta em cada pílula.
-9. Rodar smoke tests.
-10. Atualizar README e SPEC se a quantidade/ordem de fases mudar.
+9. Conferir se a missão extra gerada não sobrepõe pílulas ativas.
+10. Rodar smoke tests.
+11. Atualizar README e SPEC se a quantidade/ordem de fases mudar.
 
 ## 17. Limites Conhecidos
 
@@ -696,7 +730,7 @@ Mobile web:
 
 ## 19. Regras Para Proximos Agentes
 
-- Leia `README.md`, `AGENTS.md`, `SPEC.MD`, `PROMPT_YOLO.MD`, `requirements.txt`, `main.py`, `src/`, `scripts/smoke_tests.py` e `scripts/build_pygbag_clean.py` antes de alterar.
+- Leia `README.md`, `AGENTS.md`, `SPEC.MD`, `PROMPT_LOOP.MD`, `requirements.txt`, `main.py`, `src/`, `scripts/smoke_tests.py` e `scripts/build_pygbag_clean.py` antes de alterar.
 - Preserve Python, Pygame-CE e Pygbag.
 - Preserve loop `async` em `main.py`.
 - Preserve controles de teclado e toque.
@@ -710,6 +744,7 @@ Mobile web:
 - Não quebre nova jornada temporária com `N`.
 - Não deixe checkpoints, respawns ou início em áreas de cuidado.
 - Não deixe pílulas inalcançáveis.
+- Não deixe missões extras inalcançáveis, sobre áreas de cuidado ou sobre pílulas ativas.
 - Preserve painel histórico fixo com translucidez quando Mig passa por trás.
 - Atualize documentação quando mudar comportamento, arquitetura, publicação ou testes.
 - Rode validações proporcionais ao risco da mudança.

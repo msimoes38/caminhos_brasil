@@ -9,6 +9,7 @@ from src.backgrounds import draw_background
 from src.levels import (
     create_level,
     get_active_pill_count,
+    get_history_blocks,
     get_level_count,
     get_level_fragment_count,
     get_level_pill_count,
@@ -78,12 +79,17 @@ class Game:
         self.touch_jump_pressed = False
         self.pointer_starts = {}
         self.level_play_time = 0
-        self.tutorial_actions = {"move": False, "jump": False, "collect": False}
+        self.tutorial_actions = self._new_tutorial_actions()
+        self.side_missions_completed: set[int] = set()
+        self.side_mission_completed = False
+        self.session_discovery_count = 0
         self.recent_collection_entry = None
         self.selected_quiz_option = 0
         self.quiz_feedback = ""
         self.quiz_feedback_timer = 0
         self.quiz_answered_correctly = False
+        self.recent_history_block_seal = None
+        self.recent_phase_album_completed: str | None = None
 
         self.selected_level_index = 0
         self.level_select_scroll = 0
@@ -107,6 +113,15 @@ class Game:
             await asyncio.sleep(0)
 
         pygame.quit()
+
+    def _new_tutorial_actions(self) -> dict[str, bool]:
+        return {
+            "move": False,
+            "jump": False,
+            "collect": False,
+            "side": False,
+            "portal": False,
+        }
 
     def _detect_touch_context(self) -> bool:
         try:
@@ -669,12 +684,14 @@ class Game:
         self._update_feedback_message(dt)
         self._collect_fragments()
         self._update_checkpoints()
+        self._update_side_mission()
 
         if self._should_restart_attempt():
             self._reset_attempt("Mig voltou ao ponto de retorno para tentar com mais cuidado.")
             return
 
         if self.player.rect.colliderect(self.level.goal):
+            self.tutorial_actions["portal"] = True
             if self._all_fragments_collected():
                 self._open_quiz_or_complete()
             else:
@@ -708,7 +725,7 @@ class Game:
 
         self.fragments = remaining_fragments
         if collected_any:
-            if self._all_fragments_collected():
+            if self._all_fragments_collected() and not self.recent_phase_album_completed:
                 self.feedback_message = "Todas as pílulas coletadas! O portal brilhou. Procure o Guardião."
                 self.feedback_message_timer = 3.8
             self.sounds.play("collect")
@@ -721,6 +738,23 @@ class Game:
         self.collection_entry_set.add(entry)
         self.collection_entries.append(entry)
         self.recent_collection_entry = entry
+        self.session_discovery_count += 1
+        phase_entries = [
+            saved_entry
+            for saved_entry in self.collection_entries
+            if saved_entry[0] == self.level.title
+        ]
+        if len(phase_entries) >= get_level_fragment_count(self.level_index):
+            self.recent_phase_album_completed = self.level.title
+            self.feedback_message = "Álbum completo da fase! Você encontrou as 10 descobertas."
+            self.feedback_message_timer = 4.2
+            self._spawn_effect_burst(
+                self.player.rect.midtop,
+                (255, 219, 112),
+                count=28,
+                radius=5,
+            )
+            self.sounds.play("seal")
         self._save_progress()
 
     def _update_fragment_message(self, dt: float):
@@ -768,6 +802,27 @@ class Game:
             )
             self.sounds.play("checkpoint")
 
+    def _update_side_mission(self):
+        if self.side_mission_completed:
+            return
+
+        mission = self.level.side_mission
+        if not self.player.rect.colliderect(mission.rect):
+            return
+
+        self.side_mission_completed = True
+        self.side_missions_completed.add(self.level_index)
+        self.tutorial_actions["side"] = True
+        self.feedback_message = mission.complete_message
+        self.feedback_message_timer = 3.6
+        self._spawn_effect_burst(
+            mission.rect.center,
+            (255, 205, 86),
+            count=22,
+            radius=5,
+        )
+        self.sounds.play("bonus")
+
     def _all_fragments_collected(self) -> bool:
         return len(self.fragments) == 0
 
@@ -781,6 +836,15 @@ class Game:
         self.feedback_message_timer = 2.4
         self.sounds.play("blocked")
 
+    def _guardian_intro_text(self) -> str:
+        block = self._history_block_for_level(self.level_index)
+        if block:
+            return f"Vamos lembrar com calma: {block.phrase}"
+        return "Vamos lembrar com calma uma descoberta importante."
+
+    def _guardian_success_text(self) -> str:
+        return "Muito bem! O Guardião abriu o portal com alegria."
+
     def _open_quiz_or_complete(self):
         if self.level.quiz is None:
             self._complete_level()
@@ -790,6 +854,8 @@ class Game:
         self.quiz_feedback = ""
         self.quiz_feedback_timer = 0
         self.quiz_answered_correctly = False
+        self.feedback_message = "O Guardião quer ouvir uma lembrança da fase."
+        self.feedback_message_timer = 2.2
         self._clear_touch_controls()
         self.state = STATE_QUIZ
         self.sounds.play("select")
@@ -802,14 +868,15 @@ class Game:
 
         self.selected_quiz_option = max(0, min(option_index, len(quiz.options) - 1))
         if self.selected_quiz_option == quiz.correct_index:
-            self.quiz_feedback = "Muito bem! Você lembrou da descoberta."
+            self.quiz_feedback = self._guardian_success_text()
             self.quiz_feedback_timer = 0
             self.quiz_answered_correctly = True
+            self.sounds.play("correct")
             self._complete_level()
             return
 
-        self.quiz_feedback = f"Quase! Leia a dica e tente de novo. {quiz.hint}"
-        self.quiz_feedback_timer = 7
+        self.quiz_feedback = f"Quase! Você está aprendendo. {quiz.hint} Tente de novo."
+        self.quiz_feedback_timer = 7.5
         self.sounds.play("blocked")
 
     def _update_quiz_feedback(self, dt: float):
@@ -876,6 +943,7 @@ class Game:
         self.total_fragments = len(self.fragments)
         self.respawn_position = self.level.start_position
         self.active_checkpoints = set()
+        self.side_mission_completed = self.level_index in self.side_missions_completed
         self.fragment_message = ""
         self.fragment_message_timer = 0
         self.feedback_message = ""
@@ -884,8 +952,10 @@ class Game:
         self.quiz_feedback = ""
         self.quiz_feedback_timer = 0
         self.quiz_answered_correctly = False
+        self.recent_history_block_seal = None
+        self.recent_phase_album_completed = None
         self.level_play_time = 0
-        self.tutorial_actions = {"move": False, "jump": False, "collect": False}
+        self.tutorial_actions = self._new_tutorial_actions()
         self.effects = []
         self.camera_x = 0
         self._clear_touch_controls()
@@ -958,12 +1028,22 @@ class Game:
         self._load_level(next_index, STATE_INTRO)
 
     def _complete_level(self):
+        earned_before = {
+            block.name
+            for block, _completed, _total, earned in self._history_block_progress()
+            if earned
+        }
         self.state = STATE_COMPLETED
         self.completed_levels.add(self.level_index)
         self.highest_unlocked_level = min(
             get_level_count() - 1,
             max(self.highest_unlocked_level, self.level_index + 1),
         )
+        self.recent_history_block_seal = None
+        for block, _completed, _total, earned in self._history_block_progress():
+            if earned and block.name not in earned_before:
+                self.recent_history_block_seal = block.name
+                break
         self._save_progress()
         self._spawn_effect_burst(
             self.level.goal.center,
@@ -971,7 +1051,10 @@ class Game:
             count=28,
             radius=5,
         )
-        self.sounds.play("complete")
+        if self.recent_history_block_seal:
+            self.sounds.play("seal")
+        else:
+            self.sounds.play("complete")
 
     def _toggle_collection(self):
         if self.state == STATE_COLLECTION:
@@ -1061,6 +1144,9 @@ class Game:
         self.session_random = Random()
         self.session_pill_choices.clear()
         self.session_quiz_choices.clear()
+        self.side_missions_completed.clear()
+        self.session_discovery_count = 0
+        self.recent_phase_album_completed = None
         collection_entries = list(self.collection_entries)
         self._apply_progress(
             {
@@ -1172,7 +1258,7 @@ class Game:
         return pygame.Rect(box.right - 116, box.y + 18, 88, 34)
 
     def _collection_visible_rows(self) -> int:
-        return 5
+        return 4
 
     def _intro_box_rect(self) -> pygame.Rect:
         return pygame.Rect(70, SCREEN_HEIGHT - 195, SCREEN_WIDTH - 140, 150)
@@ -1196,12 +1282,12 @@ class Game:
         return None
 
     def _quiz_box_rect(self) -> pygame.Rect:
-        return self._centered_rect(820, 400)
+        return self._centered_rect(820, 420)
 
     def _quiz_option_rects(self) -> list[pygame.Rect]:
         box = self._quiz_box_rect()
         return [
-            pygame.Rect(box.x + 64, box.y + 170 + index * 56, box.width - 128, 46)
+            pygame.Rect(box.x + 64, box.y + 186 + index * 56, box.width - 128, 46)
             for index in range(3)
         ]
 
@@ -1220,7 +1306,7 @@ class Game:
         return box
 
     def _final_box_rect(self) -> pygame.Rect:
-        return self._centered_rect(840, 380)
+        return self._centered_rect(840, 430)
 
     def _collection_rows(self) -> list[tuple[str, str]]:
         rows = []
@@ -1233,10 +1319,12 @@ class Game:
             entries = entries_by_level.get(level_title, [])
 
             total = get_level_fragment_count(index)
+            completed_album = len(entries) >= total
+            completion_label = " - Álbum completo!" if completed_album else ""
             rows.append(
                 (
                     "header",
-                    f"{index + 1:02d}. {get_level_title(index)} ({min(len(entries), total)}/{total} descobertas)",
+                    f"{index + 1:02d}. {get_level_title(index)} ({min(len(entries), total)}/{total} descobertas){completion_label}",
                 )
             )
             for info in entries:
@@ -1245,6 +1333,30 @@ class Game:
                 rows.append(("empty", "Ainda sem pílulas descobertas nesta fase."))
 
         return rows
+
+    def _history_block_progress(self):
+        progress = []
+        for block in get_history_blocks():
+            completed = sum(1 for index in block.level_indexes if index in self.completed_levels)
+            total = len(block.level_indexes)
+            progress.append((block, completed, total, completed == total))
+        return progress
+
+    def _history_block_for_level(self, level_index: int):
+        for block in get_history_blocks():
+            if level_index in block.level_indexes:
+                return block
+        return None
+
+    def _history_block_display_name(self, block) -> str:
+        display_names = {
+            "Primeiros contatos": "Primeiros",
+            "Brasil colonial": "Colonial",
+            "Independência e Império": "Ind./Imp.",
+            "República e democracia": "República",
+            "Brasil de hoje": "Hoje",
+        }
+        return display_names.get(block.name, block.name)
 
     def _draw(self):
         draw_background(self.screen, self.level.theme, self.camera_x, self.level.width)
@@ -1263,6 +1375,7 @@ class Game:
             self._draw_level()
             self._draw_hazards()
             self._draw_checkpoints()
+            self._draw_side_mission()
             self._draw_fragments()
             self._draw_effects()
             self._draw_player()
@@ -1475,6 +1588,148 @@ class Game:
                     4,
                 )
 
+    def _draw_side_mission(self):
+        mission = self.level.side_mission
+        marker_rect = self._to_screen_rect(mission.rect)
+        if marker_rect.right < -80 or marker_rect.left > SCREEN_WIDTH + 80:
+            return
+
+        wave = int(sin(self.animation_time * 4 + self.level_index) * 3)
+        marker_rect.y += wave
+        completed = self.side_mission_completed
+        glow_color = (255, 231, 142) if not completed else (188, 225, 197)
+        fill_color = (255, 205, 86) if not completed else (96, 174, 122)
+        outline_color = (122, 91, 47) if not completed else (54, 116, 77)
+        pulse_radius = 26 + int(sin(self.animation_time * 5) * 3)
+
+        if not completed:
+            pygame.draw.circle(self.screen, glow_color, marker_rect.center, pulse_radius, 2)
+
+        pedestal = pygame.Rect(marker_rect.centerx - 22, marker_rect.bottom - 5, 44, 12)
+        pygame.draw.rect(self.screen, (116, 96, 72), pedestal, border_radius=5)
+        pygame.draw.ellipse(
+            self.screen,
+            (92, 74, 56),
+            (pedestal.x + 4, pedestal.y + 5, pedestal.width - 8, 8),
+        )
+        pygame.draw.rect(self.screen, fill_color, marker_rect, border_radius=9)
+        pygame.draw.rect(self.screen, outline_color, marker_rect, 2, border_radius=9)
+        self._draw_side_mission_icon(marker_rect, mission.icon, completed)
+
+        label = "Extra" if not completed else "Feito"
+        label_surface = self.small_font.render(label, True, TEXT_COLOR)
+        label_rect = label_surface.get_rect(
+            center=(marker_rect.centerx, marker_rect.y - 12)
+        )
+        label_bg = label_rect.inflate(14, 6)
+        pygame.draw.rect(self.screen, (255, 250, 230), label_bg, border_radius=6)
+        pygame.draw.rect(self.screen, (168, 137, 80), label_bg, 1, border_radius=6)
+        self.screen.blit(label_surface, label_rect)
+
+        close_to_player = abs(self.player.rect.centerx - mission.rect.centerx) < 150
+        if close_to_player and not completed and self.state == STATE_PLAYING:
+            self._draw_side_mission_prompt(marker_rect, mission.prompt)
+
+    def _draw_side_mission_prompt(self, marker_rect: pygame.Rect, prompt: str):
+        lines = self._wrap_text(prompt, 30)[:3]
+        if not lines:
+            return
+
+        box_width = 320
+        box_height = 20 + len(lines) * 20
+        box_x = max(18, min(marker_rect.centerx - box_width // 2, SCREEN_WIDTH - box_width - 18))
+        box_y = max(136, marker_rect.y - box_height - 28)
+        box = pygame.Rect(box_x, box_y, box_width, box_height)
+        pygame.draw.rect(self.screen, (255, 250, 230), box, border_radius=7)
+        pygame.draw.rect(self.screen, (168, 137, 80), box, 2, border_radius=7)
+        for index, line in enumerate(lines):
+            surface = self._render_fitting_text(
+                line,
+                TEXT_COLOR,
+                box.width - 26,
+                [self.font, self.small_font],
+            )
+            self.screen.blit(surface, (box.x + 13, box.y + 9 + index * 20))
+
+    def _draw_side_mission_icon(self, rect: pygame.Rect, icon: str, completed: bool):
+        center = rect.center
+        line_color = (72, 61, 48) if not completed else (238, 255, 232)
+        if completed:
+            pygame.draw.line(
+                self.screen,
+                line_color,
+                (center[0] - 10, center[1]),
+                (center[0] - 2, center[1] + 8),
+                4,
+            )
+            pygame.draw.line(
+                self.screen,
+                line_color,
+                (center[0] - 2, center[1] + 8),
+                (center[0] + 12, center[1] - 10),
+                4,
+            )
+            return
+
+        if icon in {"marker", "sign", "lamp", "connection"}:
+            pygame.draw.rect(
+                self.screen,
+                line_color,
+                (center[0] - 2, center[1] - 10, 4, 20),
+                border_radius=2,
+            )
+            pygame.draw.circle(self.screen, line_color, (center[0], center[1] - 12), 7, 2)
+        elif icon in {"map", "letter", "document"}:
+            pygame.draw.rect(
+                self.screen,
+                (255, 249, 218),
+                (rect.x + 9, rect.y + 8, 18, 20),
+                border_radius=2,
+            )
+            pygame.draw.rect(
+                self.screen,
+                line_color,
+                (rect.x + 9, rect.y + 8, 18, 20),
+                2,
+                border_radius=2,
+            )
+            pygame.draw.line(
+                self.screen,
+                line_color,
+                (rect.x + 13, rect.y + 16),
+                (rect.x + 23, rect.y + 16),
+                2,
+            )
+        elif icon in {"rails", "press", "tower"}:
+            pygame.draw.line(
+                self.screen,
+                line_color,
+                (rect.x + 10, rect.y + 25),
+                (rect.x + 27, rect.y + 11),
+                3,
+            )
+            pygame.draw.line(
+                self.screen,
+                line_color,
+                (rect.x + 10, rect.y + 11),
+                (rect.x + 27, rect.y + 25),
+                3,
+            )
+        else:
+            points = [
+                (center[0], center[1] - 12),
+                (center[0] + 5, center[1] - 2),
+                (center[0] + 16, center[1] - 2),
+                (center[0] + 7, center[1] + 4),
+                (center[0] + 10, center[1] + 15),
+                (center[0], center[1] + 8),
+                (center[0] - 10, center[1] + 15),
+                (center[0] - 7, center[1] + 4),
+                (center[0] - 16, center[1] - 2),
+                (center[0] - 5, center[1] - 2),
+            ]
+            pygame.draw.polygon(self.screen, line_color, points)
+
     def _draw_fragments(self):
         for order, fragment in enumerate(self.fragments):
             fragment_rect = self._to_screen_rect(fragment.rect)
@@ -1485,7 +1740,6 @@ class Game:
             is_first_hint = (
                 self.level_index == 0
                 and order == 0
-                and self.level_play_time <= 18
                 and not self.tutorial_actions["collect"]
             )
 
@@ -1754,11 +2008,29 @@ class Game:
             elif is_next:
                 pygame.draw.rect(self.screen, (236, 226, 184), row)
 
+            block = self._history_block_for_level(index)
+            if is_next:
+                arrow_points = [
+                    (row.x - 22, row.centery),
+                    (row.x - 8, row.centery - 9),
+                    (row.x - 8, row.centery + 9),
+                ]
+                pygame.draw.polygon(self.screen, (226, 168, 74), arrow_points)
+                pygame.draw.polygon(self.screen, TEXT_COLOR, arrow_points, 2)
+
             dot_color = (82, 150, 214) if is_unlocked else (132, 132, 132)
             if is_completed:
                 dot_color = GOAL_COLOR
             pygame.draw.circle(self.screen, dot_color, (line_x, y + 10), 11)
             pygame.draw.circle(self.screen, TEXT_COLOR, (line_x, y + 10), 11, 2)
+            if block:
+                block_label = self._render_fitting_text(
+                    block.short_label,
+                    (255, 250, 232) if is_unlocked else (230, 230, 222),
+                    18,
+                    [self.small_font],
+                )
+                self.screen.blit(block_label, block_label.get_rect(center=(line_x, y + 10)))
 
             if is_completed:
                 status = "Concluída"
@@ -1825,6 +2097,20 @@ class Game:
                 feedback_surface,
                 feedback_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 60)),
             )
+        else:
+            block = self._history_block_for_level(self.selected_level_index)
+            if block:
+                phrase = f"Bloco {self._history_block_display_name(block)}: {block.phrase}"
+                phrase_surface = self._render_fitting_text(
+                    phrase,
+                    (72, 76, 70),
+                    box.width - 90,
+                    [self.font, self.small_font],
+                )
+                self.screen.blit(
+                    phrase_surface,
+                    phrase_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 60)),
+                )
 
         help_surface = self.font.render(
             "Setas ou toque escolhem | Enter inicia | M volta ao menu",
@@ -1846,7 +2132,12 @@ class Game:
         box = self._get_message_box_rect(710, 44)
         text_alpha = self._draw_message_panel(box)
 
-        message_surface = self.font.render(message or self.feedback_message, True, TEXT_COLOR)
+        message_surface = self._render_fitting_text(
+            message or self.feedback_message,
+            TEXT_COLOR,
+            box.width - 32,
+            [self.font, self.small_font],
+        )
         message_surface.set_alpha(text_alpha)
         self.screen.blit(message_surface, (box.x + 16, box.y + 12))
 
@@ -1875,16 +2166,23 @@ class Game:
         return player_rect
 
     def _tutorial_hint_text(self) -> str | None:
-        if not self.tutorial_actions["move"] and self.level_play_time <= 7:
+        if self.level_index != 0:
+            return None
+
+        if not self.tutorial_actions["move"]:
             if self.touch_ui_enabled:
                 return "Use os botões para andar."
             return "Use A/D ou setas para andar."
-        if not self.tutorial_actions["jump"] and self.level_play_time <= 12:
+        if not self.tutorial_actions["jump"]:
             if self.touch_ui_enabled:
                 return "Toque em Pular."
             return "Use Espaço para pular."
-        if not self.tutorial_actions["collect"] and self.level_play_time <= 18:
+        if not self.tutorial_actions["collect"]:
             return "Pegue as pílulas brilhantes."
+        if self._all_fragments_collected() and not self.tutorial_actions["portal"]:
+            return "Agora vá ao portal verde."
+        if not self.side_mission_completed:
+            return "Opcional: observe o marco Extra."
         return None
 
     def _draw_tutorial_hints(self):
@@ -1894,10 +2192,16 @@ class Game:
 
         x = 420 if self.touch_ui_enabled else 24
         y = SCREEN_HEIGHT - 180 if self.touch_ui_enabled else SCREEN_HEIGHT - 72
-        box = pygame.Rect(x, y, 388, 44)
+        box_width = 430 if self.touch_ui_enabled else 388
+        box = pygame.Rect(x, y, box_width, 44)
         pygame.draw.rect(self.screen, (248, 238, 190), box, border_radius=7)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=7)
-        hint_surface = self.font.render(hint, True, TEXT_COLOR)
+        hint_surface = self._render_fitting_text(
+            hint,
+            TEXT_COLOR,
+            box.width - 28,
+            [self.font, self.small_font],
+        )
         self.screen.blit(hint_surface, hint_surface.get_rect(center=box.center))
 
     def _draw_touch_controls(self):
@@ -1967,14 +2271,18 @@ class Game:
         title_surface = self.big_font.render("Guardião do Portal", True, TEXT_COLOR)
         self.screen.blit(title_surface, title_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 42)))
 
-        subtitle_surface = self.font.render(
-            "Responda lembrando das pílulas desta jogada.",
-            True,
-            (72, 76, 70),
-        )
-        self.screen.blit(subtitle_surface, subtitle_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 78)))
+        guardian_lines = self._wrap_text(
+            f"Guardião: {self._guardian_intro_text()}",
+            76,
+        )[:2]
+        for index, line in enumerate(guardian_lines):
+            guardian_surface = self.font.render(line, True, (72, 76, 70))
+            self.screen.blit(
+                guardian_surface,
+                guardian_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 76 + index * 23)),
+            )
 
-        question_y = box.y + 104
+        question_y = box.y + 126
         for index, line in enumerate(self._wrap_text(quiz.question, 68)[:2]):
             question_surface = self.font.render(line, True, TEXT_COLOR)
             self.screen.blit(
@@ -2058,6 +2366,66 @@ class Game:
         self.screen.blit(note_surface, note_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 58)))
         self.screen.blit(close_surface, close_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 28)))
 
+    def _draw_history_block_seal_strip(self, box: pygame.Rect):
+        progress = self._history_block_progress()
+        seal_width = 128
+        seal_height = 46
+        gap = 8
+        total_width = len(progress) * seal_width + (len(progress) - 1) * gap
+        start_x = box.x + 108 + (box.width - 152 - total_width) // 2
+        y = box.y + 84
+
+        for index, (block, completed, total, earned) in enumerate(progress):
+            rect = pygame.Rect(start_x + index * (seal_width + gap), y, seal_width, seal_height)
+            self._draw_history_block_seal(rect, block, completed, total, earned, compact=True)
+
+    def _draw_history_block_seal(
+        self,
+        rect: pygame.Rect,
+        block,
+        completed: int,
+        total: int,
+        earned: bool,
+        compact: bool = False,
+    ):
+        fill_color = (252, 236, 154) if earned else (232, 224, 198)
+        border_color = (226, 168, 74) if earned else (150, 132, 92)
+        medal_color = (248, 218, 92) if earned else (206, 198, 178)
+        text_color = TEXT_COLOR if earned else (88, 88, 84)
+
+        pygame.draw.rect(self.screen, fill_color, rect, border_radius=7)
+        pygame.draw.rect(self.screen, border_color, rect, 2, border_radius=7)
+
+        medal_center = (rect.x + (20 if compact else 24), rect.centery)
+        medal_radius = 14 if compact else 18
+        pygame.draw.circle(self.screen, medal_color, medal_center, medal_radius)
+        pygame.draw.circle(self.screen, TEXT_COLOR, medal_center, medal_radius, 2)
+
+        label_surface = self._render_fitting_text(
+            block.short_label,
+            TEXT_COLOR,
+            medal_radius * 2 - 4,
+            [self.small_font],
+        )
+        self.screen.blit(label_surface, label_surface.get_rect(center=medal_center))
+
+        text_left = rect.x + (42 if compact else 50)
+        name_surface = self._render_fitting_text(
+            self._history_block_display_name(block),
+            text_color,
+            rect.right - text_left - 8,
+            [self.small_font],
+        )
+        progress_text = "Selo!" if earned else f"{completed}/{total} fases"
+        progress_surface = self._render_fitting_text(
+            progress_text,
+            text_color,
+            rect.right - text_left - 8,
+            [self.small_font],
+        )
+        self.screen.blit(name_surface, (text_left, rect.y + (5 if compact else 8)))
+        self.screen.blit(progress_surface, (text_left, rect.y + (25 if compact else 32)))
+
     def _draw_collection(self):
         box = self._collection_box_rect()
         pygame.draw.rect(self.screen, (244, 230, 190), box, border_radius=8)
@@ -2091,23 +2459,62 @@ class Game:
         back_surface = self.font.render("Voltar", True, TEXT_COLOR)
         self.screen.blit(back_surface, back_surface.get_rect(center=back_rect.center))
 
+        self._draw_history_block_seal_strip(box)
+
         rows = self._collection_rows()
         visible_rows = rows[self.collection_scroll: self.collection_scroll + self._collection_visible_rows()]
-        y = box.y + 94
+        y = box.y + 144
         content_x = box.x + 108
         content_width = box.width - 152
         for row_type, text in visible_rows:
             if row_type == "header":
                 header_box = pygame.Rect(content_x, y - 3, content_width, 32)
-                pygame.draw.rect(self.screen, (236, 216, 158), header_box, border_radius=6)
-                pygame.draw.rect(self.screen, (128, 116, 86), header_box, 1, border_radius=6)
+                is_album_complete = "Álbum completo!" in text
+                header_fill = (252, 236, 154) if is_album_complete else (236, 216, 158)
+                header_border = (226, 168, 74) if is_album_complete else (128, 116, 86)
+                pygame.draw.rect(self.screen, header_fill, header_box, border_radius=6)
+                pygame.draw.rect(
+                    self.screen,
+                    header_border,
+                    header_box,
+                    2 if is_album_complete else 1,
+                    border_radius=6,
+                )
                 surface = self._render_fitting_text(
                     text,
                     TEXT_COLOR,
-                    header_box.width - 44,
+                    header_box.width - 74,
                     [self.font, self.small_font],
                 )
                 pygame.draw.circle(self.screen, GOAL_COLOR, (header_box.x + 17, header_box.centery), 7)
+                if is_album_complete:
+                    pygame.draw.circle(
+                        self.screen,
+                        (255, 248, 214),
+                        (header_box.right - 22, header_box.centery),
+                        10,
+                    )
+                    pygame.draw.circle(
+                        self.screen,
+                        (226, 168, 74),
+                        (header_box.right - 22, header_box.centery),
+                        10,
+                        2,
+                    )
+                    pygame.draw.line(
+                        self.screen,
+                        TEXT_COLOR,
+                        (header_box.right - 27, header_box.centery),
+                        (header_box.right - 23, header_box.centery + 5),
+                        2,
+                    )
+                    pygame.draw.line(
+                        self.screen,
+                        TEXT_COLOR,
+                        (header_box.right - 23, header_box.centery + 5),
+                        (header_box.right - 16, header_box.centery - 6),
+                        2,
+                    )
                 self.screen.blit(surface, surface.get_rect(midleft=(header_box.x + 34, header_box.centery)))
                 y += 40
             elif row_type == "empty":
@@ -2131,14 +2538,21 @@ class Game:
                 pygame.draw.rect(self.screen, border_color, card, 2, border_radius=7)
                 pygame.draw.circle(self.screen, FRAGMENT_COLOR, (card.x + 24, card.y + 27), 11)
                 pygame.draw.circle(self.screen, FRAGMENT_OUTLINE, (card.x + 24, card.y + 27), 11, 2)
+                text_width = card.width - (126 if is_recent else 62)
                 for index, line in enumerate(self._wrap_text(text, 62)[:2]):
                     surface = self._render_fitting_text(
                         line,
                         (64, 68, 72),
-                        card.width - 62,
+                        text_width,
                         [self.font, self.small_font],
                     )
                     self.screen.blit(surface, (card.x + 48, card.y + 7 + index * 22))
+                if is_recent:
+                    badge = pygame.Rect(card.right - 66, card.y + 10, 48, 22)
+                    pygame.draw.rect(self.screen, (255, 248, 214), badge, border_radius=6)
+                    pygame.draw.rect(self.screen, (226, 168, 74), badge, 2, border_radius=6)
+                    badge_surface = self.small_font.render("Novo!", True, TEXT_COLOR)
+                    self.screen.blit(badge_surface, badge_surface.get_rect(center=badge.center))
                 y += 60
 
         help_surface = self.font.render(
@@ -2172,8 +2586,10 @@ class Game:
 
     def _draw_completion_message(self):
         title = "Fase concluída!"
-        if self.quiz_answered_correctly:
-            subtitle = "Muito bem! Você lembrou da descoberta."
+        if self.recent_history_block_seal:
+            subtitle = f"Selo da jornada conquistado: {self.recent_history_block_seal}!"
+        elif self.quiz_answered_correctly:
+            subtitle = self._guardian_success_text()
         else:
             subtitle = "Medalha recebida: todas as pílulas da fase foram encontradas."
         if self.level_index + 1 >= get_level_count():
@@ -2181,11 +2597,16 @@ class Game:
         else:
             restart = "Enter avança | toque continua | R reinicia | C coleção."
 
+        box = self._completion_box_rect()
         title_surface = self.big_font.render(title, True, TEXT_COLOR)
-        subtitle_surface = self.font.render(subtitle, True, TEXT_COLOR)
+        subtitle_surface = self._render_fitting_text(
+            subtitle,
+            TEXT_COLOR,
+            box.width - 92,
+            [self.font, self.small_font],
+        )
         restart_surface = self.font.render(restart, True, TEXT_COLOR)
 
-        box = self._completion_box_rect()
         pygame.draw.rect(self.screen, (248, 238, 190), box, border_radius=8)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=8)
         pygame.draw.circle(self.screen, (248, 218, 92), (box.x + 42, box.y + 42), 20)
@@ -2229,7 +2650,7 @@ class Game:
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=8)
 
         title_surface = self.big_font.render("Jornada concluída!", True, TEXT_COLOR)
-        self.screen.blit(title_surface, title_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 52)))
+        self.screen.blit(title_surface, title_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 44)))
 
         lines = [
             "Mig viajou de 1500 até o Brasil contemporâneo.",
@@ -2238,19 +2659,25 @@ class Game:
         ]
         for index, line in enumerate(lines):
             surface = self.font.render(line, True, TEXT_COLOR)
-            self.screen.blit(surface, surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 110 + index * 34)))
+            self.screen.blit(surface, surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 92 + index * 32)))
 
-        medal_y = box.y + 218
-        start_x = SCREEN_WIDTH // 2 - 190
-        for index in range(5):
-            x = start_x + index * 95
-            pygame.draw.circle(self.screen, (248, 218, 92), (x, medal_y), 19)
-            pygame.draw.circle(self.screen, TEXT_COLOR, (x, medal_y), 19, 2)
-            pygame.draw.polygon(
-                self.screen,
-                (226, 168, 74),
-                [(x - 9, medal_y + 16), (x, medal_y + 34), (x + 9, medal_y + 16)],
+        block_progress = self._history_block_progress()
+        seal_width = 148
+        seal_height = 58
+        seal_gap = 10
+        total_seal_width = len(block_progress) * seal_width + (len(block_progress) - 1) * seal_gap
+        seal_x = SCREEN_WIDTH // 2 - total_seal_width // 2
+        seal_y = box.y + 180
+        for index, (block, completed, total, earned) in enumerate(block_progress):
+            seal_rect = pygame.Rect(
+                seal_x + index * (seal_width + seal_gap),
+                seal_y,
+                seal_width,
+                seal_height,
             )
+            self._draw_history_block_seal(seal_rect, block, completed, total, earned)
+
+        earned_seals = sum(1 for _block, _completed, _total, earned in block_progress if earned)
 
         completed_surface = self.font.render(
             f"Fases concluídas: {len(self.completed_levels)}/{get_level_count()}",
@@ -2262,21 +2689,41 @@ class Game:
             True,
             TEXT_COLOR,
         )
-        credits_surface = self.font.render(
-            "Créditos: jogo educativo criado com Python, Pygame-CE e carinho pelo aprendizado.",
+        seals_surface = self.font.render(
+            f"Selos da jornada: {earned_seals}/{len(block_progress)}",
             True,
             TEXT_COLOR,
         )
-        help_surface = self.font.render(
-            "Enter, M ou toque volta ao menu | C abre coleção | R revisita a última fase",
+        session_surface = self.font.render(
+            f"Descobertas nesta sessão: {self.session_discovery_count}",
             True,
             TEXT_COLOR,
+        )
+        side_surface = self.font.render(
+            f"Missões extras observadas: {len(self.side_missions_completed)}/{get_level_count()}",
+            True,
+            TEXT_COLOR,
+        )
+        credits_surface = self._render_fitting_text(
+            "Créditos: jogo educativo criado com Python, Pygame-CE e carinho pelo aprendizado.",
+            TEXT_COLOR,
+            box.width - 72,
+            [self.font, self.small_font],
+        )
+        help_surface = self._render_fitting_text(
+            "Enter, M ou toque volta ao menu | C abre coleção | R revisita a última fase",
+            TEXT_COLOR,
+            box.width - 72,
+            [self.font, self.small_font],
         )
 
-        self.screen.blit(completed_surface, completed_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 266)))
-        self.screen.blit(collected_surface, collected_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 296)))
-        self.screen.blit(credits_surface, credits_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 330)))
-        self.screen.blit(help_surface, help_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 360)))
+        self.screen.blit(completed_surface, completed_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 260)))
+        self.screen.blit(collected_surface, collected_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 286)))
+        self.screen.blit(seals_surface, seals_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 312)))
+        self.screen.blit(session_surface, session_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 338)))
+        self.screen.blit(side_surface, side_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 364)))
+        self.screen.blit(credits_surface, credits_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 392)))
+        self.screen.blit(help_surface, help_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 414)))
 
     def _wrap_text(self, text: str, max_chars: int) -> list[str]:
         lines = []

@@ -30,6 +30,7 @@ from src.game import (
 from src.levels import (
     create_level,
     get_active_pill_count,
+    get_history_blocks,
     get_level_count,
     get_level_pill_bank,
     get_level_pill_count,
@@ -95,9 +96,23 @@ def main() -> int:
             elif support_index not in reachable_platforms:
                 errors.append(f"{label}: pilula em plataforma dificil de alcancar: {fragment.rect}.")
 
+        mission = level.side_mission
+        if not mission.title.strip() or not mission.prompt.strip() or not mission.complete_message.strip():
+            errors.append(f"{label}: missao extra com texto vazio.")
+        mission_support_index = _find_fragment_support(mission.rect, level.platforms)
+        if mission_support_index is None:
+            errors.append(f"{label}: missao extra sem plataforma proxima: {mission.rect}.")
+        elif mission_support_index not in reachable_platforms:
+            errors.append(f"{label}: missao extra em plataforma dificil de alcancar: {mission.rect}.")
+        if any(mission.rect.colliderect(hazard) for hazard in level.hazards):
+            errors.append(f"{label}: missao extra sobre area de cuidado: {mission.rect}.")
+        if any(mission.rect.colliderect(fragment.rect) for fragment in level.fragments):
+            errors.append(f"{label}: missao extra sobre pilula ativa: {mission.rect}.")
+
     _check_progress_store(errors)
     _check_touch_detection(errors)
     _check_build_web_bridge_patch(errors)
+    _check_history_blocks(errors)
 
     game = Game()
     if game.menu_image is None:
@@ -126,13 +141,15 @@ def main() -> int:
     print("- Todas as fases tem banco com 10 pilulas e selecao ativa 4/5.")
     print("- Checkpoints, respawns e inicio nao caem em areas de cuidado.")
     print("- Pilulas ficam apoiadas em plataformas proximas e alcancaveis.")
+    print("- Missoes extras ficam proximas de plataformas alcancaveis e fora das areas de cuidado.")
     print("- Game inicializa em modo dummy com abertura e sprite do Mig.")
     print("- Guardiao do Portal pergunta sobre pilula ativa, aceita erro com dica e conclui com resposta correta.")
-    print("- Colecao historica acumula descobertas sem duplicar entradas.")
+    print("- Colecao historica acumula descobertas sem duplicar entradas e celebra album 10/10.")
     print("- ProgressStore salva/carrega no arquivo local, helper web e localStorage simulado com fallback seguro.")
     print("- Deteccao touch inicial reconhece flag JS, maxTouchPoints, matchMedia e ignora desktop simulado.")
     print("- Build limpo injeta a ponte web de touch/save e preserva o icone do manifest.")
-    print("- Fluxo basico de menu, nova sessao, checkpoint, cuidado, Esc e final passa sem alterar save.")
+    print("- Selos da jornada cobrem os blocos historicos sem repetir fases e com frase de contexto.")
+    print("- Fluxo basico de menu, nova sessao, missao extra, checkpoint, cuidado, Esc e final passa sem alterar save.")
     print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo.")
     print("- Mensagem historica mantem posicao fixa e usa translucidez quando Mig passa por tras.")
     return 0
@@ -480,6 +497,28 @@ def _check_quiz_uses_active_pill(level, label: str, errors: list[str]):
         errors.append(f"{label}: quiz nao corresponde as pilulas ativas.")
 
 
+def _check_history_blocks(errors: list[str]):
+    blocks = get_history_blocks()
+    if len(blocks) != 5:
+        errors.append(f"Selos da jornada: esperados 5 blocos. Encontrados: {len(blocks)}.")
+
+    covered_levels = []
+    for block in blocks:
+        if not block.name.strip() or not block.short_label.strip():
+            errors.append("Selos da jornada: bloco com nome ou rotulo vazio.")
+        if not block.phrase.strip():
+            errors.append(f"Selos da jornada: bloco {block.name} sem frase de contexto.")
+        if not block.level_indexes:
+            errors.append(f"Selos da jornada: bloco {block.name} nao tem fases.")
+        covered_levels.extend(block.level_indexes)
+
+    expected_levels = list(range(get_level_count()))
+    if sorted(covered_levels) != expected_levels:
+        errors.append("Selos da jornada nao cobrem todas as fases em ordem valida.")
+    if len(set(covered_levels)) != len(covered_levels):
+        errors.append("Selos da jornada repetem alguma fase em mais de um bloco.")
+
+
 def _find_fragment_support(
     fragment_rect: pygame.Rect,
     platforms: list[pygame.Rect],
@@ -569,10 +608,19 @@ def _check_basic_flow(game: Game, errors: list[str]):
     game._add_collection_entry(first_info)
     if len(game.collection_entries) != expected_collection_count:
         errors.append("Colecao historica duplicou uma pilula ja descoberta.")
+    for pill in get_level_pill_bank(0):
+        game._add_collection_entry(pill.info)
+    if not any(
+        row_type == "header" and "completo" in text
+        for row_type, text in game._collection_rows()
+    ):
+        errors.append("Colecao nao destaca album completo ao reunir 10 descobertas.")
 
     game._handle_keydown(pygame.K_RETURN)
     if game.state != STATE_PLAYING:
         errors.append("Enter na introducao nao iniciou a fase.")
+    if "andar" not in (game._tutorial_hint_text() or ""):
+        errors.append("Tutorial inicial nao orientou movimento enquanto a acao nao foi feita.")
 
     game.player.rect.midbottom = (300, 190)
     message_box = game._get_message_box_rect(710, 82)
@@ -598,6 +646,18 @@ def _check_basic_flow(game: Game, errors: list[str]):
     if game.state != STATE_PLAYING:
         errors.append("C nao voltou da colecao para a fase.")
 
+    mission = game.level.side_mission
+    mission_count_before = len(game.side_missions_completed)
+    game.player.velocity.update(0, 0)
+    game.player.rect.center = mission.rect.center
+    game._update(0)
+    if not game.side_mission_completed or game.level_index not in game.side_missions_completed:
+        errors.append("Missao extra nao foi concluida ao tocar no marcador.")
+    if len(game.side_missions_completed) != mission_count_before + 1:
+        errors.append("Missao extra nao atualizou o contador da sessao.")
+    if not game.feedback_message:
+        errors.append("Missao extra nao mostrou feedback positivo.")
+
     checkpoint = game.level.checkpoints[0]
     game.player.rect.center = checkpoint.center
     game._update(1 / 60)
@@ -618,6 +678,8 @@ def _check_basic_flow(game: Game, errors: list[str]):
         errors.append("Portal liberado nao abriu o Guardiao do Portal.")
     elif game.level.quiz_pill_index not in game.level.active_pill_indexes:
         errors.append("Guardiao do Portal perguntou sobre pilula fora da jogada.")
+    if not game._guardian_intro_text():
+        errors.append("Guardiao do Portal nao gerou texto de contexto.")
 
     quiz = game.level.quiz
     wrong_index = (quiz.correct_index + 1) % len(quiz.options)
@@ -626,10 +688,17 @@ def _check_basic_flow(game: Game, errors: list[str]):
         errors.append("Resposta errada no quiz nao manteve a fase no Guardiao do Portal.")
     if not game.quiz_feedback:
         errors.append("Resposta errada no quiz nao mostrou dica.")
+    if "aprendendo" not in game.quiz_feedback:
+        errors.append("Resposta errada no quiz nao manteve tom acolhedor.")
 
     game._submit_quiz_answer(quiz.correct_index)
     if game.state != STATE_COMPLETED:
         errors.append("Resposta correta no quiz nao concluiu a fase.")
+    first_block, first_block_completed, first_block_total, first_block_earned = game._history_block_progress()[0]
+    if not first_block_earned or first_block_completed != first_block_total:
+        errors.append(f"Selo {first_block.name} nao foi conquistado ao concluir a fase 1.")
+    if game.recent_history_block_seal != first_block.name:
+        errors.append("Tela de conclusao nao registrou o selo recem-conquistado.")
 
     game._handle_keydown(pygame.K_RETURN)
     if game.level_index != 1 or game.state != STATE_INTRO:
