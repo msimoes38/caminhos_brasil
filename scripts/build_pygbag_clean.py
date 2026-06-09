@@ -473,7 +473,11 @@ def patch_web_app_metadata(index_path: Path) -> bool:
         return False
 
     manifest_path = index_path.parent / "manifest.webmanifest"
+    icon_source = STAGING_DIR / "abertura.png"
+    icon_target = index_path.parent / "abertura.png"
     try:
+        if icon_source.exists():
+            shutil.copy2(icon_source, icon_target)
         manifest_path.write_text(
             json.dumps(WEB_MANIFEST, ensure_ascii=False, indent=2),
             encoding="utf-8",

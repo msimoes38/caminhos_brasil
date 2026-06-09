@@ -322,7 +322,7 @@ Resultado: o comando iniciou e gerou build, mas na raiz do projeto ele tambem te
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Resultado validado: o build limpo empacota somente os arquivos necessarios do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma ponte JS para `window.caminhosTouchContext`, helpers de save em `localStorage`, tela de carregamento propria, manifest basico, titulo/descricao da aba, helper de tela cheia e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A tela de carregamento pode ser liberada por sinal do jogo, toque/click ou automaticamente apos alguns segundos. A saida fica em:
+Resultado validado: o build limpo empacota somente os arquivos necessarios do jogo (`main.py`, `requirements.txt`, `abertura.png`, `assets/images/personagem.png` e arquivos de `src/`). Ele tambem adiciona uma ponte JS para `window.caminhosTouchContext`, helpers de save em `localStorage`, tela de carregamento propria, manifest basico com `abertura.png` acessivel na pasta web final, titulo/descricao da aba, helper de tela cheia e usa `--ume_block=0` para evitar que celulares fiquem presos na tela "Ready to start !" antes do jogo iniciar. A tela de carregamento pode ser liberada por sinal do jogo, toque/click ou automaticamente apos alguns segundos. A saida fica em:
 
 ```text
 build/pygbag_app/build/web

@@ -1,6 +1,22 @@
-# PROMPT YOLO - Caminhos do Brasil
+# PROMPT YOLO - Evolucao Criativa Do Caminhos Do Brasil
 
-Voce e um agente de IA trabalhando no projeto `caminhos_brasil`, um jogo educativo 2D em Python/Pygame-CE sobre a historia do Brasil para criancas. Trabalhe em modo autonomo, incremental e pragmatico: leia o contexto, implemente melhorias pequenas e funcionais, valide, atualize documentacao e entregue um resumo claro.
+Voce e um agente de IA trabalhando em loop no projeto `caminhos_brasil`, um jogo educativo 2D em Python/Pygame-CE sobre a historia do Brasil para criancas. Sua missao e tornar o jogo mais bonito, divertido, expressivo e educativo, com mais funcionalidades e pequenos desafios, sem perder leveza, clareza e compatibilidade com Pygbag/GitHub Pages.
+
+Trabalhe de forma autonoma, incremental e muito cuidadosa. Cada rodada deve deixar o jogo melhor de um jeito visivel ou pedagogicamente util, com validacao proporcional. Prefira ciclos pequenos, completos e testaveis a grandes promessas.
+
+## Visao De Produto
+
+O jogo deve parecer uma aventura historica acolhedora: Mig viaja por periodos do Brasil, coleta descobertas, supera desafios simples e conversa com o Guardiao do Portal. A crianca deve sentir curiosidade, alegria de explorar e vontade de completar a colecao, enquanto aprende historia com frases curtas, respeitosas e memoraveis.
+
+Meta de longo prazo:
+
+- Fases mais vivas, bonitas e diferentes entre si.
+- Mais motivos para explorar, revisar e completar a jornada.
+- Desafios leves, justos e variados, adequados a criancas por volta de 8 anos.
+- Conteudo historico simples, respeitoso e efetivo.
+- Feedbacks visuais e sonoros mais encantadores.
+- Mobile/web confiavel e facil de usar.
+- Codigo ainda simples, leve e sustentavel.
 
 ## Contexto Obrigatorio
 
@@ -9,242 +25,237 @@ Antes de alterar codigo, leia:
 - `AGENTS.md`
 - `README.md`
 - `SPEC.MD`
+- `LOOP_PROMPT.MD`
 - `requirements.txt`
 - `main.py`
 - `src/game.py`
+- `src/player.py`
 - `src/progress.py`
 - `src/backgrounds.py`
 - `src/level_data.py`
 - `src/levels.py`
+- `src/settings.py`
+- `src/sounds.py`
 - `scripts/smoke_tests.py`
 - `scripts/build_pygbag_clean.py`
 
-Estado atual importante:
+Preserve Python, Pygame-CE, Pygbag, o loop `async` de `main.py`, o build limpo com `--ume_block=0`, os controles de teclado/toque, a nova jornada temporaria com `N`, o save tolerante a falhas e o tom historico infantil e respeitoso.
 
-- O jogo tem 16 fases historicas, controles por teclado/toque, colecao, linha do tempo, quiz do Guardiao e build Pygbag limpo.
-- A versao publicada fica em `https://msimoes38.github.io/caminhos_brasil/`.
-- O build web usa `scripts/build_pygbag_clean.py`, preservando `--ume_block=0`, tela HTML de carregamento, manifest/metadados e helper de tela cheia.
-- O save desktop usa `caminhos_brasil_save.json`.
-- O save web usa `localStorage` com a chave `caminhos_brasil_save_v1`, preferindo helpers JS injetados pelo build limpo.
-- A colecao ja tem visual de album com cards.
-- A linha do tempo ja reserva uma coluna de status.
-- O menu touch ja tenta cobrir texto confuso do rodape da abertura.
-- Nao adicione dependencias novas ao projeto sem necessidade clara.
-- Nao adicione Selenium ao `requirements.txt`; se precisar dele para teste publicado, instale apenas na venv local e nao versionar.
-- Preserve Python, Pygame-CE, Pygbag e o loop `async` de `main.py`.
-- Preserve linguagem infantil, acolhedora e respeitosa.
+## Regras De Ouro
 
-## Atualizacao Da Ultima Rodada
+- Nao adicione dependencias novas sem necessidade muito clara.
+- Nao adicione Selenium ao `requirements.txt`; use apenas a venv local se precisar testar web.
+- Nao torne o jogo pesado para navegador.
+- Nao remova funcionalidades existentes sem motivo forte.
+- Nao crie sistemas enormes antes de ter uma versao simples funcionando.
+- Nao use linguagem historica pesada, grafica ou inadequada para criancas.
+- Nao glorifique processos historicos controversos.
+- Nao deixe pilulas, checkpoints ou respawns em posicoes injustas.
+- Nao cubra Mig, HUD, mensagens historicas ou botoes touch com novos elementos.
+- Atualize smoke tests quando mudar regras de fase, fluxo, save, touch, player ou progresso.
+- Atualize documentacao quando mudar comportamento, controles, arquitetura, publicacao ou processo.
 
-Ja foram implementados nesta rodada:
+## Como Trabalhar Em Loop
 
-- ponte JS no build limpo com `window.caminhosTouchContext`, `window.caminhosReadSave()`, `window.caminhosWriteSave(data)` e `window.caminhosClearSave()`;
-- `Game._detect_touch_context()` consulta a flag JS antes dos fallbacks e rechecagem tardia no menu antes de qualquer uso do teclado;
-- `ProgressStore` usa os helpers JS de save como caminho principal e preserva fallback direto para `platform.window.localStorage`;
-- smoke tests para flag JS de touch, helpers JS de save e injeção idempotente da ponte web no `index.html`;
-- deteccao inicial de touch/mobile reforcada em `src/game.py`, usando `maxTouchPoints`, `matchMedia`, `ontouchstart` e user agent como fallback leve;
-- faixa inferior consistente no menu inicial para cobrir a chamada fixa da arte de abertura e evitar instrucoes duplicadas;
-- polimento leve do litoral da fase 1, destaque sutil da primeira pilula e portal liberado com brilho mais claro;
-- orientacao HTML acessivel injetada pelo build limpo fora do canvas;
-- smoke tests para a nova deteccao touch simulada.
+Em cada ciclo:
 
-Proximas rodadas devem priorizar validacao em celular real, teste publicado de persistencia web e novos polimentos pequenos de fase.
+1. Leia o contexto relevante.
+2. Escolha uma meta pequena e de alto impacto.
+3. Implemente uma melhoria completa.
+4. Valide.
+5. Atualize documentacao/testes quando necessario.
+6. Entregue resumo curto com proximas sugestoes.
 
-## Diagnostico Da Versao Publicada
+Escolha sempre a menor fatia que gere valor real. Exemplos de boas metas:
 
-Uma verificacao com Selenium em Chrome headless conseguiu abrir a URL publicada, carregar o canvas `960x540`, esconder a tela de carregamento e interagir com:
+- "Adicionar medalhas simples por blocos de fases."
+- "Dar mais identidade visual a fase 2."
+- "Criar feedback especial ao completar todas as pilulas de uma fase."
+- "Melhorar o Guardiao com uma fala curta antes da pergunta."
+- "Adicionar uma missao secundaria simples na fase 1."
 
-- menu desktop;
-- introducao da fase 1;
-- inicio da fase 1;
-- movimento e pulo;
-- colecao;
-- linha do tempo;
-- ajuda.
+Evite metas grandes demais:
 
-Tambem foi confirmado que o pacote publicado `pygbag_app.apk` contem as melhorias recentes, incluindo `localStorage`, album da colecao e novos detalhes visuais.
+- "Refazer todas as fases."
+- "Criar novo motor de fisica."
+- "Adicionar sistema completo de inventario."
+- "Reescrever toda a UI."
 
-Problemas ou oportunidades observados antes da ultima rodada:
+## Prioridade 1 - Diversao Educativa Imediata
 
-1. Em emulacao mobile/touch, o navegador reportou `navigator.maxTouchPoints = 1`, `pointer: coarse` e `hover: none`, mas o jogo ainda abriu com menu de teclado. Ha correcao local via `window.caminhosTouchContext`, mas ela ainda precisa ser validada apos deploy.
-2. No menu desktop, a imagem `abertura.png` ainda mostra "PRESSIONE ENTER..." enquanto o painel tambem mostra atalhos. Isso e redundante e pode poluir a leitura.
-3. O save web agora tem helpers JS no build local, mas ainda precisa de um teste real de persistencia no navegador publicado: concluir uma fase, recarregar e confirmar fase 2 liberada.
-4. A fase 1 funciona, mas o visual do gameplay e bem mais simples do que a tela de abertura. Pequenos detalhes e feedbacks podem reduzir essa diferenca.
-5. Como o jogo roda em canvas, leitores de tela e ferramentas de acessibilidade enxergam pouco. Vale adicionar alguma orientacao HTML simples/sem impacto visual.
+Priorize melhorias que uma crianca perceba em menos de 1 minuto:
 
-## Objetivo Da Rodada
+- Dicas iniciais mais claras e simpaticas.
+- Celebracao visual ao coletar pilula.
+- Portal com estado bloqueado/liberado mais expressivo.
+- Pequena fala do Guardiao antes do quiz.
+- Mensagem positiva apos erro no quiz, com dica curta e acolhedora.
+- Tela de conclusao com medalha, carimbo ou selo da fase.
+- Linha do tempo mostrando "proxima aventura" de forma mais chamativa.
+- Colecao destacando conquistas recentes.
 
-Melhorar a experiencia publicada, principalmente em mobile/touch e primeiro contato do jogador, sem grandes refatoracoes.
+## Prioridade 2 - Fases Mais Vivas E Memoraveis
 
-Priorize nesta ordem:
+Melhore poucas fases por vez. Comece por fase 1, fase 2, ultima fase e fases sensiveis.
 
-1. Validar no publicado a deteccao inicial de touch/mobile corrigida pela flag JS.
-2. Validar persistencia web real com os helpers JS.
-3. Criar teste Selenium opcional, se isso ajudar a repetir a validacao sem nova dependencia versionada.
-4. Polir primeira fase e feedbacks visuais leves.
-5. Melhorar acessibilidade/instrucoes fora do canvas.
+Ideias visuais por tema:
 
-## Melhorias A Implementar
+- Litoral: ondas, espuma, passaros, vegetacao baixa, brilho do mar, pequenos barcos ao fundo.
+- Acucar: canavial, engenho estilizado, rodas d'agua, feixes de cana, caminho de terra.
+- Interiorizacao: rios, trilhas, placas de mapa, arvores, morros e pequenas marcas de caminho.
+- Ouro: montanhas, trilhos, lanternas, pedras brilhantes discretas, vilas ao fundo.
+- Cidades coloniais: igrejas, ruas de pedra, lampioes, janelas coloridas.
+- Independencia/Imperio: praca, jardins, bandeiras discretas, livros e cartas.
+- Republica/Vargas/Democracia: pracas civicas, radios, cartazes, predios e simbolos de participacao.
+- Ditadura/Redemocratizacao: visual cuidadoso, memoria, direitos, luzes suaves, cartazes por democracia, sem imagens pesadas.
+- Brasil contemporaneo: cidades, natureza, conexoes, diversidade, escola, tecnologia e meio ambiente.
 
-### 1. Deteccao Touch/Mobile Mais Robusta
+Regra: detalhes devem enriquecer a leitura sem atrapalhar plataformas, pilulas, perigos, HUD ou toque.
 
-Problema observado:
+## Prioridade 3 - Desafios Leves E Justos
 
-- Em Chrome com emulacao mobile, `navigator.maxTouchPoints`, `pointer: coarse` e `hover: none` indicavam toque, mas o jogo desenhou o menu desktop.
+Crie variedade sem frustrar:
 
-Comportamento esperado:
+- Plataformas com ritmo um pouco diferente por tema.
+- Pequenas sequencias de pulo com checkpoint perto.
+- Areas de cuidado bem sinalizadas antes do contato.
+- Miniobjetivos opcionais, como observar um marco, ativar uma placa ou coletar um simbolo de memoria.
+- "Missao secundaria" simples por fase, sem bloquear progresso principal.
+- Recompensa extra por concluir fase com todas as pilulas ativas.
 
-- Em navegador mobile/touch, o menu inicial deve abrir diretamente no layout touch.
-- O menu touch deve mostrar botoes grandes e a faixa "Toque em uma opcao para comecar".
-- Os botoes virtuais da fase devem aparecer quando o contexto touch for detectado.
-- Teclado em desktop deve continuar usando layout desktop.
-- Se o usuario tocar/clicar na tela, o jogo tambem deve ativar o modo touch como ja acontece.
+Nao use inimigos violentos. Se criar obstaculos, prefira elementos abstratos e seguros: poças de cuidado, neblina, pedras, buracos sinalizados, caixas, cercas baixas, vento ou plataformas estreitas.
 
-Sugestao tecnica:
+## Prioridade 4 - Funcionalidades Que Aumentam Vontade De Jogar
 
-- Reforcar `Game._detect_touch_context()` em `src/game.py`.
-- Alem de `navigator.maxTouchPoints`, verificar com cuidado:
-  - `window.matchMedia("(pointer: coarse)").matches`
-  - `window.matchMedia("(hover: none)").matches`
-  - `"ontouchstart" in window`
-  - `navigator.userAgent` apenas como fallback leve, sem depender exclusivamente dele.
-- Usar `try/except` para nao quebrar desktop nem Pygbag.
-- Se alguma API nao existir, ignorar e continuar.
+Implemente em versoes pequenas:
 
-Testes esperados:
+- Medalhas por fase concluida.
+- Selos por bloco historico completado, por exemplo:
+  - Primeiros Contatos
+  - Brasil Colonial
+  - Independencia E Imperio
+  - Republica E Democracia
+  - Brasil De Hoje
+- Colecao com progresso por bloco historico.
+- Tela final mais celebrativa, com resumo da jornada e selos conquistados.
+- "Descoberta favorita" ou destaque aleatorio de uma pilula ja coletada.
+- Pequeno contador de "descobertas da sessao".
+- Botao/atalho para revisitar a proxima fase incompleta.
+- Ajuda visual com icones simples desenhados por Pygame.
 
-- Atualizar `scripts/smoke_tests.py` com simulacao simples de `platform.window`, `navigator` e `matchMedia`.
-- Verificar que `_detect_touch_context()` retorna `True` quando:
-  - `maxTouchPoints > 0`;
-  - `matchMedia("(pointer: coarse)")` retorna `matches=True`.
-- Verificar que retorna `False` em contexto desktop simulado.
-- Renderizar screenshot dummy do menu touch, se possivel.
+Evite sistemas complexos de economia, loja, ranking online, contas ou multiplayer.
 
-### 2. Limpeza Visual Do Menu Inicial
+## Prioridade 5 - Aprendizagem Historica Efetiva
 
-Problema observado:
+Cada melhoria deve ajudar a aprender melhor, nao apenas decorar.
 
-- No desktop publicado, a imagem de abertura mostra "PRESSIONE ENTER PARA COMECAR" no rodape, enquanto o painel do jogo mostra "Enter: continuar".
-- Em mobile, esse texto da imagem pode competir com a faixa de orientacao por toque.
+Boas praticas:
 
-Comportamento esperado:
+- Frases curtas.
+- Uma ideia por pilula.
+- Perguntas simples, mas nao bobas.
+- Dicas que ensinam sem punir.
+- Conclusoes que conectam passado e presente.
+- Conteudo sensivel tratado com respeito, cuidado e memoria.
+- Povos indigenas, pessoas escravizadas e grupos afetados sempre descritos com dignidade.
 
-- O menu deve ter uma mensagem principal clara, sem duplicidade visual confusa.
-- No desktop, pode manter uma faixa discreta ou cobrir o texto da imagem quando o painel estiver aberto.
-- No touch, a faixa "Toque em uma opcao para comecar" deve cobrir totalmente qualquer texto fixo da imagem.
-- Nao edite `abertura.png` se uma solucao por desenho no Pygame for suficiente.
+Ideias didaticas:
 
-Sugestao tecnica:
+- Guardiao pergunta sobre uma pilula ja vista.
+- A conclusao da fase pode fazer uma pergunta de reflexao curta.
+- A colecao pode agrupar descobertas por tema.
+- A linha do tempo pode mostrar "o que mudou" em uma frase.
+- Fases sensiveis podem ter notas de cuidado com linguagem simples.
 
-- Centralizar a regra em `src/game.py`, perto de `_draw_menu`.
-- Criar/ajustar helper para desenhar uma faixa inferior consistente tanto para touch quanto desktop.
-- No desktop, usar texto curto como "Escolha uma opcao no painel".
-- Garantir que a faixa nao esconda botoes nem informacoes do painel.
+Evite:
 
-### 3. Persistencia Web: Teste Real E Ajustes
+- textos longos;
+- humor sobre sofrimento;
+- glorificacao de conquista, escravizacao, censura ou violencia;
+- descricoes graficas;
+- alternativas de quiz humilhantes ou agressivas.
 
-O save web ja foi implementado, mas precisa ser validado na pratica.
+## Prioridade 6 - Beleza E Feedback
 
-Comportamento esperado:
+Melhore o sentimento de recompensa:
 
-- Em ambiente web, concluir a fase 1 deve salvar progresso em `localStorage`.
-- Ao recarregar a pagina, o menu/linha do tempo deve manter a fase 2 liberada.
-- A colecao deve persistir entradas descobertas.
-- Se `localStorage` falhar, o jogo deve continuar sem quebrar.
-- A nova jornada temporaria com `N` nao deve gravar progresso permanente.
+- Particulas leves ao coletar pilula.
+- Pequeno brilho no checkpoint ativado.
+- Portal mais luminoso quando liberado.
+- Medalha animada na conclusao.
+- Som curto e suave para coleta, checkpoint, acerto, bloqueio e conclusao.
+- Cores de feedback consistentes.
+- Textos positivos como "Boa descoberta!", "Voce lembrou bem!" e "Mais uma parte da historia no album!".
 
-Sugestao tecnica:
+Tudo deve ser leve: poucos objetos, poucos calculos, sem assets grandes.
 
-- Revisar `src/progress.py` sem mudar formato de save.
-- Se necessario, ajustar a deteccao de web/localStorage.
-- Evitar qualquer dependencia nova.
-- Criar teste automatizado local para `ProgressStore` ja existe; amplie somente se encontrar lacuna.
+## Prioridade 7 - Mobile, Acessibilidade E Clareza
 
-Teste publicado recomendado:
+Sempre pense no celular em modo paisagem:
 
-- Usar Chrome/Selenium apenas como ferramenta local de teste, sem versionar dependencia:
-  - instalar com `.\.venv_brasil\Scripts\python.exe -m pip install selenium` se necessario;
-  - nao alterar `requirements.txt`;
-  - usar perfil temporario em `build/`.
-- Abrir `https://msimoes38.github.io/caminhos_brasil/?v=<numero>` para evitar cache.
-- Concluir fase 1 manualmente ou automatizar o minimo possivel.
-- Recarregar e inspecionar `localStorage["caminhos_brasil_save_v1"]`.
+- Botoes touch grandes.
+- Nenhum texto importante atras dos botoes.
+- Mig visivel no inicio da fase.
+- Mensagens historicas fixas e translucidas quando necessario.
+- Menu e pausa com areas tocaveis claras.
+- Quiz facil de tocar.
+- Tela cheia com falha segura.
 
-### 4. Polimento Leve Da Fase 1 E Feedbacks
+Para acessibilidade:
 
-Problema observado:
+- Manter orientacao HTML fora do canvas.
+- Garantir contraste bom.
+- Evitar textos pequenos demais.
+- Evitar excesso de informacao na tela.
+- Preservar atalhos de teclado.
 
-- A abertura e muito rica visualmente, mas o gameplay da fase 1 ainda parece simples em comparacao.
+## Ideias De Ciclos Criativos
 
-Comportamento esperado:
+Use esta lista como fonte de inspiracao. Escolha uma por ciclo.
 
-- A fase 1 deve continuar leve e legivel, mas com mais vida visual.
-- Nao aumentar dificuldade.
-- Nao mover pilulas, checkpoints, areas de cuidado ou plataformas sem necessidade.
-- Nao atrapalhar HUD, mensagens historicas nem controles touch.
+### Ciclo A - Selos Da Jornada
 
-Ideias seguras:
+Adicionar selos por blocos historicos. Ao concluir todas as fases de um bloco, mostrar um selo na tela final e na colecao. Comece com visual simples desenhado por Pygame.
 
-- Mais detalhes no litoral em `src/backgrounds.py`: ondas discretas, aves, marco costeiro, vegetacao baixa ou brilho no mar.
-- Pequena animacao/efeito visual no portal quando liberado.
-- Melhor destaque visual para a primeira pilula sem mudar sua posicao.
-- Feedback mais claro quando todas as pilulas ativas foram coletadas.
+### Ciclo B - Missao Secundaria Simples
 
-Valide com:
+Adicionar uma pequena missao opcional por fase, como "observe o marco", "encontre o mapa" ou "ative a placa de memoria". A recompensa pode ser um feedback e um selo simples, sem bloquear conclusao.
 
-- `python -m compileall main.py src`
-- smoke tests;
-- screenshot ou teste visual da fase 1.
+### Ciclo C - Guardiao Mais Vivo
 
-### 5. Acessibilidade E Instrucoes Fora Do Canvas
+Antes da pergunta, o Guardiao pode dizer uma frase curta relacionada a fase. Apos erro, ele ensina com delicadeza. Apos acerto, ele celebra e abre o portal.
 
-Problema:
+### Ciclo D - Fases Com Identidade
 
-- O jogo roda em canvas; leitores de tela e verificadores HTML veem pouco conteudo util.
+Escolher 2 ou 3 temas e adicionar detalhes visuais especificos em `src/backgrounds.py`. Validar que nada atrapalha gameplay.
 
-Comportamento esperado:
+### Ciclo E - Colecao Mais Motivadora
 
-- Sem mudar a experiencia visual principal, a pagina publicada deve expor uma orientacao simples fora do canvas.
-- Isso pode ficar no `index.html` gerado pelo build limpo, em texto visualmente discreto ou `noscript`.
-- Deve explicar objetivo e controles basicos.
-- Nao atrapalhar canvas, tela de carregamento, fullscreen nem Pygbag.
+Adicionar destaque de progresso por bloco historico, descoberta recente mais clara e pequena celebracao quando uma fase chega a 10/10 descobertas no album.
 
-Sugestao tecnica:
+### Ciclo F - Linha Do Tempo Viva
 
-- Atualizar `scripts/build_pygbag_clean.py` para injetar uma pequena area HTML acessivel.
-- Pode ser uma `div` com classe visualmente oculta, usando CSS seguro.
-- Incluir textos curtos:
-  - "Caminhos do Brasil e um jogo educativo de plataforma."
-  - "Use teclado ou toque para mover Mig, coletar pilulas historicas e responder ao Guardiao do Portal."
-- Preservar manifest/metadados atuais.
+Melhorar a linha do tempo com icones simples, marcador da proxima aventura e uma frase curta por bloco historico.
 
-## Cuidados Historicos E De Produto
+### Ciclo G - Tela Final Celebrativa
 
-- Use linguagem simples.
-- Evite descricoes fortes, violentas ou graficas.
-- Trate povos indigenas, pessoas escravizadas e temas sensiveis com respeito.
-- Nao glorifique processos controversos.
-- Valorize memoria, diversidade, cidadania e curiosidade.
-- O publico de referencia e crianca por volta de 8 anos.
+Transformar a tela final em um resumo da jornada com medalhas, selos, quantidade de descobertas e mensagem final sobre aprender historia com respeito.
 
-## Restricoes Tecnicas
+### Ciclo H - Sensacao De Plataforma
 
-- Nao substituir Python, Pygame-CE ou Pygbag.
-- Nao quebrar `main.py` com loop `async`.
-- Nao adicionar dependencias novas ao projeto.
-- Nao adicionar Selenium ao projeto; use apenas para teste local se necessario.
-- Nao empacotar `.venv_brasil`, saves locais ou artefatos de teste.
-- Preservar `--ume_block=0` no build web.
-- Preservar tela de carregamento HTML e seus fallbacks.
-- Preservar helper de tela cheia e manifest.
-- Preservar controles de teclado e toque.
-- Preservar nova jornada temporaria com `N`.
-- Preservar save web/local e tolerancia a falhas.
-- Preservar checkpoints, respawns e pilulas em posicoes seguras.
+Ajustar movimento/pulo de forma conservadora, melhorar resposta dos controles touch e criar teste manual especifico para fase 1 e fase 2.
+
+### Ciclo I - Audio Mais Carinhoso
+
+Melhorar sons gerados por codigo com variacoes suaves por evento, mantendo fallback silencioso se mixer falhar.
+
+### Ciclo J - Tutorial Jogavel
+
+Melhorar os primeiros segundos da fase 1 com dicas contextuais que aparecem uma por vez e somem quando a crianca executa a acao.
 
 ## Validacoes Obrigatorias
 
-Rode:
+Para qualquer alteracao de codigo, rode:
 
 ```powershell
 python -m compileall main.py src
@@ -253,63 +264,59 @@ python -m compileall main.py src
 .\.venv_brasil\Scripts\python.exe scripts\smoke_tests.py
 ```
 
-Se alterar build web, persistencia web ou HTML publicado, rode tambem:
+Se alterar build web, HTML, touch, save web, carregamento ou publicacao, rode tambem:
 
 ```powershell
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Se o Python global nao tiver `pygame-ce`, mencione isso e use a venv local.
+Se alterar UI/visual, faca pelo menos uma checagem visual:
 
-## Teste Visual/Publicacao Recomendado
+- screenshot em SDL dummy;
+- execucao local;
+- ou Selenium/headless quando for web.
 
-Local:
+Se alterar fases, player, plataformas, checkpoints, perigos ou pilulas, atualize smoke tests quando necessario.
 
-1. Abrir o jogo localmente.
-2. Conferir menu desktop.
-3. Simular ou forcar contexto touch e conferir menu touch.
-4. Iniciar fase 1.
-5. Mover, pular e conferir se botoes touch nao cobrem Mig.
-6. Abrir colecao.
-7. Abrir linha do tempo.
-8. Abrir ajuda.
+## Teste Manual Minimo Para Mudancas Visuais Ou De Gameplay
 
-Publicado:
+- Abrir o jogo local.
+- Confirmar abertura/menu.
+- Iniciar fase 1.
+- Mover e pular.
+- Coletar uma pilula.
+- Verificar feedback.
+- Abrir colecao.
+- Pausar e continuar.
+- Encostar no portal bloqueado e liberado.
+- Responder o Guardiao.
+- Conferir fase 2 se houve alteracao de layout ou player.
+- Em modo touch ou emulacao, conferir botoes `<`, `>`, `Pular`, `P` e `C`.
 
-1. Abrir `https://msimoes38.github.io/caminhos_brasil/?v=<numero>`.
-2. Confirmar tela de carregamento e menu.
-3. Testar desktop.
-4. Testar em celular real, se possivel.
-5. Em celular, usar modo paisagem.
-6. Conferir que o menu inicial ja aparece em modo touch.
-7. Concluir fase 1, recarregar e verificar persistencia.
+## Como Escolher A Proxima Tarefa
 
-Selenium opcional apenas para teste:
+Use esta ordem:
 
-- Pode instalar Selenium na venv local, sem alterar dependencias do projeto.
-- Use perfil temporario dentro de `build/`.
-- Capture screenshots em `build/`, que nao devem ser commitados.
-- Se o Chrome headless falhar, tente `--user-data-dir` temporario, `--no-sandbox`, `--disable-extensions` e `--headless`.
+1. Se algo quebra mobile/web/save, corrija primeiro.
+2. Se o primeiro minuto do jogo esta confuso, melhore onboarding.
+3. Se a fase 1 esta pouco atrativa, embeleze e clarifique.
+4. Se a jornada precisa de motivacao, adicione recompensas simples.
+5. Se uma fase esta generica, de identidade visual a ela.
+6. Se a aprendizagem esta rasa, melhore quiz, colecao ou reflexoes.
+7. Se o arquivo `src/game.py` estiver impedindo progresso, refatore uma parte pequena com testes.
 
-## Criterios De Aceitacao
+## Formato De Entrega
 
-A rodada esta pronta quando:
-
-- Mobile/touch publicado abre no layout touch quando o navegador indica toque.
-- Menu inicial nao mostra orientacoes redundantes/confusas.
-- Save web continua usando `localStorage` e passa em teste real ou simulado robusto.
-- Fase 1 tem leve melhoria visual sem perder clareza.
-- Build limpo continua funcionando.
-- Smoke tests passam.
-- Documentacao reflete as mudancas.
-- Nenhuma dependencia de teste foi adicionada ao projeto.
-
-## Entrega Esperada
-
-Ao finalizar, diga de forma curta:
+Ao final de cada rodada, diga:
 
 - o que mudou;
-- arquivos principais alterados;
+- por que isso deixa o jogo mais atrativo ou educativo;
+- arquivos alterados;
 - como testar;
-- validacoes que passaram;
-- qualquer limitacao restante, especialmente se nao foi possivel testar em celular real ou navegador publicado.
+- validacoes executadas;
+- limitacoes restantes;
+- proxima sugestao de melhoria.
+
+## Norte Criativo
+
+Pense como alguem construindo uma aventura carinhosa de historia para criancas. O jogo deve convidar a explorar, recompensar curiosidade e ensinar sem ficar pesado. Cada detalhe deve responder a uma pergunta simples: "isso ajuda a crianca a se divertir, entender melhor ou querer continuar?" Se sim, implemente uma versao pequena, bonita e segura. Se nao, deixe para depois.

@@ -368,6 +368,7 @@ Motivos para usar este script:
 - injeta uma área HTML visualmente oculta com orientação básica para leitores de tela;
 - injeta helper JavaScript para tentativa de fullscreen/orientacao paisagem;
 - injeta titulo, descricao, theme-color e `manifest.webmanifest` basico;
+- copia `abertura.png` para a pasta web final, para que o icone declarado no manifest nao gere 404;
 - a tela de carregamento some quando o jogo chama `window.caminhosHideLoading`, por toque/click ou automaticamente apos alguns segundos.
 
 Saida:

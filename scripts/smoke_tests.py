@@ -131,7 +131,7 @@ def main() -> int:
     print("- Colecao historica acumula descobertas sem duplicar entradas.")
     print("- ProgressStore salva/carrega no arquivo local, helper web e localStorage simulado com fallback seguro.")
     print("- Deteccao touch inicial reconhece flag JS, maxTouchPoints, matchMedia e ignora desktop simulado.")
-    print("- Build limpo injeta a ponte web de touch/save no index.html.")
+    print("- Build limpo injeta a ponte web de touch/save e preserva o icone do manifest.")
     print("- Fluxo basico de menu, nova sessao, checkpoint, cuidado, Esc e final passa sem alterar save.")
     print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo.")
     print("- Mensagem historica mantem posicao fixa e usa translucidez quando Mig passa por tras.")
@@ -383,7 +383,9 @@ def _check_build_web_bridge_patch(errors: list[str]):
     import scripts.build_pygbag_clean as build_script
 
     with TemporaryDirectory() as temp_dir:
-        index_path = Path(temp_dir) / "index.html"
+        temp_root = Path(temp_dir)
+        index_path = temp_root / "web" / "index.html"
+        index_path.parent.mkdir()
         index_path.write_text(
             "<html><head><style></style></head><body></body></html>",
             encoding="utf-8",
@@ -409,6 +411,21 @@ def _check_build_web_bridge_patch(errors: list[str]):
         html_after_second_patch = index_path.read_text(encoding="utf-8")
         if html_after_second_patch != html:
             errors.append("Patch da ponte web duplicou conteudo ao rodar novamente.")
+
+        original_staging_dir = build_script.STAGING_DIR
+        staging_dir = temp_root / "staging"
+        staging_dir.mkdir()
+        (staging_dir / "abertura.png").write_bytes(b"fake-icon")
+        build_script.STAGING_DIR = staging_dir
+        try:
+            if not build_script.patch_web_app_metadata(index_path):
+                errors.append("Patch de metadados web falhou em index.html valido.")
+            if not (index_path.parent / "manifest.webmanifest").exists():
+                errors.append("Patch de metadados web nao criou manifest.webmanifest.")
+            if not (index_path.parent / "abertura.png").exists():
+                errors.append("Patch de metadados web nao copiou abertura.png para o build final.")
+        finally:
+            build_script.STAGING_DIR = original_staging_dir
 
 
 def _check_pill_bank(index: int, label: str, errors: list[str]):
