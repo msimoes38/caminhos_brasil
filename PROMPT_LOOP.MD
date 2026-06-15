@@ -1,23 +1,24 @@
-# PROMPT LOOP - Caminhos Do Brasil Mais Vivo
+# PROMPT LOOP 2 - Grande Salto Emocional De Caminhos Do Brasil
 
-Voce e um agente de IA trabalhando em ciclos sucessivos no projeto `caminhos_brasil`, um jogo educativo 2D em Python/Pygame-CE sobre a historia do Brasil para criancas. Sua missao e deixar o jogo mais atraente, divertido, bonito, expressivo e educativo para criancas e familias, sem perder a simplicidade tecnica que permite rodar no navegador via Pygbag e GitHub Pages.
+Voce e um agente de IA trabalhando no projeto `caminhos_brasil`, um jogo educativo 2D em Python/Pygame-CE sobre a historia do Brasil para criancas. Sua missao agora nao e apenas polir detalhes: e conduzir uma evolucao criativa que faca o jogo parecer mais vivo, emocionante, memoravel e gostoso de revisitar, mantendo a leveza tecnica necessaria para rodar no navegador via Pygbag e GitHub Pages.
 
-Trabalhe em loop: escolha uma melhoria pequena, implemente, valide, documente quando necessario e avance para a proxima melhoria de maior impacto. Cada ciclo deve deixar o jogo mais agradavel de jogar, mais facil de entender ou mais memoravel.
+Este prompt substitui o ciclo anterior. O jogo ja tem uma base funcional forte: 16 fases, pilulas historicas, Guardiao do Portal, colecao, linha do tempo, lembrancas da viagem, selos, microeventos, toque/mobile, save local/web, sons por codigo e build limpo. A partir daqui, pense como diretor de experiencia, designer de jogo educativo e engenheiro cuidadoso ao mesmo tempo.
 
-## Norte Criativo
+## Visao De Produto
 
-Transforme `Caminhos do Brasil` em uma aventura historica acolhedora, com sensacao de descoberta. A crianca deve entender rapido o que fazer, sentir vontade de explorar e receber pequenas recompensas por aprender.
+Transforme `Caminhos do Brasil` em uma pequena aventura historica com clima de jornada: Mig nao deve apenas atravessar plataformas; ele deve sentir que esta visitando lugares, lembrando descobertas, montando um caderno de viagem e chegando ao final com uma sensacao de conquista.
 
-A experiencia ideal:
+A experiencia-alvo:
 
-- Mig parece estar viajando por mundos historicos vivos.
-- Cada fase tem identidade visual clara e pequenos detalhes que convidam a olhar.
-- Coletar pilulas historicas da prazer, brilho, som e sentido.
-- O Guardiao do Portal parece um guia simpatico, nao uma prova escolar.
-- A colecao e a linha do tempo dão vontade de completar a jornada.
-- O jogo continua leve, simples e confiavel no celular.
+- A crianca entende rapido o que fazer e sente vontade de continuar.
+- Cada fase tem pelo menos um momento visual ou interativo que a torna lembravel.
+- O Guardiao do Portal parece um companheiro-guia, nao uma prova escolar.
+- A colecao parece um "Caderno de Viagem" vivo, nao apenas uma lista.
+- A linha do tempo parece um mapa de aventura historica.
+- O final relembra a jornada com carinho e da vontade de revisitar fases.
+- O jogo continua simples, respeitoso, leve, estavel e jogavel no celular.
 
-## Contexto Obrigatorio
+## Leitura Obrigatoria
 
 Antes de alterar codigo, leia:
 
@@ -37,286 +38,365 @@ Antes de alterar codigo, leia:
 - `scripts/smoke_tests.py`
 - `scripts/build_pygbag_clean.py`
 
-Preserve as regras desses arquivos. Se houver conflito, siga `AGENTS.md` primeiro.
+Se houver conflito entre este prompt e `AGENTS.md`, siga `AGENTS.md`.
 
-## Regras Fortes
+## Regras Inegociaveis
 
 - Preserve Python, Pygame-CE, Pygbag e o loop `async` de `main.py`.
-- Nao adicione dependencias novas sem necessidade clara.
-- Nao adicione Selenium ao `requirements.txt`; use o Selenium ja instalado na venv para testes de navegador.
-- Nao torne o jogo pesado para web.
-- Nao remova funcionalidades existentes sem motivo claro.
-- Nao quebre teclado, mouse, toque, save local, save web ou nova jornada temporaria com `N`.
-- Preserve o build limpo com `--ume_block=0`, tela de carregamento HTML, manifest, ponte JS de touch/save e helper de tela cheia.
-- Preserve a linguagem historica simples, curta, respeitosa e adequada para criancas.
+- Nao troque de engine.
+- Nao adicione dependencias novas sem necessidade muito clara.
+- Nao adicione Selenium ao `requirements.txt`; use o Selenium ja instalado na venv apenas para teste de navegador quando fizer sentido.
+- Nao torne o build web pesado.
+- Nao quebre teclado, mouse, toque, save local, save web, nova jornada temporaria com `N`, colecao ou linha do tempo.
+- Preserve `scripts/build_pygbag_clean.py`, `--ume_block=0`, loading HTML, manifest, ponte JS de touch/save e helper de tela cheia.
+- Nao use caminhos absolutos para assets.
+- Nao use linguagem historica pesada, grafica, violenta ou inadequada para criancas.
 - Nao glorifique processos historicos controversos.
-- Nao use descricoes violentas, graficas ou pesadas.
-- Nao coloque pilulas, missoes extras, checkpoints ou respawns em lugares injustos.
+- Ao tratar povos indigenas, pessoas escravizadas, memoria, democracia, direitos, desigualdade ou grupos afetados, use linguagem cuidadosa, curta e respeitosa.
+- Nao coloque pilulas, missoes, checkpoints, respawns ou elementos obrigatorios em locais injustos.
 - Nao cubra Mig, HUD, mensagens historicas ou botoes touch.
 
-## Grande Proposta De Melhoria
+## O Que Significa "Grande Salto"
 
-Crie, ao longo de varias rodadas pequenas, a sensacao de uma **Jornada De Descobertas**.
+Um grande salto nao e um sistema enorme. E um conjunto de melhorias verticais que mudam a sensacao do jogo:
 
-Essa melhoria geral combina jogabilidade, graficos, colecao, feedback e aprendizado:
+1. **Cenas memoraveis**: cada bloco historico ganha momentos visuais/interativos que a crianca reconhece.
+2. **Ritual de descoberta**: coletar pilulas, observar extras e abrir portal ganha mais brilho, som, movimento e sentido.
+3. **Caderno de Viagem**: a colecao vira um album afetivo, com paginas, postais, selos, lembrancas e progresso claro.
+4. **Guardiao-personagem**: o Guardiao recebe voz, presenca, reacoes e pequenas falas por bloco/fase.
+5. **Mapa de aventura**: a linha do tempo parece um percurso vivo, com caminhos, marcos, proxima parada e selos.
+6. **Final retrospectivo**: a tela final mostra uma celebracao da jornada, com resumo visual e convite para revisitar.
+7. **Polimento sensorial**: particulas, camera sutil, sons leves, pequenas animacoes e feedback instantaneo.
 
-- Cada fase ganha um pequeno elemento especial observavel, como mapa, marco, placa, carta, radio, livro, arvore, estrela, memoria ou simbolo civico.
-- A crianca pode tocar/coletar/observar esse elemento como uma missao opcional simples.
-- Ao observar, o jogo mostra uma frase curta e positiva, com particulas leves e som suave.
-- A colecao passa a valorizar essas observacoes como "lembrancas da viagem".
-- A tela final celebra pilulas, fases, selos e lembrancas encontradas.
-- O visual das fases reforca o tema, mas sem aumentar a dificuldade.
+Implemente em fatias. Cada ciclo deve terminar com o jogo funcionando melhor do que antes.
 
-Nao implemente tudo de uma vez. Use isso como direcao de produto. Em cada ciclo, escolha uma fatia pequena e completa.
+## Estrategia Recomendada
 
-## Modo De Trabalho Em Loop
+Trabalhe em "fatias verticais": escolha uma melhoria que atravesse dados, visual, feedback e teste, mas com escopo pequeno.
 
-Em cada ciclo:
+Uma fatia boa:
 
-1. Diagnostique o estado atual.
-2. Escolha uma meta pequena e visivel.
-3. Planeje brevemente arquivos e validacoes.
-4. Implemente a menor versao funcional.
-5. Rode validacoes proporcionais.
-6. Atualize docs/testes se comportamento mudou.
-7. Entregue resumo curto e sugira a proxima melhoria.
+- adiciona uma cena especial a 1 ou 2 fases;
+- melhora uma tela importante;
+- acrescenta uma recompensa visual;
+- deixa um fluxo mais emocionante;
+- atualiza smoke tests e docs quando comportamento muda.
 
-Uma boa meta cabe em uma frase:
+Uma fatia ruim:
 
-- "Melhorar a celebracao de conclusao da fase."
-- "Adicionar mais vida visual a fase 1 sem mudar plataformas."
-- "Criar fala curta do Guardiao antes da pergunta."
-- "Mostrar uma lembranca da viagem na colecao."
-- "Deixar a linha do tempo mais gostosa para crianca escolher a proxima aventura."
+- reescreve todo `src/game.py` de uma vez;
+- cria um motor novo;
+- muda todas as fases sem validar;
+- adiciona assets pesados;
+- altera fisica sem teste manual;
+- cria UI complexa demais para celular.
 
-Evite metas grandes:
+## Arquitetura Leve Sugerida
 
-- "Refazer o jogo inteiro."
-- "Criar novo motor de fisica."
-- "Reescrever toda a interface."
-- "Adicionar inventario complexo."
-- "Adicionar ranking online, conta, loja ou multiplayer."
+Se precisar criar estruturas novas, prefira modelos simples:
 
-## Prioridade 0 - Confiabilidade Antes Do Encanto
+- dados em Python em `src/level_data.py` ou `src/levels.py`;
+- helpers de desenho em `src/backgrounds.py` ou funcoes pequenas em `src/game.py`;
+- sons gerados em `src/sounds.py`;
+- constantes em `src/settings.py`;
+- testes em `scripts/smoke_tests.py`.
 
-Antes de polir visual ou gameplay, corrija qualquer problema que quebre:
+Possiveis estruturas leves:
+
+- `StageMoment`: pequeno momento observavel por fase, com titulo, texto curto, posicao, cor e icone.
+- `TravelPostcard`: item visual do Caderno de Viagem gerado a partir de fase, pilula, missao extra ou selo.
+- `GuardianLine`: falas do Guardiao por bloco, fase, erro, acerto e final.
+- `CelebrationBurst`: configuracao simples para particulas/sons em coleta, portal, selo e album completo.
+
+Crie novas abstrações apenas se reduzirem complexidade real. Se um helper local resolver, use helper local.
+
+## Prioridade 0 - Confiabilidade Antes Da Magia
+
+Antes de qualquer encanto, corrija o que quebrar:
 
 - abrir o jogo;
-- jogar no celular em modo paisagem;
-- salvar e carregar progresso;
 - iniciar fase;
-- tocar botoes virtuais;
+- mover e pular;
 - coletar pilulas;
-- responder o Guardiao;
+- responder Guardiao;
+- abrir colecao;
+- abrir linha do tempo;
+- usar toque em celular paisagem;
+- salvar/carregar progresso;
 - gerar build web limpo.
 
-Se tocar web/mobile, use Selenium instalado na venv quando fizer teste de navegador. Nao instale nem versione Selenium no projeto.
+Se uma melhoria ameaçar estabilidade, simplifique a ideia.
 
-## Prioridade 1 - Primeiro Minuto Encantador
+## Prioridade 1 - Primeiro Minuto Mais Emocionante
 
-O primeiro minuto precisa dizer para a crianca: "eu sei o que fazer e quero continuar".
+O primeiro minuto deve dizer: "vem comigo, isso aqui e uma aventura".
 
 Ideias:
 
-- Menu com chamada curta e clara, sem parecer manual.
-- Botoes touch grandes e simpaticos.
-- Tutorial da fase 1 com dicas que aparecem uma por vez.
-- Primeira pilula com brilho especial e feedback mais alegre.
-- Portal bloqueado com dica visual clara.
-- Portal liberado com brilho, som e frase curta.
-- Guardiao com primeira fala acolhedora.
+- menu com microanimacoes discretas na arte, botoes e caminho historico;
+- chamada curta de aventura, sem virar tela de marketing;
+- transicao suave do menu para a primeira fase;
+- tutorial da fase 1 com pequenos marcos visuais, nao apenas texto;
+- primeira pilula com celebracao especial;
+- primeiro portal com ritual claro: brilho, som, fala do Guardiao e recompensa.
 
-Regra: nenhuma dica deve cobrir Mig, controles touch, HUD ou mensagens historicas.
+Valide em desktop e em toque. Nada pode ficar pequeno demais no celular.
 
-## Prioridade 2 - Fases Com Identidade Visual
+## Prioridade 2 - Fases Ancora Cinematograficas
 
-Melhore poucas fases por vez. Priorize fase 1, fase 2, ultima fase e fases sensiveis.
+Escolha poucas fases para elevar bastante primeiro:
 
-Ideias por tema:
+1. Fase 1: chegada/litoral, inicio da jornada.
+2. Fase 2: engenho/acucar, clareza visual e cuidado historico.
+3. Fase 9: abolicao, memoria e respeito.
+4. Fase 14: ditadura, direitos e memoria sem peso grafico.
+5. Fase 16: Brasil contemporaneo, chegada ao presente.
 
-- Litoral: ondas, espuma, conchas discretas, passaros, vegetacao baixa, barco distante, brilho do mar.
-- Acucar: canavial, engenho estilizado, roda d'agua, feixes de cana, caminho de terra, sombras de folhas.
-- Interiorizacao: rios, trilhas, placas de mapa, morros, arvores, pegadas, pequenas pontes.
-- Ouro: montanhas, lanternas, trilhos, pedras brilhantes discretas, vilas ao fundo.
-- Cidades coloniais: ruas de pedra, janelas coloridas, lampioes, praca, igreja ao fundo.
-- Independencia/Imperio: cartas, livros, jardins, pracas, bandeiras discretas, bancos de praca.
-- Republica/Vargas/Democracia: radio, jornais, cartazes civicos, predios, praca de encontro.
-- Ditadura/Redemocratizacao: memoria, direitos, luz suave, cartazes por democracia, livros e velas sem tom pesado.
-- Brasil contemporaneo: escola, tecnologia, natureza, conexoes, diversidade, meio ambiente.
+Para cada fase ancora:
 
-Use formas simples de Pygame antes de criar assets. Assets novos devem ser leves.
+- adicione profundidade visual com formas simples;
+- crie um momento observavel;
+- use uma frase curta e respeitosa;
+- melhore portal/checkpoint/pilulas sem alterar dificuldade injustamente;
+- garanta que os elementos nao cobrem controles ou HUD.
 
-## Prioridade 3 - Jogabilidade Mais Gostosa
+Depois de validar as fases ancora, espalhe o padrao para outras fases.
 
-Melhore a sensacao de jogo com cuidado:
+## Prioridade 3 - Caderno De Viagem Vivo
 
-- pulo responsivo, sem ficar dificil;
-- controles touch mais tolerantes;
-- plataformas com ritmo levemente variado;
-- areas de cuidado bem sinalizadas;
-- checkpoints em lugares naturais;
-- pequenas subidas e descidas;
-- recompensas opcionais sem bloquear a fase.
+Evolua a colecao para parecer um caderno/album que Mig esta construindo.
 
-Nao use inimigos violentos. Para obstaculos, prefira elementos abstratos e seguros:
+Ideias:
 
-- poco de cuidado;
-- neblina;
-- pedra;
-- buraco sinalizado;
-- caixa;
-- cerca baixa;
-- vento leve;
-- ponte curta;
-- plataforma estreita mas justa.
+- abas por bloco historico;
+- pagina "Hoje descobri..." com descoberta recente;
+- postais por fase com mini-cenario desenhado por Pygame;
+- lembrancas de missoes extras com icones e frase curta;
+- selo de album completo com brilho ou pequena animacao;
+- progresso por bloco com linguagem de aventura;
+- tela vazia acolhedora quando ainda ha poucas descobertas;
+- opcao de revisitar fase a partir da colecao, se couber sem complicar.
 
-Toda mudanca em fase/player precisa preservar smoke tests de alcance e seguranca.
+Nao transforme a colecao em sistema pesado. O objetivo e dar vontade de completar.
 
-## Prioridade 4 - Recompensas Que Motivam
+## Prioridade 4 - Guardiao Como Personagem
 
-Crie motivos para completar a jornada:
+O Guardiao deve ter presenca carismatica e educativa.
 
-- selos por blocos historicos;
-- medalha simples por fase concluida;
-- celebracao quando uma fase chega a 10/10 descobertas;
-- destaque de descoberta recente;
-- contador de descobertas da sessao;
-- lembrancas da viagem por missoes opcionais;
-- tela final com resumo alegre;
-- linha do tempo mostrando "proxima aventura".
+Ideias:
 
-Comece visualmente simples. Uma medalha desenhada com circulo, faixa e brilho ja pode funcionar.
+- retrato simples animado por formas;
+- falas por bloco historico;
+- reacao gentil quando a crianca erra;
+- celebracao quando acerta;
+- conexao clara com a pilula perguntada;
+- "memoria do portal": uma frase que resume a descoberta antes de liberar;
+- efeito visual no portal quando todas as pilulas sao coletadas;
+- som proprio do Guardiao.
 
-## Prioridade 5 - Guardiao Mais Vivo
+Evite longos dialogos. Uma ou duas frases curtas bastam.
 
-O Guardiao deve parecer um guia da aventura.
+## Prioridade 5 - Mapa Da Jornada
 
-Melhorias possiveis:
+A linha do tempo deve virar um mapa que a crianca entende e quer completar.
 
-- fala curta antes da pergunta;
-- comentario diferente por bloco historico;
-- dica acolhedora apos erro;
-- celebracao curta apos acerto;
-- frase que conecta a pilula com a fase;
-- efeito visual quando o portal abre.
+Ideias:
 
-Evite perguntas longas. A crianca deve ler sem cansar.
+- caminho com curvas e pontos de parada;
+- mini-icones por fase ou bloco;
+- marcador "voce esta aqui";
+- pre-visualizacao curta da proxima fase;
+- selos conquistados integrados ao mapa;
+- estados bloqueado/liberado/concluido que nao dependem so de cor;
+- animacao discreta no proximo destino.
 
-## Prioridade 6 - Aprendizado Leve E Respeitoso
+Preserve navegacao por teclado, mouse e toque.
 
-O jogo ensina melhor quando cada texto tem uma ideia clara.
+## Prioridade 6 - Momentos De Descoberta Por Fase
 
-Boas praticas:
+Transforme microeventos em momentos observaveis de verdade.
 
-- uma ideia por pilula;
-- frases curtas;
-- termos simples;
-- perguntas de quiz diretas;
-- dicas que ensinam sem punir;
-- conclusoes que conectam passado e presente;
-- temas sensiveis tratados com dignidade e cuidado.
+Ideia de formato:
 
-Ao mencionar povos indigenas, pessoas escravizadas, censura, desigualdade ou grupos afetados, use linguagem respeitosa. Valorize memoria, diversidade, cidadania e curiosidade.
+- um objeto simples no cenario: placa, livro, radio, arvore, mapa, marco, luz, ponte, carta, escola, estrela;
+- ao se aproximar ou tocar, aparece frase curta;
+- gera particulas leves e som suave;
+- entra no Caderno de Viagem como lembranca;
+- nao e obrigatorio para concluir fase;
+- nao aumenta dificuldade.
 
-## Prioridade 7 - Som, Particulas E Movimento
+Comece com 3 fases. Depois generalize.
 
-Use polimento leve para dar vida:
+## Prioridade 7 - Feedback Sensorial
 
-- particulas ao coletar pilula;
-- brilho no checkpoint;
-- pequena ondulacao no portal;
-- pulso suave no marcador de missao extra;
-- som de acerto mais feliz;
-- som de erro gentil, nao punitivo;
-- microanimacao em medalhas e selos;
-- fundo com detalhes em parallax simples.
+O jogo deve responder com alegria ao aprendizado.
 
-Tudo deve continuar barato para web. Poucos objetos, poucos calculos, sem arquivos grandes.
+Melhore:
 
-## Prioridade 8 - Mobile E Acessibilidade
+- coleta de pilula;
+- checkpoint;
+- missao extra;
+- album completo;
+- selo de bloco;
+- portal bloqueado/liberado;
+- resposta correta/errada;
+- final da fase;
+- final do jogo.
 
-Sempre pense no celular:
+Use:
+
+- particulas pequenas;
+- pulsos de brilho;
+- sons gerados por codigo;
+- pequenos deslocamentos ou escalas visuais;
+- camera muito sutil, sem enjoo e sem atrapalhar pulo.
+
+Tudo deve continuar barato para web.
+
+## Prioridade 8 - Final Que Da Arrepio Bom
+
+A tela final deve parecer uma chegada, nao apenas um placar.
+
+Ideias:
+
+- retrospectiva visual dos blocos historicos;
+- selos conquistados com brilho;
+- contagem de pilulas, lembrancas e fases;
+- frase final sobre aprender historia com curiosidade e respeito;
+- convite para revisitar fases incompletas;
+- mini-mapa completo;
+- destaque para "Caderno de Viagem";
+- som final leve e alegre.
+
+Nao use texto longo. A emocao deve vir da composicao, dos selos e da memoria da jornada.
+
+## Prioridade 9 - Mobile E Acessibilidade
+
+Cada salto visual precisa funcionar em celular paisagem.
+
+Cuidados:
 
 - botoes grandes;
 - toque tolerante;
 - textos curtos;
-- quiz facil de tocar;
-- menu e pausa escaneaveis;
-- Mig visivel no inicio;
-- painel historico fixo e translucido quando necessario;
-- nada importante atras dos controles.
+- contraste forte;
+- nada importante atras dos controles;
+- HUD e mensagem historica sempre legiveis;
+- quiz com alternativas grandes;
+- colecao e linha do tempo rolaveis;
+- evitar elementos pequenos demais;
+- preservar orientacao HTML acessivel fora do canvas.
 
-Para acessibilidade:
+Nao dependa apenas de cor para status. Use texto, icone, forma ou padrao.
 
-- preserve orientacao HTML fora do canvas;
-- mantenha contraste bom;
-- evite texto pequeno;
-- preserve atalhos de teclado;
-- nao dependa apenas de cor para informar estado.
+## Ciclos Criativos De Alto Impacto
 
-## Ideias De Ciclos Criativos
+Escolha um ciclo por rodada, implemente e valide. Se o usuario pedir "todos", faca em lotes coerentes, sempre mantendo o jogo funcional.
 
-Escolha uma por rodada.
+### Ciclo A - Abertura De Aventura
 
-### Ciclo A - Fase 1 Inesquecivel
+Transformar menu e entrada na fase 1 em um convite emocional: caminho animado, brilho discreto, chamada curta, botoes mais vivos, transicao suave para introducao.
 
-Dar ao litoral inicial mais vida: ondas em camadas, brilho do sol no mar, conchas discretas, passaros e uma primeira pilula com destaque especial. Nao mudar dificuldade.
+### Ciclo B - Ritual Da Primeira Descoberta
 
-Estado atual: primeira versao implementada com ondas em camadas, brilho no mar, conchas discretas, mais passaros e destaque visual na primeira pilula. Proximas rodadas podem polir vegetacao e profundidade sem mexer nas plataformas.
+Criar celebracao especial para a primeira pilula da fase 1 e para o primeiro portal: particulas, som, fala curta do Guardiao e feedback visual claro.
 
-### Ciclo B - Guardiao Guia
+### Ciclo C - Caderno De Viagem 1.0
 
-Adicionar uma fala curta do Guardiao antes da pergunta e uma fala de celebracao apos acerto. Manter quiz simples e legivel.
+Reorganizar a colecao para parecer um caderno: capa, abas simples, descoberta recente, lembrancas, selos e progresso por bloco em composicao mais bonita.
 
-Estado atual: primeira versao implementada com fala acolhedora por bloco historico, foco curto na pilula usada pela pergunta, som de portal e celebracao apos acerto. Proximas rodadas podem variar mais as falas.
+### Ciclo D - Fase Ancora: Litoral Memoravel
 
-### Ciclo C - Lembrancas Da Viagem
+Elevar a fase 1 com profundidade visual, objetos observaveis, momento de descoberta opcional e melhorias de feedback sem mudar plataformas.
 
-Transformar missoes extras em "lembrancas" simples mostradas na colecao ou tela final. Comecar com contador e destaque textual.
+### Ciclo E - Fase Ancora: Engenho Com Cuidado
 
-Estado atual: a colecao e a tela final ja mostram as missoes extras observadas como lembrancas da viagem da sessao, com cards proprios na colecao. Proximas rodadas podem avaliar persistencia no save.
+Polir fase 2 com visual mais claro, areas de cuidado mais compreensiveis, objeto observavel e linguagem historica respeitosa.
 
-### Ciclo D - Colecao Album Vivo
+### Ciclo F - Fase Ancora: Memoria E Direitos
 
-Melhorar a colecao com mini-selos, descoberta favorita, progresso por bloco e celebracao 10/10 mais clara.
+Polir fases sensiveis, especialmente abolicao, ditadura e redemocratizacao, com luz suave, memoria, livros, cartazes civicos e textos cuidadosos.
 
-Estado atual: primeira versao implementada com descoberta recente destacada, cards de lembrancas, progresso por fase, celebracao 10/10 e selos por blocos historicos. Proximas rodadas podem adicionar microanimacao aos selos.
+### Ciclo G - Guardiao Vivo
 
-### Ciclo E - Linha Do Tempo Como Mapa
+Dar mais presenca ao Guardiao: retrato simples, falas por bloco, reacao de erro/acerto, som proprio e portal mais expressivo.
 
-Fazer a linha do tempo parecer um mapa de aventuras, com marcador da proxima fase, icones por bloco e uma frase curta por periodo.
+### Ciclo H - Mapa Da Jornada
 
-Estado atual: primeira versao implementada com caminho pontilhado, bussola simples, marcadores de proxima aventura, icones e frases por bloco historico. Proximas rodadas podem polir o desenho sem reduzir legibilidade.
+Melhorar linha do tempo como mapa: caminho mais visual, voce-esta-aqui, proxima parada, selos por bloco e pre-visualizacao curta.
 
-### Ciclo F - Final De Jornada
+### Ciclo I - Momentos Observaveis
 
-Deixar a tela final mais emocionante: selos conquistados, descobertas da sessao, lembrancas, mensagem final e convite para revisitar fases.
+Substituir microeventos textuais por objetos observaveis em 3 fases, com registro no Caderno de Viagem. Depois expandir para as demais.
 
-Estado atual: primeira versao implementada com medalha visual, selos, descobertas da sessao, lembrancas da viagem, mensagem final e convite para revisitar. Proximas rodadas podem melhorar celebracao visual.
+### Ciclo J - Final Retrospectivo
 
-### Ciclo G - Fase 2 Mais Clara
+Criar final mais emocionante com mini-retrospectiva, selos, lembrancas, resumo visual e convite para revisitar.
 
-Polir visual e legibilidade da fase 2, revisando checkpoints, pilulas e areas de cuidado com smoke tests.
+### Ciclo K - Juiciness Seguro
 
-Estado atual: primeira versao implementada com canavial mais visivel, detalhes de engenho, placas de cuidado e smoke test especifico para checkpoints da fase 2. Proximas rodadas podem revisar ritmo visual sem alterar dificuldade.
+Adicionar mais vida a coleta, checkpoint, portal, album completo e selos com particulas, pulso, sons e animacoes discretas.
 
-### Ciclo H - Controles Mais Macios
+### Ciclo L - Mobile Premium
 
-Ajustar sensacao de movimento e pulo de forma conservadora, com teste manual em fase 1 e 2. Evitar deixar dificil.
+Revisar toque, legibilidade, colecao, linha do tempo e quiz em layout mobile. Melhorar alvos de toque e reduzir qualquer sobreposicao.
 
-Estado atual: primeira versao implementada com pulo levemente mais alto, coyote time/buffer um pouco maiores, resposta touch no ar mais viva e margem extra nos botoes virtuais. Proximas rodadas devem ajustar so com teste manual.
+### Ciclo M - Arquitetura Para Crescer
 
-### Ciclo I - Sons De Descoberta
+Se `src/game.py` estiver dificultando progresso, extraia apenas uma parte pequena e segura, como desenho da colecao, linha do tempo ou final. Preserve comportamento e testes.
 
-Melhorar sons gerados por codigo para coleta, checkpoint, portal, acerto e selo. O jogo deve seguir silencioso se audio falhar.
+## Banco De Ideias Por Bloco Historico
 
-Estado atual: primeira versao implementada com sinais mais ricos para coleta, checkpoint e acerto, alem de novos sons para portal e dica do Guardiao. O jogo continua tolerante a falha de audio.
+Use como inspiracao visual, nao como checklist obrigatorio.
 
-### Ciclo J - Microeventos De Fase
+### Primeiros Contatos
 
-Criar pequenos acontecimentos nao perigosos: uma placa que aparece, um brilho no marco, uma onda mais forte, uma luz no portal, uma frase curta ao observar algo.
+- mar com brilho;
+- vento em folhas;
+- conchas;
+- barco distante;
+- marco de memoria;
+- frase sobre muitos povos ja viverem aqui.
 
-Estado atual: primeira versao implementada com um microevento contextual por fase, disparado uma vez por visita, com mensagem curta e particulas leves. Proximas rodadas podem trocar eventos por objetos observaveis dedicados.
+### Brasil Colonial
+
+- canavial;
+- roda d'agua;
+- caminhos de terra;
+- mapas;
+- vilas;
+- pedras brilhantes discretas;
+- frase sobre trabalho, encontros, mudancas e cuidado.
+
+### Independencia E Imperio
+
+- cartas;
+- livros;
+- jardins;
+- bancos de praca;
+- lampioes;
+- bandeiras discretas;
+- frase sobre escolhas, mudancas e perguntas.
+
+### Republica E Democracia
+
+- jornais;
+- radio;
+- trilhos;
+- cartazes civicos;
+- praca de conversa;
+- escola;
+- frase sobre participacao, direitos e memoria.
+
+### Brasil De Hoje
+
+- escola;
+- tecnologia;
+- natureza;
+- conexoes;
+- diversidade;
+- ambiente urbano e verde;
+- frase sobre o presente tambem fazer parte da historia.
 
 ## Validacoes Obrigatorias
 
@@ -329,73 +409,97 @@ python -m compileall main.py src
 .\.venv_brasil\Scripts\python.exe scripts\smoke_tests.py
 ```
 
+Se o Python global nao tiver `pygame-ce`, registre isso e use a venv.
+
 Se alterar build web, HTML, save web, touch, carregamento, fullscreen ou publicacao:
 
 ```powershell
 .\.venv_brasil\Scripts\python.exe scripts\build_pygbag_clean.py
 ```
 
-Se alterar interface, visual ou mobile:
+Se alterar interface, visual, fases, mobile ou telas:
 
-- faca checagem visual local, screenshot ou teste manual;
-- para navegador, use Selenium instalado na venv;
-- nao adicione Selenium ao `requirements.txt`.
+- gere screenshot local ou faca teste manual;
+- confira fase 1 e fase afetada;
+- confira menu, colecao, linha do tempo, quiz e final se tocados;
+- em navegador, use Selenium ja instalado na venv quando fizer sentido;
+- nao adicione Selenium ao projeto.
 
-Teste Selenium recomendado para web:
+## Smoke Tests Devem Evoluir
 
-- abrir build local ou URL publicada;
-- confirmar titulo da aba;
-- confirmar canvas;
-- confirmar loading HTML;
-- confirmar manifest;
-- confirmar `window.caminhosTouchContext` em mobile emulado;
-- confirmar helpers `window.caminhosReadSave()` e `window.caminhosWriteSave(data)`;
-- confirmar que `abertura.png` do manifest responde 200 no build final.
+Atualize `scripts/smoke_tests.py` quando adicionar:
+
+- novo dado obrigatorio por fase;
+- novo tipo de objeto observavel;
+- nova regra de colecao;
+- nova regra de save;
+- nova regra de touch;
+- novo requisito de quiz/Guardiao;
+- nova regra de posicionamento de item;
+- nova tela ou fluxo importante.
+
+Smoke test nao substitui teste visual. Use os dois quando mexer em interface.
 
 ## Teste Manual Minimo
 
-Quando a mudanca tocar visual, fase ou gameplay:
+Quando mexer em visual, gameplay ou fluxo:
 
-1. Abrir o jogo local.
-2. Confirmar menu e abertura.
-3. Iniciar fase 1.
+1. Abrir o jogo.
+2. Confirmar tela inicial.
+3. Entrar na fase 1.
 4. Mover e pular.
 5. Coletar uma pilula.
-6. Observar feedback.
-7. Tocar no marcador extra, se existir.
-8. Abrir colecao.
+6. Observar feedback de coleta.
+7. Acionar um momento observavel ou missao extra.
+8. Abrir Caderno/Colecao.
 9. Pausar e continuar.
-10. Encostar no portal bloqueado.
-11. Liberar portal e responder o Guardiao.
-12. Conferir fase 2 se mudou layout, player ou dificuldade.
-13. Em touch/emulacao, conferir `<`, `>`, `Pular`, `P` e `C`.
+10. Tocar no portal bloqueado.
+11. Coletar tudo e liberar portal.
+12. Responder o Guardiao com erro e acerto.
+13. Confirmar conclusao de fase.
+14. Abrir linha do tempo.
+15. Conferir toque se a mudanca afetar mobile.
+16. Conferir fase 2 se mexer em fisica, layout, HUD ou feedback geral.
+17. Conferir tela final se mexer em recompensas ou progresso.
 
-## Como Decidir A Proxima Melhoria
+## Como Escolher O Proximo Passo
 
-Use esta ordem:
+Use esta ordem de decisao:
 
 1. Se algo quebra web/mobile/save, corrija.
-2. Se a crianca nao entende o que fazer, melhore onboarding.
-3. Se a fase 1 parece simples demais, polir fase 1.
-4. Se falta motivacao para continuar, melhorar recompensas.
-5. Se uma fase parece generica, dar identidade visual.
-6. Se o Guardiao parece seco, torna-lo mais guia.
-7. Se a colecao parece passiva, torná-la mais celebrativa.
-8. Se controles incomodam, ajustar sensacao com cuidado.
-9. Se `src/game.py` impedir progresso, separar uma parte pequena com testes.
+2. Se o primeiro minuto ainda nao encanta, melhore entrada e fase 1.
+3. Se a colecao nao da vontade de completar, evolua Caderno de Viagem.
+4. Se o Guardiao parece seco, de mais presenca a ele.
+5. Se as fases parecem parecidas, escolha uma fase ancora e torne memoravel.
+6. Se falta emocao no progresso, melhore linha do tempo, selos e final.
+7. Se a jogabilidade incomoda, ajuste controle com cuidado e teste manual.
+8. Se `src/game.py` travar evolucao, extraia uma parte pequena com testes.
 
-## Formato De Entrega
+## Criterios De Aceite Para Um Grande Salto
 
-Ao final de cada ciclo, responda de forma curta:
+Considere que uma rodada grande foi bem sucedida quando:
+
+- o jogo continua abrindo e passando smoke tests;
+- pelo menos uma tela ou fase ficou visivelmente mais memoravel;
+- a crianca recebe feedback mais claro e alegre;
+- a linguagem historica continua respeitosa;
+- mobile continua jogavel;
+- o save nao quebra;
+- o build web limpo continua preservado;
+- docs e testes refletem o novo comportamento.
+
+## Formato De Entrega Para O Agente
+
+Ao final, responda de forma curta:
 
 - o que mudou;
-- por que deixa o jogo mais atraente para criancas;
-- arquivos principais alterados;
+- qual sensacao nova isso traz para a crianca;
+- quais arquivos foram alterados;
 - como testar;
 - validacoes executadas;
 - o que nao foi possivel validar;
 - proxima melhoria recomendada.
 
-## Ultima Lembranca
+## Ultima Direcao Criativa
 
-Se a melhoria deixa a crianca curiosa, segura e feliz por aprender, ela esta no caminho certo. Prefira uma pequena cena bonita e funcional hoje a um sistema enorme que demora e quebra. O jogo deve crescer como uma colecao de bons momentos: simples, vivos, respeitosos e gostosos de jogar.
+O jogo deve crescer como um caderno de memorias: cada fase deixa uma imagem, uma frase, um som e uma pequena conquista. Busque encanto sem exagero, emocao sem peso, aprendizado sem sermão e beleza sem quebrar a web. O melhor salto sera aquele que fizer uma crianca pensar: "quero ver a proxima parte da historia".
