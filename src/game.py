@@ -12,10 +12,12 @@ from src.levels import (
     get_history_blocks,
     get_level_count,
     get_level_fragment_count,
+    get_level_pill_bank,
     get_level_pill_count,
     get_level_pill_infos,
     get_level_plain_title,
     get_level_title,
+    get_side_mission_summary,
     get_total_fragment_count,
 )
 from src.player import Player
@@ -82,6 +84,7 @@ class Game:
         self.tutorial_actions = self._new_tutorial_actions()
         self.side_missions_completed: set[int] = set()
         self.side_mission_completed = False
+        self.micro_events_seen: set[int] = set()
         self.session_discovery_count = 0
         self.recent_collection_entry = None
         self.selected_quiz_option = 0
@@ -685,6 +688,7 @@ class Game:
         self._collect_fragments()
         self._update_checkpoints()
         self._update_side_mission()
+        self._update_micro_event()
 
         if self._should_restart_attempt():
             self._reset_attempt("Mig voltou ao ponto de retorno para tentar com mais cuidado.")
@@ -823,6 +827,49 @@ class Game:
         )
         self.sounds.play("bonus")
 
+    def _update_micro_event(self):
+        if self.level_index in self.micro_events_seen:
+            return
+        if self.feedback_message_timer > 0 or self.fragment_message_timer > 0:
+            return
+
+        trigger_x, message, color = self._micro_event_data()
+        if self.player.rect.centerx < trigger_x:
+            return
+
+        self.micro_events_seen.add(self.level_index)
+        self.feedback_message = message
+        self.feedback_message_timer = 3.2
+        self._spawn_effect_burst(
+            self.player.rect.midtop,
+            color,
+            count=14,
+            radius=4,
+        )
+
+    def _micro_event_data(self) -> tuple[int, str, tuple[int, int, int]]:
+        messages = (
+            ("Uma onda desenhou espuma no caminho.", (126, 198, 214)),
+            ("Folhas de cana balançam e mostram o rumo.", (124, 184, 92)),
+            ("Um mapa antigo aponta novas trilhas.", (226, 202, 128)),
+            ("Uma pedra brilha de leve nas montanhas.", (218, 196, 118)),
+            ("Uma carta na praça lembra ideias em movimento.", (226, 202, 128)),
+            ("Um livro aberto convida Mig a observar.", (204, 222, 236)),
+            ("Um marco verde destaca uma mudança política.", (126, 176, 92)),
+            ("Uma luz de jardim ajuda a notar continuidades.", (248, 220, 116)),
+            ("Uma memória de liberdade pede respeito.", (238, 232, 210)),
+            ("Um sino distante marca novas escolhas.", (226, 168, 74)),
+            ("Trilhos e café mostram caminhos do período.", (156, 118, 72)),
+            ("Um rádio antigo leva notícias pela cidade.", (170, 180, 178)),
+            ("Cartazes lembram diálogo e participação.", (190, 206, 146)),
+            ("Luzes suaves lembram direitos e memória.", (238, 232, 210)),
+            ("Um livro cidadão brilha na praça.", (82, 150, 214)),
+            ("Conexões do presente acendem no caminho.", (82, 150, 214)),
+        )
+        message, color = messages[self.level_index % len(messages)]
+        trigger_x = min(self.level.width - 420, max(420, int(self.level.width * 0.28)))
+        return trigger_x, message, color
+
     def _all_fragments_collected(self) -> bool:
         return len(self.fragments) == 0
 
@@ -839,10 +886,32 @@ class Game:
     def _guardian_intro_text(self) -> str:
         block = self._history_block_for_level(self.level_index)
         if block:
-            return f"Vamos lembrar com calma: {block.phrase}"
+            guide_lines = {
+                "Primeiros contatos": "Respire e lembre: muitos povos já viviam aqui.",
+                "Brasil colonial": "Vamos olhar para trabalho, caminhos e cuidado.",
+                "Independência e Império": "Toda mudança pede perguntas e respeito.",
+                "República e democracia": "Direitos e memória ajudam a escolher melhor.",
+                "Brasil de hoje": "O presente também faz parte da história.",
+            }
+            return guide_lines.get(block.name, f"Vamos lembrar com calma: {block.phrase}")
         return "Vamos lembrar com calma uma descoberta importante."
 
+    def _guardian_focus_text(self) -> str:
+        if self.level.quiz_pill_index is None:
+            return "A pergunta vem de uma descoberta desta fase."
+
+        bank = get_level_pill_bank(self.level_index)
+        if not 0 <= self.level.quiz_pill_index < len(bank):
+            return "A pergunta vem de uma descoberta desta fase."
+
+        info = bank[self.level.quiz_pill_index].info
+        short_info = self._wrap_text(info, 54)[0]
+        return f"Lembre da pílula: {short_info}"
+
     def _guardian_success_text(self) -> str:
+        block = self._history_block_for_level(self.level_index)
+        if block:
+            return f"Muito bem! O Guardião celebrou o bloco {self._history_block_display_name(block)}."
         return "Muito bem! O Guardião abriu o portal com alegria."
 
     def _open_quiz_or_complete(self):
@@ -858,7 +927,7 @@ class Game:
         self.feedback_message_timer = 2.2
         self._clear_touch_controls()
         self.state = STATE_QUIZ
-        self.sounds.play("select")
+        self.sounds.play("portal")
 
     def _submit_quiz_answer(self, option_index: int):
         quiz = self.level.quiz
@@ -877,7 +946,7 @@ class Game:
 
         self.quiz_feedback = f"Quase! Você está aprendendo. {quiz.hint} Tente de novo."
         self.quiz_feedback_timer = 7.5
-        self.sounds.play("blocked")
+        self.sounds.play("hint")
 
     def _update_quiz_feedback(self, dt: float):
         if self.quiz_feedback_timer <= 0:
@@ -1145,6 +1214,7 @@ class Game:
         self.session_pill_choices.clear()
         self.session_quiz_choices.clear()
         self.side_missions_completed.clear()
+        self.micro_events_seen.clear()
         self.session_discovery_count = 0
         self.recent_phase_album_completed = None
         collection_entries = list(self.collection_entries)
@@ -1219,7 +1289,8 @@ class Game:
 
     def _gameplay_touch_action_at(self, position: tuple[int, int]) -> str | None:
         for action, rect in self._touch_control_rects().items():
-            if rect.collidepoint(position):
+            hit_rect = rect.inflate(14, 12)
+            if hit_rect.collidepoint(position):
                 return action
         return None
 
@@ -1309,7 +1380,8 @@ class Game:
         return self._centered_rect(840, 430)
 
     def _collection_rows(self) -> list[tuple[str, str]]:
-        rows = []
+        rows = self._side_mission_memory_rows()
+        rows.extend(self._recent_discovery_rows())
         entries_by_level: dict[str, list[str]] = {}
         for level_title, info in self.collection_entries:
             entries_by_level.setdefault(level_title, []).append(info)
@@ -1333,6 +1405,42 @@ class Game:
                 rows.append(("empty", "Ainda sem pílulas descobertas nesta fase."))
 
         return rows
+
+    def _side_mission_memory_rows(self) -> list[tuple[str, str]]:
+        completed_indexes = [
+            index
+            for index in sorted(self.side_missions_completed)
+            if 0 <= index < get_level_count()
+        ]
+        rows = [
+            (
+                "memory_header",
+                f"Lembranças da viagem: {len(completed_indexes)}/{get_level_count()} observadas",
+            )
+        ]
+        if not completed_indexes:
+            rows.append(
+                (
+                    "memory_empty",
+                    "Observe marcadores Extra para guardar lembranças nesta sessão.",
+                )
+            )
+            return rows
+
+        for index in completed_indexes:
+            title, complete_message = get_side_mission_summary(index)
+            rows.append(("memory_item", f"{index + 1:02d}. {title} - {complete_message}"))
+        return rows
+
+    def _recent_discovery_rows(self) -> list[tuple[str, str]]:
+        if not self.recent_collection_entry:
+            return []
+
+        level_title, info = self.recent_collection_entry
+        return [
+            ("favorite_header", "Descoberta recente da jornada"),
+            ("favorite_item", f"{level_title}: {info}"),
+        ]
 
     def _history_block_progress(self):
         progress = []
@@ -1975,6 +2083,28 @@ class Game:
         self.screen.blit(key_surface, key_surface.get_rect(center=key_box.center))
         self.screen.blit(label_surface, (x + 88, y + 6))
 
+    def _draw_timeline_map_details(self, box: pygame.Rect):
+        for offset in range(0, box.width - 120, 86):
+            x = box.x + 80 + offset
+            y = box.y + 70 + (offset // 86 % 2) * 8
+            pygame.draw.circle(self.screen, (226, 214, 172), (x, y), 3)
+            if offset:
+                pygame.draw.line(self.screen, (226, 214, 172), (x - 70, y - 8), (x - 8, y), 2)
+
+        compass_center = (box.right - 84, box.y + 46)
+        pygame.draw.circle(self.screen, (238, 222, 166), compass_center, 22)
+        pygame.draw.circle(self.screen, (128, 116, 86), compass_center, 22, 2)
+        pygame.draw.polygon(
+            self.screen,
+            (226, 168, 74),
+            [
+                (compass_center[0], compass_center[1] - 16),
+                (compass_center[0] + 6, compass_center[1] + 4),
+                (compass_center[0], compass_center[1] + 1),
+                (compass_center[0] - 6, compass_center[1] + 4),
+            ],
+        )
+
     def _draw_level_select(self):
         box = self._level_select_box_rect()
         pygame.draw.rect(self.screen, (248, 238, 190), box)
@@ -1982,6 +2112,7 @@ class Game:
 
         title_surface = self.big_font.render("Linha do tempo", True, TEXT_COLOR)
         self.screen.blit(title_surface, title_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 46)))
+        self._draw_timeline_map_details(box)
 
         visible_rows = 7
         first_index = self.level_select_scroll
@@ -2282,7 +2413,18 @@ class Game:
                 guardian_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 76 + index * 23)),
             )
 
-        question_y = box.y + 126
+        focus_surface = self._render_fitting_text(
+            self._guardian_focus_text(),
+            (72, 76, 70),
+            box.width - 112,
+            [self.small_font],
+        )
+        self.screen.blit(
+            focus_surface,
+            focus_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 120)),
+        )
+
+        question_y = box.y + 140
         for index, line in enumerate(self._wrap_text(quiz.question, 68)[:2]):
             question_surface = self.font.render(line, True, TEXT_COLOR)
             self.screen.blit(
@@ -2467,7 +2609,110 @@ class Game:
         content_x = box.x + 108
         content_width = box.width - 152
         for row_type, text in visible_rows:
-            if row_type == "header":
+            if row_type == "memory_header":
+                header_box = pygame.Rect(content_x, y - 3, content_width, 32)
+                pygame.draw.rect(self.screen, (218, 232, 190), header_box, border_radius=6)
+                pygame.draw.rect(self.screen, (80, 126, 78), header_box, 2, border_radius=6)
+                pygame.draw.circle(self.screen, (255, 231, 142), (header_box.x + 17, header_box.centery), 8)
+                pygame.draw.circle(self.screen, (80, 126, 78), (header_box.x + 17, header_box.centery), 8, 2)
+                surface = self._render_fitting_text(
+                    text,
+                    TEXT_COLOR,
+                    header_box.width - 52,
+                    [self.font, self.small_font],
+                )
+                self.screen.blit(surface, surface.get_rect(midleft=(header_box.x + 34, header_box.centery)))
+                y += 40
+            elif row_type == "memory_empty":
+                empty_box = pygame.Rect(content_x + 18, y, content_width - 36, 42)
+                pygame.draw.rect(self.screen, (240, 246, 222), empty_box, border_radius=7)
+                pygame.draw.rect(self.screen, (112, 146, 92), empty_box, 1, border_radius=7)
+                surface = self._render_fitting_text(
+                    text,
+                    (82, 106, 72),
+                    empty_box.width - 28,
+                    [self.font, self.small_font],
+                )
+                self.screen.blit(surface, surface.get_rect(center=empty_box.center))
+                y += 50
+            elif row_type == "memory_item":
+                card = pygame.Rect(content_x + 18, y, content_width - 36, 54)
+                pygame.draw.rect(self.screen, (240, 248, 220), card, border_radius=7)
+                pygame.draw.rect(self.screen, (80, 126, 78), card, 2, border_radius=7)
+                pygame.draw.circle(self.screen, (255, 205, 86), (card.x + 24, card.y + 27), 11)
+                pygame.draw.circle(self.screen, (80, 126, 78), (card.x + 24, card.y + 27), 11, 2)
+                pygame.draw.line(self.screen, TEXT_COLOR, (card.x + 18, card.y + 27), (card.x + 23, card.y + 33), 2)
+                pygame.draw.line(self.screen, TEXT_COLOR, (card.x + 23, card.y + 33), (card.x + 31, card.y + 20), 2)
+                for index, line in enumerate(self._wrap_text(text, 70)[:2]):
+                    surface = self._render_fitting_text(
+                        line,
+                        (58, 78, 58),
+                        card.width - 62,
+                        [self.font, self.small_font],
+                    )
+                    self.screen.blit(surface, (card.x + 48, card.y + 7 + index * 22))
+                y += 60
+            elif row_type == "favorite_header":
+                header_box = pygame.Rect(content_x, y - 3, content_width, 32)
+                pygame.draw.rect(self.screen, (252, 236, 154), header_box, border_radius=6)
+                pygame.draw.rect(self.screen, (226, 168, 74), header_box, 2, border_radius=6)
+                pygame.draw.circle(self.screen, (248, 218, 92), (header_box.x + 17, header_box.centery), 8)
+                pygame.draw.circle(self.screen, TEXT_COLOR, (header_box.x + 17, header_box.centery), 8, 2)
+                surface = self._render_fitting_text(
+                    text,
+                    TEXT_COLOR,
+                    header_box.width - 52,
+                    [self.font, self.small_font],
+                )
+                self.screen.blit(surface, surface.get_rect(midleft=(header_box.x + 34, header_box.centery)))
+                y += 40
+            elif row_type == "favorite_item":
+                card = pygame.Rect(content_x + 18, y, content_width - 36, 54)
+                pygame.draw.rect(self.screen, (255, 248, 218), card, border_radius=7)
+                pygame.draw.rect(self.screen, (226, 168, 74), card, 2, border_radius=7)
+                pygame.draw.polygon(
+                    self.screen,
+                    FRAGMENT_COLOR,
+                    [
+                        (card.x + 24, card.y + 13),
+                        (card.x + 29, card.y + 24),
+                        (card.x + 41, card.y + 24),
+                        (card.x + 31, card.y + 31),
+                        (card.x + 35, card.y + 43),
+                        (card.x + 24, card.y + 36),
+                        (card.x + 13, card.y + 43),
+                        (card.x + 17, card.y + 31),
+                        (card.x + 7, card.y + 24),
+                        (card.x + 19, card.y + 24),
+                    ],
+                )
+                pygame.draw.polygon(
+                    self.screen,
+                    FRAGMENT_OUTLINE,
+                    [
+                        (card.x + 24, card.y + 13),
+                        (card.x + 29, card.y + 24),
+                        (card.x + 41, card.y + 24),
+                        (card.x + 31, card.y + 31),
+                        (card.x + 35, card.y + 43),
+                        (card.x + 24, card.y + 36),
+                        (card.x + 13, card.y + 43),
+                        (card.x + 17, card.y + 31),
+                        (card.x + 7, card.y + 24),
+                        (card.x + 19, card.y + 24),
+                    ],
+                    2,
+                )
+                for index, line in enumerate(self._wrap_text(text, 68)[:2]):
+                    surface = self._render_fitting_text(
+                        line,
+                        (64, 68, 72),
+                        card.width - 62,
+                        [self.font, self.small_font],
+                    )
+                    self.screen.blit(surface, (card.x + 52, card.y + 7 + index * 22))
+                y += 60
+            elif row_type == "header":
                 header_box = pygame.Rect(content_x, y - 3, content_width, 32)
                 is_album_complete = "Álbum completo!" in text
                 header_fill = (252, 236, 154) if is_album_complete else (236, 216, 158)
@@ -2648,6 +2893,13 @@ class Game:
         box = self._final_box_rect()
         pygame.draw.rect(self.screen, (248, 238, 190), box, border_radius=8)
         pygame.draw.rect(self.screen, TEXT_COLOR, box, 2, border_radius=8)
+        pygame.draw.circle(self.screen, (255, 238, 154), (box.x + 62, box.y + 50), 28)
+        pygame.draw.circle(self.screen, (226, 168, 74), (box.x + 62, box.y + 50), 28, 2)
+        pygame.draw.polygon(
+            self.screen,
+            (226, 168, 74),
+            [(box.x + 46, box.y + 72), (box.x + 62, box.y + 104), (box.x + 78, box.y + 72)],
+        )
 
         title_surface = self.big_font.render("Jornada concluída!", True, TEXT_COLOR)
         self.screen.blit(title_surface, title_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 44)))
@@ -2655,7 +2907,7 @@ class Game:
         lines = [
             "Mig viajou de 1500 até o Brasil contemporâneo.",
             "A história do Brasil continua sendo estudada, contada e vivida.",
-            "Cada pílula lembra que aprender história pede curiosidade e respeito.",
+            "Você montou um mapa de descobertas com curiosidade e respeito.",
         ]
         for index, line in enumerate(lines):
             surface = self.font.render(line, True, TEXT_COLOR)
@@ -2700,9 +2952,15 @@ class Game:
             TEXT_COLOR,
         )
         side_surface = self.font.render(
-            f"Missões extras observadas: {len(self.side_missions_completed)}/{get_level_count()}",
+            f"Lembranças da viagem: {len(self.side_missions_completed)}/{get_level_count()}",
             True,
             TEXT_COLOR,
+        )
+        closing_surface = self._render_fitting_text(
+            "Mensagem final: revisite fases, complete álbuns e conte o que aprendeu.",
+            TEXT_COLOR,
+            box.width - 72,
+            [self.font, self.small_font],
         )
         credits_surface = self._render_fitting_text(
             "Créditos: jogo educativo criado com Python, Pygame-CE e carinho pelo aprendizado.",
@@ -2717,13 +2975,16 @@ class Game:
             [self.font, self.small_font],
         )
 
-        self.screen.blit(completed_surface, completed_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 260)))
-        self.screen.blit(collected_surface, collected_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 286)))
-        self.screen.blit(seals_surface, seals_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 312)))
-        self.screen.blit(session_surface, session_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 338)))
-        self.screen.blit(side_surface, side_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 364)))
-        self.screen.blit(credits_surface, credits_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 392)))
-        self.screen.blit(help_surface, help_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 414)))
+        left_stat_x = SCREEN_WIDTH // 2 - 210
+        right_stat_x = SCREEN_WIDTH // 2 + 210
+        self.screen.blit(completed_surface, completed_surface.get_rect(center=(left_stat_x, box.y + 260)))
+        self.screen.blit(collected_surface, collected_surface.get_rect(center=(right_stat_x, box.y + 260)))
+        self.screen.blit(seals_surface, seals_surface.get_rect(center=(left_stat_x, box.y + 286)))
+        self.screen.blit(session_surface, session_surface.get_rect(center=(right_stat_x, box.y + 286)))
+        self.screen.blit(side_surface, side_surface.get_rect(center=(SCREEN_WIDTH // 2, box.y + 316)))
+        self.screen.blit(closing_surface, closing_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 82)))
+        self.screen.blit(credits_surface, credits_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 62)))
+        self.screen.blit(help_surface, help_surface.get_rect(center=(SCREEN_WIDTH // 2, box.bottom - 30)))
 
     def _wrap_text(self, text: str, max_chars: int) -> list[str]:
         lines = []

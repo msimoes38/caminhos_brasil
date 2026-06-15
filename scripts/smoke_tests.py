@@ -35,7 +35,13 @@ from src.levels import (
     get_level_pill_bank,
     get_level_pill_count,
 )
-from src.settings import GRAVITY, PLAYER_JUMP_SPEED, PLAYER_SPEED
+from src.settings import (
+    GRAVITY,
+    PLAYER_COYOTE_TIME,
+    PLAYER_JUMP_BUFFER_TIME,
+    PLAYER_JUMP_SPEED,
+    PLAYER_SPEED,
+)
 
 
 PLAYER_RECT_SIZE = (36, 56)
@@ -108,17 +114,21 @@ def main() -> int:
             errors.append(f"{label}: missao extra sobre area de cuidado: {mission.rect}.")
         if any(mission.rect.colliderect(fragment.rect) for fragment in level.fragments):
             errors.append(f"{label}: missao extra sobre pilula ativa: {mission.rect}.")
+        if index == 1 and len(level.checkpoints) < 2:
+            errors.append("Fase 2: esperados checkpoints suficientes para orientar o engenho.")
 
     _check_progress_store(errors)
     _check_touch_detection(errors)
     _check_build_web_bridge_patch(errors)
     _check_history_blocks(errors)
+    _check_control_tuning(errors)
 
     game = Game()
     if game.menu_image is None:
         errors.append("Abertura nao carregou a partir de abertura.png.")
     if not game.player.animations:
         errors.append("Sprite do Mig nao carregou a partir de assets/images/personagem.png.")
+    _check_generated_sounds(game, errors)
 
     save_path = ROOT / "caminhos_brasil_save.json"
     save_before = save_path.read_bytes() if save_path.exists() else None
@@ -144,13 +154,16 @@ def main() -> int:
     print("- Missoes extras ficam proximas de plataformas alcancaveis e fora das areas de cuidado.")
     print("- Game inicializa em modo dummy com abertura e sprite do Mig.")
     print("- Guardiao do Portal pergunta sobre pilula ativa, aceita erro com dica e conclui com resposta correta.")
-    print("- Colecao historica acumula descobertas sem duplicar entradas e celebra album 10/10.")
+    print("- Colecao historica acumula descobertas, lembrancas da viagem e celebra album 10/10.")
     print("- ProgressStore salva/carrega no arquivo local, helper web e localStorage simulado com fallback seguro.")
     print("- Deteccao touch inicial reconhece flag JS, maxTouchPoints, matchMedia e ignora desktop simulado.")
     print("- Build limpo injeta a ponte web de touch/save e preserva o icone do manifest.")
     print("- Selos da jornada cobrem os blocos historicos sem repetir fases e com frase de contexto.")
+    print("- Controles mantem pulo, coyote time e buffer em faixa suave para criancas.")
+    print("- Sons gerados cobrem portal, dica do Guardiao, coleta, checkpoints e selos.")
     print("- Fluxo basico de menu, nova sessao, missao extra, checkpoint, cuidado, Esc e final passa sem alterar save.")
     print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo.")
+    print("- Microeventos de fase aparecem uma vez e a colecao destaca a descoberta recente.")
     print("- Mensagem historica mantem posicao fixa e usa translucidez quando Mig passa por tras.")
     return 0
 
@@ -519,6 +532,24 @@ def _check_history_blocks(errors: list[str]):
         errors.append("Selos da jornada repetem alguma fase em mais de um bloco.")
 
 
+def _check_control_tuning(errors: list[str]):
+    if not 640 <= PLAYER_JUMP_SPEED <= 660:
+        errors.append("Ajuste de pulo saiu da faixa suave esperada.")
+    if not 0.16 <= PLAYER_COYOTE_TIME <= 0.2:
+        errors.append("Coyote time saiu da faixa esperada para perdao no pulo.")
+    if not 0.18 <= PLAYER_JUMP_BUFFER_TIME <= 0.22:
+        errors.append("Buffer de pulo saiu da faixa esperada para toque/teclado.")
+
+
+def _check_generated_sounds(game: Game, errors: list[str]):
+    if not game.sounds.enabled:
+        return
+
+    for key in ("collect", "checkpoint", "correct", "portal", "hint", "seal"):
+        if key not in game.sounds.sounds:
+            errors.append(f"Som gerado ausente: {key}.")
+
+
 def _find_fragment_support(
     fragment_rect: pygame.Rect,
     platforms: list[pygame.Rect],
@@ -615,6 +646,13 @@ def _check_basic_flow(game: Game, errors: list[str]):
         for row_type, text in game._collection_rows()
     ):
         errors.append("Colecao nao destaca album completo ao reunir 10 descobertas.")
+    if game.recent_collection_entry is None:
+        game.recent_collection_entry = (game.level.title, first_info)
+    recent_info = game.recent_collection_entry[1]
+    if not any(row_type == "favorite_header" for row_type, _text in game._collection_rows()):
+        errors.append("Colecao nao destaca a descoberta recente da jornada.")
+    if not any(row_type == "favorite_item" and recent_info in text for row_type, text in game._collection_rows()):
+        errors.append("Colecao nao mostra a pilula recente em card proprio.")
 
     game._handle_keydown(pygame.K_RETURN)
     if game.state != STATE_PLAYING:
@@ -657,6 +695,29 @@ def _check_basic_flow(game: Game, errors: list[str]):
         errors.append("Missao extra nao atualizou o contador da sessao.")
     if not game.feedback_message:
         errors.append("Missao extra nao mostrou feedback positivo.")
+    memory_rows = game._collection_rows()
+    if not any(
+        row_type == "memory_header" and "Lembranças da viagem" in text
+        for row_type, text in memory_rows
+    ):
+        errors.append("Colecao nao mostra a secao de lembrancas da viagem.")
+    if not any(
+        row_type == "memory_item" and mission.complete_message in text
+        for row_type, text in memory_rows
+    ):
+        errors.append("Colecao nao mostra a missao extra observada como lembranca.")
+
+    trigger_x, micro_message, _micro_color = game._micro_event_data()
+    game.feedback_message = ""
+    game.feedback_message_timer = 0
+    game.fragment_message = ""
+    game.fragment_message_timer = 0
+    game.player.rect.centerx = trigger_x
+    game._update_micro_event()
+    if game.level_index not in game.micro_events_seen:
+        errors.append("Microevento da fase nao foi registrado ao passar pelo ponto de gatilho.")
+    if game.feedback_message != micro_message:
+        errors.append("Microevento da fase nao mostrou a mensagem contextual esperada.")
 
     checkpoint = game.level.checkpoints[0]
     game.player.rect.center = checkpoint.center
@@ -680,6 +741,8 @@ def _check_basic_flow(game: Game, errors: list[str]):
         errors.append("Guardiao do Portal perguntou sobre pilula fora da jogada.")
     if not game._guardian_intro_text():
         errors.append("Guardiao do Portal nao gerou texto de contexto.")
+    if not game._guardian_focus_text().startswith(("Lembre da", "A pergunta")):
+        errors.append("Guardiao do Portal nao mostrou foco na pilula usada pela pergunta.")
 
     quiz = game.level.quiz
     wrong_index = (quiz.correct_index + 1) % len(quiz.options)
@@ -755,6 +818,8 @@ def _check_touch_flow(game: Game, errors: list[str]):
     game._handle_pointer_up(right_rect.center, pointer_id)
 
     jump_rect = game._touch_control_rects()["jump"]
+    if game._gameplay_touch_action_at((jump_rect.left - 6, jump_rect.centery)) != "jump":
+        errors.append("Area de toque do pulo nao aceita margem proxima ao botao.")
     pointer_id = ("test", 3)
     game.player.on_ground = True
     game._handle_pointer_down(jump_rect.center, pointer_id)

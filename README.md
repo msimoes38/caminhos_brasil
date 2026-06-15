@@ -21,11 +21,11 @@ Principais recursos:
 - Menu mobile com botões grandes, faixa de orientação por toque e botão de tela cheia.
 - Detecção inicial de toque/mobile reforçada por flag JS do build (`window.caminhosTouchContext`) e fallbacks para `maxTouchPoints`, `pointer: coarse`, `hover: none`, `ontouchstart` ou user agent mobile.
 - Faixa inferior no menu cobre a chamada fixa da arte de abertura e evita instruções duplicadas.
-- Linha do tempo com fases bloqueadas, liberadas, próximas e concluídas, com ícones de blocos históricos e frase de contexto.
+- Linha do tempo com fases bloqueadas, liberadas, próximas e concluídas, com ícones de blocos históricos, frase de contexto, trilha pontilhada e bússola simples de mapa.
 - Dezesseis fases históricas jogáveis.
 - Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possível, preferindo helpers JS injetados pelo build limpo.
 - Opção de nova jornada temporária com `N`, sem apagar o save.
-- Movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo, com resposta de toque levemente mais rápida.
+- Movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo, com resposta e área de toque um pouco mais tolerantes.
 - Câmera horizontal.
 - HUD com ajuste discreto para manter títulos longos dentro do painel.
 - Controles por toque para jogar no celular em modo paisagem no navegador, posicionados para não cobrir Mig no início.
@@ -34,20 +34,21 @@ Principais recursos:
 - Seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas demais.
 - Pílulas históricas coletáveis com brilho, flutuação e mensagem "Você sabia?".
 - Missão extra opcional em cada fase, com marcador próprio, dica contextual e feedback positivo.
+- Microeventos leves por fase mostram pequenas observações do cenário uma vez por visita, sem perigo nem mudança de plataforma.
 - Feedback positivo de coleta, como "Boa descoberta!", e destaque do portal quando todas as pílulas da jogada são encontradas.
 - Mensagens históricas fixas no topo; se Mig passar por trás, o painel fica temporariamente translúcido.
-- Coleção histórica acumulativa com aparência de álbum, destaque da descoberta recente, progresso por fase, celebração de álbum 10/10 e selos por blocos históricos.
+- Coleção histórica acumulativa com aparência de álbum, lembranças da viagem, destaque da descoberta recente, progresso por fase, celebração de álbum 10/10 e selos por blocos históricos.
 - Introdução narrativa por fase.
 - Nota histórica e pergunta curta ao concluir fase.
 - Portal final liberado apenas após coletar todas as pílulas ativas da fase.
-- Guardião do Portal com frase de contexto do bloco histórico, pergunta sorteada apenas entre as pílulas que apareceram na jogada e dica acolhedora em caso de erro.
+- Guardião do Portal com fala acolhedora por bloco histórico, foco na pílula da pergunta, pergunta sorteada apenas entre as pílulas que apareceram na jogada e dica acolhedora em caso de erro.
 - Checkpoints seguros com bandeira animada.
 - Áreas de cuidado mais visíveis, com aviso antes do contato.
 - Tela de pausa com botões grandes para continuar, reiniciar, voltar ao menu e abrir a coleção.
-- Tela final com resumo de fases, pílulas descobertas, missões extras observadas, descobertas da sessão e selos da jornada conquistados.
-- Cenários por tema desenhados com Pygame, com detalhes visuais próprios de cada período, incluindo litoral inicial, engenho, memória cívica e Brasil contemporâneo.
+- Tela final com resumo de fases, pílulas descobertas, lembranças da viagem, descobertas da sessão, selos da jornada conquistados e mensagem final para revisitar a jornada.
+- Cenários por tema desenhados com Pygame, com detalhes visuais próprios de cada período, incluindo litoral inicial com ondas em camadas, brilho do mar e conchas, engenho com canavial/placas de cuidado, memória cívica e Brasil contemporâneo.
 - Sprite animado do Mig usando `assets/images/personagem.png`.
-- Sons leves gerados por codigo para pulo, coleta, checkpoint, quiz, missão extra, selo e conclusão.
+- Sons leves gerados por codigo para pulo, coleta, checkpoint, portal, dica do Guardião, quiz, missão extra, selo e conclusão.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
 - Script de build web limpo em `scripts/build_pygbag_clean.py`, com ponte JS para touch/save, tela de carregamento propria, metadados de app/manifest e ajuste para evitar travamento na tela "Ready to start !" em celulares.
 - Build web injeta uma orientação HTML acessível fora do canvas, sem impacto visual.
@@ -179,10 +180,13 @@ O smoke test confere:
 - pílulas ficam apoiadas em plataformas próximas e alcançáveis por critério conservador;
 - `Game` inicializa em modo dummy;
 - `abertura.png` e `assets/images/personagem.png` carregam;
-- Guardião do Portal pergunta apenas sobre uma pílula ativa da jogada e exige resposta correta para concluir;
-- coleção histórica acumula descobertas sem duplicar entradas e celebra álbum 10/10;
+- Guardião do Portal pergunta apenas sobre uma pílula ativa da jogada, mostra uma lembrança curta da pílula e exige resposta correta para concluir;
+- coleção histórica acumula descobertas sem duplicar entradas, mostra lembranças da viagem, destaca descoberta recente e celebra álbum 10/10;
 - missões extras ficam em plataformas alcançáveis, fora de áreas de cuidado e sem sobrepor pílulas ativas;
 - selos da jornada cobrem blocos históricos completos sem repetir fases;
+- controles mantêm pulo, coyote time e buffer em faixa suave;
+- sons gerados incluem portal e dica do Guardião quando o mixer está disponível;
+- microeventos de fase aparecem uma vez e registram mensagem contextual;
 - progresso salva/carrega em arquivo local, helpers JS simulados e `localStorage` simulado, com fallback seguro;
 - fluxo basico de menu, nova sessao temporaria, colecao, checkpoint, area de cuidado, conclusao e final passa sem alterar o save.
 - fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo;
@@ -202,21 +206,22 @@ Teste manual recomendado:
 7. Mover, pular e conferir o tutorial inicial guiado por ações.
 8. Coletar pílulas e observar o feedback positivo.
 9. Tocar no marcador `Extra` e conferir a missão opcional.
-10. Abrir a coleção com `C` e conferir o visual de álbum, contador de descobertas, descoberta recente e selos da jornada.
-11. Ativar checkpoint.
-12. Tocar em area de cuidado e confirmar retorno seguro.
-13. Reiniciar fase com `R`.
-14. Pausar e continuar com `P`; em toque, conferir os botoes grandes.
-15. Tocar no portal liberado e responder ao Guardiao do Portal.
-16. Errar uma alternativa de proposito e conferir dica sem punicao.
-17. Acertar a resposta e concluir a fase.
-18. Confirmar desbloqueio da fase seguinte.
-19. Entrar pela linha do tempo com `S` e conferir status, ícone e frase do bloco histórico.
-20. Testar a fase 2, especialmente pílulas, missão extra, checkpoints e quiz.
-21. Testar uma fase intermediaria.
-22. Testar a ultima fase.
-23. Ver tela final com resumo de selos, descobertas da sessão e missões extras.
-24. Fechar e abrir novamente para confirmar save.
+10. Caminhar até surgir um microevento contextual da fase.
+11. Abrir a coleção com `C` e conferir o visual de álbum, lembranças da viagem, contador de descobertas, descoberta recente e selos da jornada.
+12. Ativar checkpoint.
+13. Tocar em area de cuidado e confirmar retorno seguro.
+14. Reiniciar fase com `R`.
+15. Pausar e continuar com `P`; em toque, conferir os botoes grandes.
+16. Tocar no portal liberado e responder ao Guardiao do Portal.
+17. Errar uma alternativa de proposito e conferir dica sem punicao.
+18. Acertar a resposta e concluir a fase.
+19. Confirmar desbloqueio da fase seguinte.
+20. Entrar pela linha do tempo com `S` e conferir status, ícone, frase, trilha e bússola do bloco histórico.
+21. Testar a fase 2, especialmente pílulas, missão extra, checkpoints, placas de cuidado e quiz.
+22. Testar uma fase intermediaria.
+23. Testar a ultima fase.
+24. Ver tela final com resumo de selos, descobertas da sessão, lembranças da viagem e mensagem final.
+25. Fechar e abrir novamente para confirmar save.
 
 Teste mobile recomendado apos publicar:
 

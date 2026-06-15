@@ -117,6 +117,11 @@ def get_level_pill_bank(index: int) -> tuple[KnowledgePill, ...]:
     return tuple(LEVELS[index].pill_bank)
 
 
+def get_side_mission_summary(index: int) -> tuple[str, str]:
+    title, _prompt, complete_message, _icon = SIDE_MISSION_DATA[index]
+    return title, complete_message
+
+
 def get_active_pill_count(index: int) -> int:
     return 4 if index == 0 else 5
 

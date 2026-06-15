@@ -80,11 +80,11 @@ O jogo ja possui:
 - Menu mobile com botoes grandes, convite para tocar e faixa de orientacao no rodape.
 - Deteccao inicial de toque/mobile reforcada por `window.caminhosTouchContext` injetado no build e APIs simples do navegador.
 - Faixa inferior do menu cobre instrucoes fixas da imagem de abertura para evitar redundancia.
-- Linha do tempo com fases bloqueadas, liberadas, proximas e concluidas, com icones/frases de blocos historicos.
+- Linha do tempo com fases bloqueadas, liberadas, proximas e concluidas, com icones/frases de blocos historicos, trilha pontilhada e bussola simples.
 - Progresso salvo em JSON no desktop e em `localStorage` no navegador quando possivel, preferindo helpers JS do build limpo.
 - Nova jornada temporaria com `N`, sem apagar o save.
 - Dezesseis fases historicas em ordem cronologica.
-- Movimento lateral, pulo, gravidade, colisao e resposta de toque levemente mais rapida.
+- Movimento lateral, pulo, gravidade, colisao, coyote time, buffer de pulo e resposta de toque um pouco mais tolerante.
 - Camera horizontal.
 - HUD ajusta discretamente titulos longos para caberem no painel.
 - Controles por toque para celular em modo paisagem no navegador, sem cobrir Mig no inicio da fase.
@@ -93,22 +93,23 @@ O jogo ja possui:
 - Seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas demais.
 - Pílulas históricas coletáveis.
 - Missao extra opcional em cada fase, com marcador `Extra`, dica contextual e feedback positivo.
-- Guardiao do Portal com frase de contexto do bloco historico e pergunta historica obrigatoria sobre pílula ativa antes de concluir cada fase.
+- Guardiao do Portal com fala acolhedora por bloco historico, foco na pílula da pergunta e pergunta historica obrigatoria sobre pílula ativa antes de concluir cada fase.
 - Colecao historica agrupada por fase.
-- Colecao historica com aparencia de album, cards de descobertas, descoberta recente destacada, progresso do banco por fase, celebracao 10/10 e selos por blocos historicos.
+- Colecao historica com aparencia de album, lembrancas da viagem, cards de descobertas, descoberta recente destacada, progresso do banco por fase, celebracao 10/10 e selos por blocos historicos.
 - Introducao narrativa por fase.
 - Ajuda rapida com `H`.
-- Tela final com resumo da jornada, descobertas da sessao, missoes extras observadas, creditos simples e selos conquistados.
+- Tela final com resumo da jornada, descobertas da sessao, lembrancas da viagem, mensagem final, creditos simples e selos conquistados.
 - Tela de pausa com botoes grandes para toque.
 - Checkpoints seguros.
 - Areas de cuidado.
 - Coyote time e buffer curto de pulo.
 - Feedback visual e texto positivo para pílulas, checkpoints, areas de cuidado e portal.
 - Mensagens historicas ficam fixas no topo e se tornam translucidas quando Mig passa por tras.
-- Sons leves gerados por codigo, incluindo sinais para missao extra, resposta correta e selo.
+- Sons leves gerados por codigo, incluindo sinais para missao extra, portal, dica do Guardiao, resposta correta e selo.
 - Sprite animado do Mig usando folha de sprites.
-- Cenarios desenhados por codigo, com detalhes adicionais no engenho, memoria civica e Brasil contemporaneo.
-- Litoral inicial com ondas, espuma, vegetacao baixa e destaque sutil na primeira pilula.
+- Cenarios desenhados por codigo, com detalhes adicionais no litoral, engenho, memoria civica e Brasil contemporaneo.
+- Litoral inicial com ondas em camadas, espuma, brilho do mar, conchas, vegetacao baixa e destaque sutil na primeira pilula.
+- Microeventos leves por fase, com mensagem contextual, particulas e sem alterar dificuldade.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
 - Build Pygbag limpo em `scripts/build_pygbag_clean.py`, com manifest/metadados web.
 - Build Pygbag limpo injeta orientacao HTML acessivel fora do canvas.
@@ -133,7 +134,7 @@ O jogo ja possui:
 - `src/progress.py`: salvamento de progresso e colecao em JSON no desktop e `localStorage` no navegador, com helpers JS como caminho principal quando presentes.
 - `src/sounds.py`: sons simples gerados por codigo.
 - `src/settings.py`: constantes gerais.
-- `scripts/smoke_tests.py`: validacao automatica leve de fases, banco de pílulas, quiz, selos, assets e fluxo basico.
+- `scripts/smoke_tests.py`: validacao automatica leve de fases, banco de pílulas, quiz, selos, assets, controles, microeventos, sons e fluxo basico.
 - `scripts/build_pygbag_clean.py`: gera build web a partir de copia minima, sem empacotar venv ou save local, e injeta ajustes mobile, ponte JS de touch/save, fullscreen, manifest e carregamento no `index.html`.
 - `.github/workflows/pages.yml`: build e deploy para GitHub Pages quando houver push em `yolo_melhoria`.
 
@@ -216,7 +217,7 @@ Teste manual minimo:
 - Tocar no marcador `Extra` e conferir feedback positivo da missao opcional.
 - Em celular ou tela touch, usar modo paisagem e testar `<`, `>`, `Pular`, `P` e `C`.
 - Coletar pílulas e observar feedback positivo.
-- Conferir se a colecao destaca descoberta recente e album completo quando chegar a 10/10.
+- Conferir se a colecao mostra lembrancas da viagem, descoberta recente e album completo quando chegar a 10/10.
 - Responder ao Guardiao do Portal; testar erro com dica e acerto para concluir.
 - Conferir se a mensagem historica nao atrapalha o pulo; ela deve ficar fixa e translucida se Mig passar por tras.
 - Abrir colecao com `C`.

@@ -262,41 +262,61 @@ Escolha uma por rodada.
 
 Dar ao litoral inicial mais vida: ondas em camadas, brilho do sol no mar, conchas discretas, passaros e uma primeira pilula com destaque especial. Nao mudar dificuldade.
 
+Estado atual: primeira versao implementada com ondas em camadas, brilho no mar, conchas discretas, mais passaros e destaque visual na primeira pilula. Proximas rodadas podem polir vegetacao e profundidade sem mexer nas plataformas.
+
 ### Ciclo B - Guardiao Guia
 
 Adicionar uma fala curta do Guardiao antes da pergunta e uma fala de celebracao apos acerto. Manter quiz simples e legivel.
+
+Estado atual: primeira versao implementada com fala acolhedora por bloco historico, foco curto na pilula usada pela pergunta, som de portal e celebracao apos acerto. Proximas rodadas podem variar mais as falas.
 
 ### Ciclo C - Lembrancas Da Viagem
 
 Transformar missoes extras em "lembrancas" simples mostradas na colecao ou tela final. Comecar com contador e destaque textual.
 
+Estado atual: a colecao e a tela final ja mostram as missoes extras observadas como lembrancas da viagem da sessao, com cards proprios na colecao. Proximas rodadas podem avaliar persistencia no save.
+
 ### Ciclo D - Colecao Album Vivo
 
 Melhorar a colecao com mini-selos, descoberta favorita, progresso por bloco e celebracao 10/10 mais clara.
+
+Estado atual: primeira versao implementada com descoberta recente destacada, cards de lembrancas, progresso por fase, celebracao 10/10 e selos por blocos historicos. Proximas rodadas podem adicionar microanimacao aos selos.
 
 ### Ciclo E - Linha Do Tempo Como Mapa
 
 Fazer a linha do tempo parecer um mapa de aventuras, com marcador da proxima fase, icones por bloco e uma frase curta por periodo.
 
+Estado atual: primeira versao implementada com caminho pontilhado, bussola simples, marcadores de proxima aventura, icones e frases por bloco historico. Proximas rodadas podem polir o desenho sem reduzir legibilidade.
+
 ### Ciclo F - Final De Jornada
 
 Deixar a tela final mais emocionante: selos conquistados, descobertas da sessao, lembrancas, mensagem final e convite para revisitar fases.
+
+Estado atual: primeira versao implementada com medalha visual, selos, descobertas da sessao, lembrancas da viagem, mensagem final e convite para revisitar. Proximas rodadas podem melhorar celebracao visual.
 
 ### Ciclo G - Fase 2 Mais Clara
 
 Polir visual e legibilidade da fase 2, revisando checkpoints, pilulas e areas de cuidado com smoke tests.
 
+Estado atual: primeira versao implementada com canavial mais visivel, detalhes de engenho, placas de cuidado e smoke test especifico para checkpoints da fase 2. Proximas rodadas podem revisar ritmo visual sem alterar dificuldade.
+
 ### Ciclo H - Controles Mais Macios
 
 Ajustar sensacao de movimento e pulo de forma conservadora, com teste manual em fase 1 e 2. Evitar deixar dificil.
+
+Estado atual: primeira versao implementada com pulo levemente mais alto, coyote time/buffer um pouco maiores, resposta touch no ar mais viva e margem extra nos botoes virtuais. Proximas rodadas devem ajustar so com teste manual.
 
 ### Ciclo I - Sons De Descoberta
 
 Melhorar sons gerados por codigo para coleta, checkpoint, portal, acerto e selo. O jogo deve seguir silencioso se audio falhar.
 
+Estado atual: primeira versao implementada com sinais mais ricos para coleta, checkpoint e acerto, alem de novos sons para portal e dica do Guardiao. O jogo continua tolerante a falha de audio.
+
 ### Ciclo J - Microeventos De Fase
 
 Criar pequenos acontecimentos nao perigosos: uma placa que aparece, um brilho no marco, uma onda mais forte, uma luz no portal, uma frase curta ao observar algo.
+
+Estado atual: primeira versao implementada com um microevento contextual por fase, disparado uma vez por visita, com mensagem curta e particulas leves. Proximas rodadas podem trocar eventos por objetos observaveis dedicados.
 
 ## Validacoes Obrigatorias
 

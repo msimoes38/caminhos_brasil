@@ -29,9 +29,12 @@ def _draw_coast_background(screen: pygame.Surface, camera_x: int, level_width: i
 
     ocean_y = 350
     pygame.draw.rect(screen, (58, 143, 190), (0, ocean_y, SCREEN_WIDTH, 112))
+    _draw_sun_glitter(screen, ocean_y, 820 - int(camera_x * 0.08))
     for band in range(4):
         y = ocean_y + 14 + band * 24
         pygame.draw.line(screen, (82, 164, 202), (0, y), (SCREEN_WIDTH, y + 6), 2)
+    for band in range(3):
+        _draw_layered_wave(screen, camera_x, ocean_y + 28 + band * 26, level_width, band)
     pygame.draw.rect(screen, (232, 207, 132), (0, 430, SCREEN_WIDTH, 54))
     pygame.draw.line(screen, (248, 238, 190), (0, 430), (SCREEN_WIDTH, 430), 5)
 
@@ -43,8 +46,10 @@ def _draw_coast_background(screen: pygame.Surface, camera_x: int, level_width: i
     for world_x in range(70, level_width, 180):
         x = world_x - int(camera_x * 0.42)
         _draw_beach_grass(screen, x, 426)
+    for world_x in range(140, level_width, 220):
+        _draw_shell(screen, world_x - int(camera_x * 0.46), 448 + (world_x // 220) % 2 * 12)
 
-    _draw_birds(screen, camera_x, [(260, 118), (620, 96), (980, 132)])
+    _draw_birds(screen, camera_x, [(260, 118), (620, 96), (980, 132), (1360, 104)])
     _draw_coastal_marker(screen, 560 - int(camera_x * 0.32), 386)
     _draw_ship(screen, 1120 - int(camera_x * 0.25), 320)
 
@@ -57,6 +62,10 @@ def _draw_sugar_background(screen: pygame.Surface, camera_x: int, level_width: i
     _draw_hills(screen, camera_x, level_width, (104, 165, 95), 335, 0.18)
     pygame.draw.rect(screen, (192, 172, 92), (0, 390, SCREEN_WIDTH, 94))
 
+    for world_x in range(-120, level_width, 180):
+        x = world_x - int(camera_x * 0.18)
+        pygame.draw.ellipse(screen, (112, 170, 92), (x, 324, 160, 52))
+
     for world_x in range(-40, level_width, 50):
         x = world_x - int(camera_x * 0.55)
         pygame.draw.line(screen, (64, 132, 70), (x, 392), (x + 10, 345), 4)
@@ -64,6 +73,8 @@ def _draw_sugar_background(screen: pygame.Surface, camera_x: int, level_width: i
 
     for world_x in range(360, level_width, 460):
         _draw_cane_bundle(screen, world_x - int(camera_x * 0.42), 382)
+    for world_x in range(520, level_width, 620):
+        _draw_care_sign(screen, world_x - int(camera_x * 0.36), 370)
     _draw_water_channel(screen, camera_x, level_width)
     _draw_engenho(screen, 1200 - int(camera_x * 0.35), 330)
 
@@ -225,6 +236,29 @@ def _draw_contemporary_background(screen: pygame.Surface, camera_x: int, level_w
 
 def _draw_sun(screen: pygame.Surface, position: tuple[int, int]):
     pygame.draw.circle(screen, (248, 220, 116), position, 38)
+
+
+def _draw_sun_glitter(screen: pygame.Surface, ocean_y: int, sun_x: int):
+    for index in range(7):
+        width = 84 - index * 8
+        y = ocean_y + 18 + index * 11
+        x = sun_x - width // 2 + (index % 2) * 10
+        pygame.draw.line(screen, (150, 210, 222), (x, y), (x + width, y), 2)
+        pygame.draw.line(screen, (238, 248, 232), (x + 18, y + 3), (x + width - 12, y + 3), 1)
+
+
+def _draw_layered_wave(
+    screen: pygame.Surface,
+    camera_x: int,
+    y: int,
+    level_width: int,
+    band: int,
+):
+    color = (204, 236, 232) if band == 0 else (132, 194, 214)
+    for world_x in range(-180 + band * 44, level_width, 210):
+        x = world_x - int(camera_x * (0.22 + band * 0.05))
+        pygame.draw.arc(screen, color, (x, y, 96, 26), 0.18, 2.9, 2)
+        pygame.draw.arc(screen, color, (x + 64, y + 2, 76, 20), 0.18, 2.9, 2)
 
 
 def _draw_clouds(screen: pygame.Surface, camera_x: int, positions: list[tuple[int, int]]):
@@ -495,6 +529,29 @@ def _draw_beach_grass(screen: pygame.Surface, x: int, y: int):
     pygame.draw.line(screen, (88, 150, 78), (x + 8, y + 10), (x + 24, y - 8), 3)
     pygame.draw.line(screen, (66, 118, 68), (x + 18, y + 10), (x + 28, y - 18), 3)
     pygame.draw.ellipse(screen, (214, 190, 118), (x - 6, y + 8, 44, 12))
+
+
+def _draw_shell(screen: pygame.Surface, x: int, y: int):
+    if x < -40 or x > SCREEN_WIDTH + 40:
+        return
+
+    shell_color = (248, 226, 176)
+    outline = (154, 118, 82)
+    pygame.draw.arc(screen, shell_color, (x, y, 24, 16), 0, 3.14, 8)
+    pygame.draw.arc(screen, outline, (x, y, 24, 16), 0, 3.14, 2)
+    for offset in (5, 10, 15):
+        pygame.draw.line(screen, outline, (x + 12, y + 4), (x + offset, y + 14), 1)
+
+
+def _draw_care_sign(screen: pygame.Surface, x: int, y: int):
+    if x < -80 or x > SCREEN_WIDTH + 80:
+        return
+
+    pygame.draw.rect(screen, (92, 70, 46), (x + 22, y + 26, 5, 48))
+    pygame.draw.rect(screen, (244, 226, 150), (x, y, 50, 30), border_radius=4)
+    pygame.draw.rect(screen, (92, 70, 46), (x, y, 50, 30), 2, border_radius=4)
+    pygame.draw.line(screen, (92, 70, 46), (x + 13, y + 21), (x + 25, y + 8), 3)
+    pygame.draw.line(screen, (92, 70, 46), (x + 25, y + 8), (x + 37, y + 21), 3)
 
 
 def _draw_cane_bundle(screen: pygame.Surface, x: int, y: int):

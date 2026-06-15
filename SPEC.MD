@@ -38,7 +38,7 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - menu com continuar, nova sessão temporária, linha do tempo, coleção, ajuda e tela cheia no mobile;
 - 16 fases históricas em ordem cronológica;
 - introdução narrativa por fase;
-- movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo, com resposta de toque levemente mais rápida;
+- movimento lateral, pulo, gravidade, colisao, coyote time e buffer curto de pulo, com resposta e área de toque um pouco mais tolerantes;
 - câmera horizontal;
 - HUD com ajuste discreto para títulos longos;
 - controles por teclado, mouse e toque;
@@ -54,14 +54,15 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - checkpoints seguros e respawn;
 - áreas de cuidado;
 - portal final bloqueado até todas as pílulas ativas da fase serem coletadas;
-- Guardião do Portal com frase de contexto do bloco histórico, pergunta histórica obrigatória antes da conclusão, sorteada entre as pílulas ativas da jogada;
+- Guardião do Portal com fala acolhedora por bloco histórico, foco na pílula usada pela pergunta e pergunta histórica obrigatória antes da conclusão, sorteada entre as pílulas ativas da jogada;
 - feedback visual e texto positivo para pílula, checkpoint, cuidado, portal e conclusão;
-- litoral inicial com ondas, espuma, vegetação baixa e destaque sutil na primeira pílula;
-- coleção histórica acumulativa em formato de álbum, com cards de descobertas, descoberta recente destacada, celebração de álbum 10/10 e selos por blocos históricos;
-- linha do tempo com fases liberadas, bloqueadas, próximas aventuras e concluídas, reservando coluna de status e exibindo ícones/frase de bloco histórico;
+- litoral inicial com ondas em camadas, espuma, brilho do mar, conchas, vegetação baixa e destaque sutil na primeira pílula;
+- coleção histórica acumulativa em formato de álbum, com lembranças da viagem, cards de descobertas, descoberta recente destacada, celebração de álbum 10/10 e selos por blocos históricos;
+- linha do tempo com fases liberadas, bloqueadas, próximas aventuras e concluídas, reservando coluna de status e exibindo ícones/frase de bloco histórico, trilha pontilhada e bússola simples;
 - tela de pausa com botões grandes para toque;
-- tela final com resumo da jornada, descobertas da sessão, missões extras observadas e selos conquistados;
-- sons simples gerados por codigo, incluindo sinais para missão extra, resposta correta e selo;
+- tela final com resumo da jornada, descobertas da sessão, lembranças da viagem, selos conquistados e mensagem final de revisita;
+- microeventos leves por fase, com mensagem contextual e partículas, sem perigo nem mudança de layout;
+- sons simples gerados por codigo, incluindo sinais para missão extra, portal, dica do Guardião, resposta correta e selo;
 - save local em JSON e save web em `localStorage` via helpers JS do build limpo, ambos tolerantes a falhas;
 - smoke tests permanentes;
 - build Pygbag limpo com manifest/metadados web, orientação HTML acessível fora do canvas e deploy via GitHub Pages.
@@ -298,6 +299,7 @@ Eventos com som:
 - checkpoint;
 - missão extra;
 - resposta correta no Guardião;
+- portal e dica acolhedora do Guardião;
 - selo da jornada;
 - conclusao;
 - final;
@@ -338,8 +340,11 @@ Valida:
 - `abertura.png` carrega;
 - sprite do Mig carrega;
 - `ProgressStore` salva/carrega em arquivo local, helpers JS simulados e `localStorage` simulado, com fallback seguro;
-- coleção histórica acumula descobertas sem duplicar entradas e celebra álbum completo 10/10;
+- coleção histórica acumula descobertas sem duplicar entradas, mostra lembranças da viagem, destaca descoberta recente e celebra álbum completo 10/10;
 - selos da jornada cobrem todos os blocos históricos sem repetir fases e possuem frase de contexto;
+- controles mantêm pulo, coyote time e buffer em faixas suaves;
+- sons gerados cobrem portal e dica do Guardião quando o mixer está disponível;
+- microeventos de fase aparecem uma vez por visita;
 - fluxo basico de menu, nova sessão, missão extra, checkpoint, cuidado, quiz, conclusão e final;
 - fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa, quiz e linha do tempo;
 - detecção touch inicial por `window.caminhosTouchContext`, `maxTouchPoints`, `matchMedia` e desktop simulado;
@@ -489,8 +494,11 @@ Regras atuais das pílulas:
 - iniciar nova jornada temporária com `N` refaz o sorteio;
 - o Guardião do Portal só pergunta sobre uma pílula ativa da jogada;
 - a coleção mostra progresso do banco completo da fase, por exemplo `7/10 descobertas`;
+- a coleção mostra as missões extras observadas como lembranças da viagem da sessão;
+- a coleção destaca a descoberta recente em um card próprio;
 - ao reunir 10/10 descobertas de uma fase, a coleção destaca o álbum completo;
-- a coleção e a tela final mostram selos por blocos históricos concluídos.
+- a coleção e a tela final mostram selos por blocos históricos concluídos;
+- cada fase pode disparar um microevento textual leve ao avançar pelo cenário; esses eventos não são salvos nesta versão.
 
 ## 10. Modelo De Dados
 
