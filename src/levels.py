@@ -23,6 +23,15 @@ class SideMission:
 
 
 @dataclass(frozen=True)
+class StageMoment:
+    rect: pygame.Rect
+    title: str
+    message: str
+    icon: str
+    color: tuple[int, int, int]
+
+
+@dataclass(frozen=True)
 class Level:
     title: str
     year: str
@@ -41,6 +50,7 @@ class Level:
     active_pill_indexes: tuple[int, ...]
     quiz_pill_index: int | None
     side_mission: SideMission
+    stage_moment: StageMoment
 
 
 @dataclass(frozen=True)
@@ -77,6 +87,26 @@ SIDE_MISSION_DATA = (
     ("Acenda a luz da memória", "Encontre uma luz de cuidado no caminho.", "Luz acesa! Memória ajuda a valorizar direitos.", "light"),
     ("Abra o livro cidadão", "Procure o livro da Constituição.", "Livro aberto! Direitos são construídos com participação.", "constitution"),
     ("Conecte o presente", "Encontre o símbolo de conexão do Brasil de hoje.", "Conexão feita! O presente também faz parte da história.", "connection"),
+)
+
+
+STAGE_MOMENT_DATA = (
+    ("Brisa do litoral", "Uma brisa passa pelo marco e lembra que muitos povos ja viviam aqui.", "shell", (126, 198, 214)),
+    ("Roda do engenho", "A roda gira devagar. Trabalho e cuidado precisam ser lembrados juntos.", "wheel", (124, 184, 92)),
+    ("Mapa das trilhas", "O mapa mostra rios e caminhos conhecidos por muita gente antes das novas rotas.", "map", (226, 202, 128)),
+    ("Lanterna das minas", "A lanterna ilumina vilas que cresceram com mudancas e desafios.", "lamp", (218, 196, 118)),
+    ("Carta na praca", "A carta lembra que ideias podem inspirar perguntas sobre o futuro.", "letter", (226, 202, 128)),
+    ("Livro da corte", "O livro aberto mostra que conhecimento tambem circula pela cidade.", "book", (204, 222, 236)),
+    ("Marco da mudanca", "O marco convida Mig a observar escolhas politicas com cuidado.", "flag", (126, 176, 92)),
+    ("Luz do jardim", "A luz do jardim ajuda a notar continuidades e diferencas.", "garden", (248, 220, 116)),
+    ("Memoria da liberdade", "A luz suave lembra dignidade, liberdade e respeito.", "memory", (238, 232, 210)),
+    ("Sino da praca", "O sino marca novas disputas, escolhas e participacao.", "bell", (226, 168, 74)),
+    ("Trilhos do cafe", "Os trilhos mostram como economia e politica se cruzaram.", "rails", (156, 118, 72)),
+    ("Radio da cidade", "O radio leva noticias e mostra a forca da comunicacao.", "radio", (170, 180, 178)),
+    ("Cartaz do dialogo", "O cartaz lembra que democracia precisa de conversa e respeito.", "poster", (190, 206, 146)),
+    ("Luz da memoria", "A luz acesa ajuda a lembrar direitos e democracia.", "light", (238, 232, 210)),
+    ("Livro cidadao", "O livro aberto fala de direitos construidos com participacao.", "constitution", (82, 150, 214)),
+    ("Conexao do presente", "A conexao acende: o presente tambem faz parte da historia.", "connection", (82, 150, 214)),
 )
 
 
@@ -122,6 +152,11 @@ def get_side_mission_summary(index: int) -> tuple[str, str]:
     return title, complete_message
 
 
+def get_stage_moment_summary(index: int) -> tuple[str, str]:
+    title, message, _icon, _color = STAGE_MOMENT_DATA[index]
+    return title, message
+
+
 def get_active_pill_count(index: int) -> int:
     return 4 if index == 0 else 5
 
@@ -148,6 +183,7 @@ def create_level(
     platforms = [pygame.Rect(platform) for platform in data.platforms]
     fragments = _fragments_from_pills(platforms, data.pill_bank, active_pill_indexes, index)
     side_mission = _side_mission_for_level(platforms, fragments, index)
+    stage_moment = _stage_moment_for_level(platforms, fragments, side_mission, index)
     return Level(
         title=data.title,
         year=data.year,
@@ -166,6 +202,7 @@ def create_level(
         active_pill_indexes=active_pill_indexes,
         quiz_pill_index=quiz_pill_index,
         side_mission=side_mission,
+        stage_moment=stage_moment,
     )
 
 
@@ -283,6 +320,72 @@ def _free_side_mission_rect(
 
     platform = platforms[0]
     return pygame.Rect(platform.x + 12, platform.top - 56, 36, 36)
+
+
+def _stage_moment_for_level(
+    platforms: list[pygame.Rect],
+    fragments: list[Fragment],
+    side_mission: SideMission,
+    level_index: int,
+) -> StageMoment:
+    title, message, icon, color = STAGE_MOMENT_DATA[level_index]
+    usable_platforms = platforms[1:]
+    if usable_platforms:
+        preferred_index = min(len(usable_platforms) - 1, 2 + (level_index % 4))
+        platform_order = [usable_platforms[preferred_index]] + [
+            platform
+            for index, platform in enumerate(usable_platforms)
+            if index != preferred_index
+        ]
+        rect = _free_stage_moment_rect(platform_order, fragments, side_mission, level_index)
+    else:
+        rect = pygame.Rect(320 + level_index * 12, 350, 38, 42)
+
+    return StageMoment(
+        rect=rect,
+        title=title,
+        message=message,
+        icon=icon,
+        color=color,
+    )
+
+
+def _free_stage_moment_rect(
+    platforms: list[pygame.Rect],
+    fragments: list[Fragment],
+    side_mission: SideMission,
+    level_index: int,
+) -> pygame.Rect:
+    fallback_rect = None
+    fallback_distance = -1
+
+    for platform in platforms:
+        candidate_offsets = [platform.width // 2 - 19]
+        if platform.width >= 136:
+            edge_offsets = [34, platform.width - 72]
+            if level_index % 2 == 0:
+                edge_offsets.reverse()
+            candidate_offsets = edge_offsets + candidate_offsets
+
+        for offset_x in candidate_offsets:
+            rect = pygame.Rect(platform.x + offset_x, platform.top - 62, 38, 42)
+            if any(rect.colliderect(fragment.rect.inflate(18, 14)) for fragment in fragments):
+                continue
+            if rect.colliderect(side_mission.rect.inflate(18, 14)):
+                continue
+            distance = abs(rect.centerx - side_mission.rect.centerx)
+            if distance > fallback_distance:
+                fallback_rect = rect
+                fallback_distance = distance
+            if rect.colliderect(side_mission.rect.inflate(340, 120)):
+                continue
+            return rect
+
+    if fallback_rect is not None:
+        return fallback_rect
+
+    platform = platforms[0]
+    return pygame.Rect(platform.x + 16, platform.top - 62, 38, 42)
 
 
 def _quiz_for_pill(pill: KnowledgePill, level_index: int, pill_index: int) -> QuizData:

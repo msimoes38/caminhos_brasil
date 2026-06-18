@@ -34,6 +34,7 @@ from src.levels import (
     get_level_count,
     get_level_pill_bank,
     get_level_pill_count,
+    get_stage_moment_summary,
 )
 from src.settings import (
     GRAVITY,
@@ -117,6 +118,21 @@ def main() -> int:
         if index == 1 and len(level.checkpoints) < 2:
             errors.append("Fase 2: esperados checkpoints suficientes para orientar o engenho.")
 
+        moment = level.stage_moment
+        if not moment.title.strip() or not moment.message.strip() or not moment.icon.strip():
+            errors.append(f"{label}: momento observavel com texto ou icone vazio.")
+        moment_support_index = _find_fragment_support(moment.rect, level.platforms)
+        if moment_support_index is None:
+            errors.append(f"{label}: momento observavel sem plataforma proxima: {moment.rect}.")
+        elif moment_support_index not in reachable_platforms:
+            errors.append(f"{label}: momento observavel em plataforma dificil de alcancar: {moment.rect}.")
+        if any(moment.rect.colliderect(hazard) for hazard in level.hazards):
+            errors.append(f"{label}: momento observavel sobre area de cuidado: {moment.rect}.")
+        if moment.rect.colliderect(mission.rect.inflate(18, 14)):
+            errors.append(f"{label}: momento observavel sobre missao extra: {moment.rect}.")
+        if any(moment.rect.colliderect(fragment.rect.inflate(18, 14)) for fragment in level.fragments):
+            errors.append(f"{label}: momento observavel sobre pilula ativa: {moment.rect}.")
+
     _check_progress_store(errors)
     _check_touch_detection(errors)
     _check_build_web_bridge_patch(errors)
@@ -133,6 +149,7 @@ def main() -> int:
     save_path = ROOT / "caminhos_brasil_save.json"
     save_before = save_path.read_bytes() if save_path.exists() else None
     _check_basic_flow(game, errors)
+    _check_first_minute_rituals(errors)
     _check_touch_flow(Game(), errors)
     save_after = save_path.read_bytes() if save_path.exists() else None
     if save_before != save_after:
@@ -151,7 +168,7 @@ def main() -> int:
     print("- Todas as fases tem banco com 10 pilulas e selecao ativa 4/5.")
     print("- Checkpoints, respawns e inicio nao caem em areas de cuidado.")
     print("- Pilulas ficam apoiadas em plataformas proximas e alcancaveis.")
-    print("- Missoes extras ficam proximas de plataformas alcancaveis e fora das areas de cuidado.")
+    print("- Missoes extras e momentos observaveis ficam em plataformas alcancaveis e fora das areas de cuidado.")
     print("- Game inicializa em modo dummy com abertura e sprite do Mig.")
     print("- Guardiao do Portal pergunta sobre pilula ativa, aceita erro com dica e conclui com resposta correta.")
     print("- Colecao historica acumula descobertas, lembrancas da viagem e celebra album 10/10.")
@@ -162,8 +179,9 @@ def main() -> int:
     print("- Controles mantem pulo, coyote time e buffer em faixa suave para criancas.")
     print("- Sons gerados cobrem portal, dica do Guardiao, coleta, checkpoints e selos.")
     print("- Fluxo basico de menu, nova sessao, missao extra, checkpoint, cuidado, Esc e final passa sem alterar save.")
+    print("- Ritual da primeira descoberta e do primeiro portal aparece em uma jornada limpa.")
     print("- Fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo.")
-    print("- Microeventos de fase aparecem uma vez e a colecao destaca a descoberta recente.")
+    print("- Momentos observaveis aparecem no cenario, entram no Caderno e a colecao destaca a descoberta recente.")
     print("- Mensagem historica mantem posicao fixa e usa translucidez quando Mig passa por tras.")
     return 0
 
@@ -707,17 +725,31 @@ def _check_basic_flow(game: Game, errors: list[str]):
     ):
         errors.append("Colecao nao mostra a missao extra observada como lembranca.")
 
-    trigger_x, micro_message, _micro_color = game._micro_event_data()
+    moment = game.level.stage_moment
+    _trigger_x, micro_message, _micro_color = game._micro_event_data()
     game.feedback_message = ""
     game.feedback_message_timer = 0
     game.fragment_message = ""
     game.fragment_message_timer = 0
-    game.player.rect.centerx = trigger_x
+    game.player.rect.center = moment.rect.center
     game._update_micro_event()
     if game.level_index not in game.micro_events_seen:
-        errors.append("Microevento da fase nao foi registrado ao passar pelo ponto de gatilho.")
+        errors.append("Momento observavel da fase nao foi registrado ao tocar no objeto.")
     if game.feedback_message != micro_message:
-        errors.append("Microevento da fase nao mostrou a mensagem contextual esperada.")
+        errors.append("Momento observavel da fase nao mostrou a mensagem contextual esperada.")
+    moment_title, moment_message = get_stage_moment_summary(game.level_index)
+    if moment_message != micro_message:
+        errors.append("Resumo do momento observavel nao corresponde ao dado da fase.")
+    moment_rows = game._collection_rows()
+    if not any(row_type == "memory_item" and moment_title in text for row_type, text in moment_rows):
+        errors.append("Colecao nao mostra momento observavel como lembranca da viagem.")
+    if not game.recent_collection_entry or game.recent_collection_entry[0] != "Lembrança da viagem":
+        errors.append("Momento observavel nao virou lembranca recente no Caderno.")
+    if not any(
+        row_type == "favorite_item" and moment_title in text and "memory_item" not in text
+        for row_type, text in moment_rows
+    ):
+        errors.append("Caderno nao destaca momento observavel recente com texto legivel.")
 
     checkpoint = game.level.checkpoints[0]
     game.player.rect.center = checkpoint.center
@@ -777,6 +809,11 @@ def _check_basic_flow(game: Game, errors: list[str]):
     game._handle_keydown(pygame.K_RETURN)
     if game.state != STATE_FINAL:
         errors.append("Ultima fase nao levou para a tela final.")
+    final_memory_lines = game._final_memory_recap_lines()
+    if not any("guardadas no Caderno" in line for line in final_memory_lines):
+        errors.append("Tela final nao resume lembrancas guardadas no Caderno.")
+    if not any(moment_title in line for line in final_memory_lines):
+        errors.append("Tela final nao relembra momento observavel marcante.")
 
     game._load_level(1, STATE_PLAYING)
     game._handle_keydown(pygame.K_ESCAPE)
@@ -784,6 +821,37 @@ def _check_basic_flow(game: Game, errors: list[str]):
         errors.append("Esc nao voltou para a tela inicial.")
     if not game.running:
         errors.append("Esc encerrou o runtime em vez de manter o jogo aberto.")
+
+
+def _check_first_minute_rituals(errors: list[str]):
+    game = Game()
+    game.temporary_session = True
+    game.collection_entries = []
+    game.collection_entry_set = set()
+    game.completed_levels = set()
+    game.session_discovery_count = 0
+    game.first_discovery_ritual_seen = False
+    game.first_portal_ritual_seen = False
+    game._load_level(0, STATE_PLAYING)
+
+    first_fragment = game.fragments[0]
+    game.player.rect.center = first_fragment.rect.center
+    game._collect_fragments()
+    if not game.first_discovery_ritual_seen:
+        errors.append("Primeira pilula da jornada limpa nao marcou o ritual de descoberta.")
+    if not game.fragment_message.startswith("Primeira descoberta!"):
+        errors.append("Primeira pilula da jornada limpa nao mostrou mensagem especial.")
+    if not game.effects:
+        errors.append("Primeira pilula da jornada limpa nao gerou particulas especiais.")
+
+    game.fragments = []
+    game._open_quiz_or_complete()
+    if game.state != STATE_QUIZ:
+        errors.append("Primeiro portal da jornada limpa nao abriu o Guardiao.")
+    if not game.first_portal_ritual_seen:
+        errors.append("Primeiro portal da jornada limpa nao marcou o ritual especial.")
+    if "primeiro portal" not in game.guardian_ritual_message.lower():
+        errors.append("Primeiro portal da jornada limpa nao mostrou fala especial do Guardiao.")
 
 
 def _check_touch_flow(game: Game, errors: list[str]):

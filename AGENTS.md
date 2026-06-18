@@ -92,13 +92,15 @@ O jogo ja possui:
 - Banco com 10 pílulas de conhecimento por fase.
 - Seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas demais.
 - Pílulas históricas coletáveis.
+- Primeira pilula inedita de uma jornada limpa na fase 1 tem ritual especial de Caderno de Viagem, particulas e som leve.
 - Missao extra opcional em cada fase, com marcador `Extra`, dica contextual e feedback positivo.
-- Guardiao do Portal com fala acolhedora por bloco historico, foco na pílula da pergunta e pergunta historica obrigatoria sobre pílula ativa antes de concluir cada fase.
+- Guardiao do Portal com fala acolhedora por bloco historico, foco na pílula da pergunta, retrato simples animado no quiz e pergunta historica obrigatoria sobre pílula ativa antes de concluir cada fase.
+- Primeiro portal da fase 1 tem fala especial do Guardiao e brilho extra.
 - Colecao historica agrupada por fase.
-- Colecao historica com aparencia de album, lembrancas da viagem, cards de descobertas, descoberta recente destacada, progresso do banco por fase, celebracao 10/10 e selos por blocos historicos.
+- Colecao historica com aparencia de album, lembrancas da viagem, objetos observaveis, cards de descobertas, descoberta recente destacada, progresso do banco por fase, celebracao 10/10 e selos por blocos historicos.
 - Introducao narrativa por fase.
 - Ajuda rapida com `H`.
-- Tela final com resumo da jornada, descobertas da sessao, lembrancas da viagem, mensagem final, creditos simples e selos conquistados.
+- Tela final com resumo da jornada, descobertas da sessao, lembrancas da viagem, retrospectiva de lembrancas marcantes, mensagem final, creditos simples e selos conquistados.
 - Tela de pausa com botoes grandes para toque.
 - Checkpoints seguros.
 - Areas de cuidado.
@@ -109,7 +111,7 @@ O jogo ja possui:
 - Sprite animado do Mig usando folha de sprites.
 - Cenarios desenhados por codigo, com detalhes adicionais no litoral, engenho, memoria civica e Brasil contemporaneo.
 - Litoral inicial com ondas em camadas, espuma, brilho do mar, conchas, vegetacao baixa e destaque sutil na primeira pilula.
-- Microeventos leves por fase, com mensagem contextual, particulas e sem alterar dificuldade.
+- Momentos observaveis por fase, desenhados como objetos no cenario, com mensagem contextual, particulas, registro no Caderno e sem alterar dificuldade.
 - Smoke tests permanentes em `scripts/smoke_tests.py`.
 - Build Pygbag limpo em `scripts/build_pygbag_clean.py`, com manifest/metadados web.
 - Build Pygbag limpo injeta orientacao HTML acessivel fora do canvas.
@@ -129,12 +131,12 @@ O jogo ja possui:
 - `src/game.py`: loop principal, estados, telas, HUD, fluxo e progresso.
 - `src/player.py`: movimento, colisao, animacao e desenho do Mig.
 - `src/level_data.py`: dados das fases historicas, bancos de pílulas e geracao simples de layout.
-- `src/levels.py`: conversao dos dados das fases em objetos usados pelo Pygame, seleção ativa de pílulas e blocos historicos dos selos.
+- `src/levels.py`: conversao dos dados das fases em objetos usados pelo Pygame, seleção ativa de pílulas, momentos observaveis e blocos historicos dos selos.
 - `src/backgrounds.py`: desenho dos cenarios por tema.
 - `src/progress.py`: salvamento de progresso e colecao em JSON no desktop e `localStorage` no navegador, com helpers JS como caminho principal quando presentes.
 - `src/sounds.py`: sons simples gerados por codigo.
 - `src/settings.py`: constantes gerais.
-- `scripts/smoke_tests.py`: validacao automatica leve de fases, banco de pílulas, quiz, selos, assets, controles, microeventos, sons e fluxo basico.
+- `scripts/smoke_tests.py`: validacao automatica leve de fases, banco de pílulas, quiz, selos, assets, controles, ritual inicial, momentos observaveis, sons e fluxo basico.
 - `scripts/build_pygbag_clean.py`: gera build web a partir de copia minima, sem empacotar venv ou save local, e injeta ajustes mobile, ponte JS de touch/save, fullscreen, manifest e carregamento no `index.html`.
 - `.github/workflows/pages.yml`: build e deploy para GitHub Pages quando houver push em `yolo_melhoria`.
 
@@ -174,6 +176,7 @@ Se o Python global nao tiver `pygame-ce`, use a venv local.
 - O respawn de checkpoints tambem nao pode cair em areas de cuidado.
 - Pílulas ativas devem ficar apoiadas em plataformas alcancaveis pelo pulo atual do Mig.
 - Missoes extras devem ficar em plataformas alcancaveis, fora de areas de cuidado e sem sobrepor pílulas ativas.
+- Momentos observaveis devem ficar em plataformas alcancaveis, longe o bastante do `Extra` para nao sobrepor baloes e sem cobrir pílulas ativas.
 - Perguntas do Guardiao devem se basear em mensagens ja apresentadas na fase.
 - Respostas erradas no Guardiao devem ensinar com dica curta, sem punir ou reiniciar a fase.
 - A fase 2 ja teve problemas de checkpoint e itens inalcancaveis; revisar com cuidado se alterar layout.
@@ -215,9 +218,10 @@ Teste manual minimo:
 - Em toque, conferir menu com convite para tocar e botao `Tela cheia`.
 - Mover, pular e conferir tutorial guiado por acoes na fase 1.
 - Tocar no marcador `Extra` e conferir feedback positivo da missao opcional.
+- Tocar no objeto observavel da fase e conferir mensagem, particulas e registro no Caderno.
 - Em celular ou tela touch, usar modo paisagem e testar `<`, `>`, `Pular`, `P` e `C`.
 - Coletar pílulas e observar feedback positivo.
-- Conferir se a colecao mostra lembrancas da viagem, descoberta recente e album completo quando chegar a 10/10.
+- Conferir se a colecao mostra lembrancas da viagem, momento observavel recente e album completo quando chegar a 10/10.
 - Responder ao Guardiao do Portal; testar erro com dica e acerto para concluir.
 - Conferir se a mensagem historica nao atrapalha o pulo; ela deve ficar fixa e translucida se Mig passar por tras.
 - Abrir colecao com `C`.
@@ -231,7 +235,7 @@ Teste manual minimo:
 - Conferir icone/frase de bloco historico na linha do tempo.
 - Testar fase 2.
 - Testar uma fase intermediaria.
-- Testar a ultima fase e tela final.
+- Testar a ultima fase e conferir retrospectiva de lembrancas na tela final.
 
 ## Proximas Evolucoes Provaveis
 

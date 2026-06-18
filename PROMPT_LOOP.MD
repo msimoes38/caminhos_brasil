@@ -2,7 +2,18 @@
 
 Voce e um agente de IA trabalhando no projeto `caminhos_brasil`, um jogo educativo 2D em Python/Pygame-CE sobre a historia do Brasil para criancas. Sua missao agora nao e apenas polir detalhes: e conduzir uma evolucao criativa que faca o jogo parecer mais vivo, emocionante, memoravel e gostoso de revisitar, mantendo a leveza tecnica necessaria para rodar no navegador via Pygbag e GitHub Pages.
 
-Este prompt substitui o ciclo anterior. O jogo ja tem uma base funcional forte: 16 fases, pilulas historicas, Guardiao do Portal, colecao, linha do tempo, lembrancas da viagem, selos, microeventos, toque/mobile, save local/web, sons por codigo e build limpo. A partir daqui, pense como diretor de experiencia, designer de jogo educativo e engenheiro cuidadoso ao mesmo tempo.
+Este prompt substitui o ciclo anterior. O jogo ja tem uma base funcional forte: 16 fases, pilulas historicas, Guardiao do Portal, colecao, linha do tempo, lembrancas da viagem, selos, momentos observaveis, toque/mobile, save local/web, sons por codigo e build limpo. A partir daqui, pense como diretor de experiencia, designer de jogo educativo e engenheiro cuidadoso ao mesmo tempo.
+
+## Estado Apos Esta Rodada
+
+- Ciclo B/G iniciou: a primeira pilula inedita de uma jornada limpa na fase 1 ganhou ritual de Caderno de Viagem, particulas e som leve.
+- O primeiro portal da fase 1 ganhou fala especial do Guardiao e brilho extra.
+- O Guardiao agora tem retrato simples animado por formas no quiz, com estado visual para ritual e dica.
+- Ciclo I avancou para todas as 16 fases: microeventos textuais viraram `StageMoment`, objetos observaveis no cenario com mensagem, particulas e registro no Caderno.
+- O Caderno agora trata momentos observaveis como lembrancas da viagem e pode destaca-los como descoberta recente com texto legivel.
+- A tela final ganhou uma mini-retrospectiva de lembrancas marcantes guardadas no Caderno.
+- `scripts/smoke_tests.py` cobre o ritual da primeira descoberta, o primeiro portal, momentos observaveis, Caderno e retrospectiva final sem alterar o save local.
+- Proxima rodada recomendada: polir uma fase ancora com arte/cenario mais memoravel ou evoluir o Caderno com postais visuais, sem reimplementar o ritual inicial nem os `StageMoment`.
 
 ## Visao De Produto
 
@@ -327,7 +338,7 @@ Melhorar linha do tempo como mapa: caminho mais visual, voce-esta-aqui, proxima 
 
 ### Ciclo I - Momentos Observaveis
 
-Substituir microeventos textuais por objetos observaveis em 3 fases, com registro no Caderno de Viagem. Depois expandir para as demais.
+Consolidado: os microeventos textuais ja foram substituidos por objetos observaveis nas 16 fases, com registro no Caderno de Viagem. Proximas melhorias devem polir visual, icones, postais ou interacoes desses momentos, nao recriar o sistema.
 
 ### Ciclo J - Final Retrospectivo
 

@@ -33,8 +33,9 @@ Principais recursos:
 - Banco com 10 pílulas de conhecimento por fase.
 - Seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas demais.
 - Pílulas históricas coletáveis com brilho, flutuação e mensagem "Você sabia?".
+- Primeira descoberta de uma jornada limpa na fase 1 tem ritual especial, com mensagem de Caderno de Viagem, partículas e som leve.
 - Missão extra opcional em cada fase, com marcador próprio, dica contextual e feedback positivo.
-- Microeventos leves por fase mostram pequenas observações do cenário uma vez por visita, sem perigo nem mudança de plataforma.
+- Momentos observaveis por fase aparecem como pequenos objetos no cenario; ao tocar neles, Mig guarda uma lembranca no Caderno de Viagem.
 - Feedback positivo de coleta, como "Boa descoberta!", e destaque do portal quando todas as pílulas da jogada são encontradas.
 - Mensagens históricas fixas no topo; se Mig passar por trás, o painel fica temporariamente translúcido.
 - Coleção histórica acumulativa com aparência de álbum, lembranças da viagem, destaque da descoberta recente, progresso por fase, celebração de álbum 10/10 e selos por blocos históricos.
@@ -42,10 +43,11 @@ Principais recursos:
 - Nota histórica e pergunta curta ao concluir fase.
 - Portal final liberado apenas após coletar todas as pílulas ativas da fase.
 - Guardião do Portal com fala acolhedora por bloco histórico, foco na pílula da pergunta, pergunta sorteada apenas entre as pílulas que apareceram na jogada e dica acolhedora em caso de erro.
+- Primeiro portal da fase 1 tem fala especial do Guardião, brilho extra e retrato simples animado por formas no quiz.
 - Checkpoints seguros com bandeira animada.
 - Áreas de cuidado mais visíveis, com aviso antes do contato.
 - Tela de pausa com botões grandes para continuar, reiniciar, voltar ao menu e abrir a coleção.
-- Tela final com resumo de fases, pílulas descobertas, lembranças da viagem, descobertas da sessão, selos da jornada conquistados e mensagem final para revisitar a jornada.
+- Tela final com resumo de fases, pílulas descobertas, lembranças da viagem, retrospectiva de lembrancas marcantes, descobertas da sessão, selos da jornada conquistados e mensagem final para revisitar a jornada.
 - Cenários por tema desenhados com Pygame, com detalhes visuais próprios de cada período, incluindo litoral inicial com ondas em camadas, brilho do mar e conchas, engenho com canavial/placas de cuidado, memória cívica e Brasil contemporâneo.
 - Sprite animado do Mig usando `assets/images/personagem.png`.
 - Sons leves gerados por codigo para pulo, coleta, checkpoint, portal, dica do Guardião, quiz, missão extra, selo e conclusão.
@@ -181,12 +183,13 @@ O smoke test confere:
 - `Game` inicializa em modo dummy;
 - `abertura.png` e `assets/images/personagem.png` carregam;
 - Guardião do Portal pergunta apenas sobre uma pílula ativa da jogada, mostra uma lembrança curta da pílula e exige resposta correta para concluir;
+- ritual da primeira descoberta e do primeiro portal aparece em uma jornada limpa;
 - coleção histórica acumula descobertas sem duplicar entradas, mostra lembranças da viagem, destaca descoberta recente e celebra álbum 10/10;
 - missões extras ficam em plataformas alcançáveis, fora de áreas de cuidado e sem sobrepor pílulas ativas;
 - selos da jornada cobrem blocos históricos completos sem repetir fases;
 - controles mantêm pulo, coyote time e buffer em faixa suave;
 - sons gerados incluem portal e dica do Guardião quando o mixer está disponível;
-- microeventos de fase aparecem uma vez e registram mensagem contextual;
+- momentos observaveis aparecem no cenario, disparam mensagem contextual, entram no Caderno e viram descoberta recente legivel;
 - progresso salva/carrega em arquivo local, helpers JS simulados e `localStorage` simulado, com fallback seguro;
 - fluxo basico de menu, nova sessao temporaria, colecao, checkpoint, area de cuidado, conclusao e final passa sem alterar o save.
 - fluxo basico por toque cobre menu, fase, movimento, pulo, colecao, quiz e linha do tempo;
@@ -206,7 +209,7 @@ Teste manual recomendado:
 7. Mover, pular e conferir o tutorial inicial guiado por ações.
 8. Coletar pílulas e observar o feedback positivo.
 9. Tocar no marcador `Extra` e conferir a missão opcional.
-10. Caminhar até surgir um microevento contextual da fase.
+10. Tocar no objeto observavel da fase e conferir a lembranca contextual.
 11. Abrir a coleção com `C` e conferir o visual de álbum, lembranças da viagem, contador de descobertas, descoberta recente e selos da jornada.
 12. Ativar checkpoint.
 13. Tocar em area de cuidado e confirmar retorno seguro.

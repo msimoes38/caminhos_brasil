@@ -49,19 +49,21 @@ A versão atual está jogável e publicada para teste público. Ela possui:
 - banco com 10 pílulas de conhecimento por fase;
 - seleção por sessão: 4 pílulas ativas na fase 1 e 5 pílulas ativas nas fases 2 a 16;
 - pílulas históricas coletáveis;
+- primeira pílula inédita de uma jornada limpa na fase 1 ativa um ritual especial com mensagem de Caderno de Viagem, partículas e som leve;
 - missão extra opcional em cada fase, posicionada em plataforma alcançável e sem sobrepor pílulas ativas;
 - mensagens históricas fixas no topo, com translucidez quando Mig passa por trás;
 - checkpoints seguros e respawn;
 - áreas de cuidado;
 - portal final bloqueado até todas as pílulas ativas da fase serem coletadas;
 - Guardião do Portal com fala acolhedora por bloco histórico, foco na pílula usada pela pergunta e pergunta histórica obrigatória antes da conclusão, sorteada entre as pílulas ativas da jogada;
+- primeiro portal da fase 1 mostra fala especial do Guardião, brilho extra e retrato simples animado por formas no quiz;
 - feedback visual e texto positivo para pílula, checkpoint, cuidado, portal e conclusão;
 - litoral inicial com ondas em camadas, espuma, brilho do mar, conchas, vegetação baixa e destaque sutil na primeira pílula;
-- coleção histórica acumulativa em formato de álbum, com lembranças da viagem, cards de descobertas, descoberta recente destacada, celebração de álbum 10/10 e selos por blocos históricos;
+- coleção histórica acumulativa em formato de álbum, com lembranças da viagem, objetos observaveis, cards de descobertas, descoberta recente destacada, celebração de álbum 10/10 e selos por blocos históricos;
 - linha do tempo com fases liberadas, bloqueadas, próximas aventuras e concluídas, reservando coluna de status e exibindo ícones/frase de bloco histórico, trilha pontilhada e bússola simples;
 - tela de pausa com botões grandes para toque;
 - tela final com resumo da jornada, descobertas da sessão, lembranças da viagem, selos conquistados e mensagem final de revisita;
-- microeventos leves por fase, com mensagem contextual e partículas, sem perigo nem mudança de layout;
+- momentos observaveis por fase, com objeto no cenario, mensagem contextual, partículas e registro no Caderno de Viagem da sessão;
 - sons simples gerados por codigo, incluindo sinais para missão extra, portal, dica do Guardião, resposta correta e selo;
 - save local em JSON e save web em `localStorage` via helpers JS do build limpo, ambos tolerantes a falhas;
 - smoke tests permanentes;
@@ -233,6 +235,7 @@ Funções públicas:
 - `get_level_pill_infos(index)`
 - `get_level_pill_bank(index)`
 - `get_active_pill_count(index)`
+- `get_stage_moment_summary(index)`
 - `get_history_blocks()`
 - `create_level(index, active_pill_indexes=None, quiz_pill_index=None)`
 
@@ -335,7 +338,7 @@ Valida:
 - cada fase tem quiz do Guardião do Portal com 3 alternativas;
 - o quiz vem de uma pílula ativa da jogada;
 - inicio, checkpoints e respawns nao caem em areas de cuidado;
-- pílulas e missões extras ficam em plataformas próximas e alcançáveis por critério conservador;
+- pílulas, missões extras e momentos observaveis ficam em plataformas próximas e alcançáveis por critério conservador;
 - `Game` inicializa;
 - `abertura.png` carrega;
 - sprite do Mig carrega;
@@ -344,7 +347,8 @@ Valida:
 - selos da jornada cobrem todos os blocos históricos sem repetir fases e possuem frase de contexto;
 - controles mantêm pulo, coyote time e buffer em faixas suaves;
 - sons gerados cobrem portal e dica do Guardião quando o mixer está disponível;
-- microeventos de fase aparecem uma vez por visita;
+- momentos observaveis aparecem uma vez por fase, entram no Caderno e alimentam a retrospectiva final;
+- ritual da primeira descoberta e do primeiro portal aparece em jornada limpa;
 - fluxo basico de menu, nova sessão, missão extra, checkpoint, cuidado, quiz, conclusão e final;
 - fluxo basico por toque: menu, introducao, movimento, pulo, colecao, pausa, quiz e linha do tempo;
 - detecção touch inicial por `window.caminhosTouchContext`, `maxTouchPoints`, `matchMedia` e desktop simulado;
@@ -494,11 +498,11 @@ Regras atuais das pílulas:
 - iniciar nova jornada temporária com `N` refaz o sorteio;
 - o Guardião do Portal só pergunta sobre uma pílula ativa da jogada;
 - a coleção mostra progresso do banco completo da fase, por exemplo `7/10 descobertas`;
-- a coleção mostra as missões extras observadas como lembranças da viagem da sessão;
+- a coleção mostra as missões extras e os momentos observaveis como lembranças da viagem da sessão;
 - a coleção destaca a descoberta recente em um card próprio;
 - ao reunir 10/10 descobertas de uma fase, a coleção destaca o álbum completo;
 - a coleção e a tela final mostram selos por blocos históricos concluídos;
-- cada fase pode disparar um microevento textual leve ao avançar pelo cenário; esses eventos não são salvos nesta versão.
+- cada fase tem um `StageMoment` observavel no cenário, posicionado em plataforma alcançável, fora de áreas de cuidado e sem sobrepor pílulas ativas; essas lembranças ficam na sessão atual e não são persistidas no save.
 
 ## 10. Modelo De Dados
 
@@ -542,6 +546,16 @@ complete_message
 icon
 ```
 
+`StageMoment`:
+
+```text
+rect
+title
+message
+icon
+color
+```
+
 `HistoryBlock`:
 
 ```text
@@ -551,7 +565,7 @@ level_indexes
 phrase
 ```
 
-`Level` em `src/levels.py` converte tuplas para `pygame.Rect` e recebe a seleção ativa da sessão.
+`Level` em `src/levels.py` converte tuplas para `pygame.Rect`, recebe a seleção ativa da sessão e inclui missão extra, quiz e `StageMoment` observavel.
 
 `HistoryBlock` em `src/levels.py` agrupa fases para os selos da jornada. Os selos são calculados em memória a partir de `completed_levels`; não há campo novo no save.
 
